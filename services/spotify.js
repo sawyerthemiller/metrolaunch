@@ -14,6 +14,7 @@
   let deps = null;
   let data = null;
   let pollTimer = null;
+  let nullCount = 0;
 
   // Text cleaning regex numero dos
 
@@ -94,6 +95,7 @@
       .then(r => r.json())
       .then(d => {
         if (d.isPlaying) {
+          nullCount = 0;
           let cUrl = null;
           if (d.coverUrl) {
             if (d.coverUrl.startsWith('http')) {
@@ -106,14 +108,21 @@
             }
           }
           data = { track: d.track, artist: d.artist, coverUrl: cUrl };
+          handlePlaybackChange(hadDataBefore);
         } else {
-          data = null;
+          nullCount++;
+          if (nullCount >= 2) {
+            data = null;
+            handlePlaybackChange(hadDataBefore);
+          }
         }
-        handlePlaybackChange(hadDataBefore);
       })
       .catch(() => {
-        data = null;
-        handlePlaybackChange(hadDataBefore);
+        nullCount++;
+        if (nullCount >= 2) {
+          data = null;
+          handlePlaybackChange(hadDataBefore);
+        }
       });
   }
 
@@ -181,9 +190,23 @@
     if (!navigator.onLine) {
       return Promise.resolve({ ok: false, reason: 'offline' });
     }
-    return fetch(`${SERVER_URL}?t=${Date.now()}`, { cache: 'no-store' })
-      .then(resp => resp.ok ? { ok: true } : { ok: false, reason: `status-${resp.status}` })
-      .catch(() => ({ ok: false, reason: 'network' }));
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    return fetch(`${SERVER_URL}?t=${Date.now()}`, { 
+      cache: 'no-store',
+      signal: controller.signal
+    })
+      .then(resp => {
+        clearTimeout(timeoutId);
+        return resp.ok ? { ok: true } : { ok: false, reason: `status-${resp.status}` };
+      })
+      .catch(err => {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') return { ok: false, reason: 'timeout' };
+        return { ok: false, reason: 'network' };
+      });
   }
 
   function isRunning() {

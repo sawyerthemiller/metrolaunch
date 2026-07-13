@@ -312,6 +312,7 @@ def main():
     prev_track = None
     prev_artist = None
     prev_playing = None
+    transient_pause_count = 0
 
     with _make_key_reader() as keys:
 
@@ -340,8 +341,9 @@ def main():
                     status = get_spotify_status()
 
                     if status == 'NOT_RUNNING':
+                        transient_pause_count += 1
                         # if it was playing before, send a pause
-                        if prev_playing is True:
+                        if prev_playing is True and transient_pause_count >= 2:
                             make_request(f'{server_url}?action=update', {
                                 'username': username,
                                 'track': '',
@@ -352,7 +354,8 @@ def main():
                             prev_playing = False
 
                     elif status == 'PAUSED':
-                        if prev_playing is not False:
+                        transient_pause_count += 1
+                        if prev_playing is not False and transient_pause_count >= 2:
                             make_request(f'{server_url}?action=update', {
                                 'username': username,
                                 'track': prev_track or '',
@@ -363,6 +366,7 @@ def main():
                             prev_playing = False
 
                     elif status.startswith('PLAYING|'):
+                        transient_pause_count = 0
                         parts = status.split('|')
                         track = parts[1] if len(parts) > 1 else ''
                         artist = parts[2] if len(parts) > 2 else ''
