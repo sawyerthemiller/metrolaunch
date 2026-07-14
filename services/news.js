@@ -25,9 +25,11 @@
     if (!title) return '';
     return title
       .replace(/A\.I\.?/gi, 'AI')
+      .replace(/\s*\[([^\]]+)\]/g, ' $1')
       .replace(/["'”“@:;+\u00B1$?,\u235C\u2192]/g, '')
       .replace(/[\u2013\u2014_]/g, '-')
-      .replace(/\.{4,}$/, '...');
+      .replace(/\.{4,}$/, '...')
+      .trim();
   }
 
   function cacheGet() {
