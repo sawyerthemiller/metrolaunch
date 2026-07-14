@@ -60,7 +60,16 @@ self.addEventListener('fetch', event => {
     if (!event.request.url.startsWith('http')) return;
 
     const url = new URL(event.request.url);
-    if (url.origin !== location.origin) return;
+    
+    // explicitly prevent caching of dynamic data for live tiles
+    if (url.hostname.includes('leopardindustries.net') ||  // for spotify status
+        url.hostname.includes('firebaseio') ||             // for news
+        url.hostname.includes('api.openweathermap.org')) { // for weather
+        return;
+    }
+
+    // allow same-origin requests or cross-origin image requests
+    if (url.origin !== location.origin && event.request.destination !== 'image') return;
 
     event.respondWith(
         (async () => {
