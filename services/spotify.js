@@ -48,6 +48,7 @@
     parsed = parsed.replace(/\bfeat\b/gi, 'Featuring');
     parsed = parsed.replace(/\bwith\b/gi, 'With');
     parsed = parsed.replace(/\bpt\b/gi, 'PT');
+    parsed = parsed.replace(/\bvs\b/gi, 'VS');
     return parsed;
   }
 
