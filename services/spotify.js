@@ -24,9 +24,11 @@
     parsed = parsed.replace(/(^|\W)\$(?=\w)/g, '$1S');
     parsed = parsed.replace(/\$/g, 's');
     parsed = parsed.replace(/'/g, '');
-    parsed = parsed.replace(/[!.]+$/g, '').replace(/!/g, '');
+    parsed = parsed.replace(/!/g, '');
     return parsed;
   }
+
+  // Text cleaning regex numero tres
 
   function cleanTrackName(track) {
     if (!track) return '';
@@ -44,6 +46,8 @@
       return '';
     });
     
+    // Aesthetic cleanups
+
     parsed = parsed.replace(/\//g, ' ');
     parsed = parsed.replace(/\bfeat\b/gi, 'Featuring');
     parsed = parsed.replace(/\bwith\b/gi, 'With');
