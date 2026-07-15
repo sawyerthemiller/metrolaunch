@@ -265,6 +265,7 @@ const App = (() => {
     weatherCountry: '',
     skipApiKeyPrompt: false,
     skipUpdateCheck: false,
+    weatherEnabled: true,
     newsEnabled: false,
     newsLowercase: false,
     spotifyEnabled: false,
@@ -1875,6 +1876,10 @@ const App = (() => {
       <div class="form-section-title${sectionClass('live')}" data-section="live">Live Tiles <span class="section-chevron">\u25BC</span></div>
       <div class="section-body${sectionClass('live')}" id="sec-live">
         <div class="toggle-row">
+          <span class="toggle-label">Weather tile</span>
+          <div class="toggle-switch${settings.weatherEnabled !== false ? ' on' : ''}" id="weather-toggle"></div>
+        </div>
+        <div class="toggle-row">
           <span class="toggle-label">Spotify now playing</span>
           <div class="toggle-switch${settings.spotifyEnabled ? ' on' : ''}" id="spotify-toggle"></div>
         </div>
@@ -2017,6 +2022,13 @@ const App = (() => {
     lhToggle.onclick = () => {
       lhOn = !lhOn;
       lhToggle.classList.toggle('on', lhOn);
+    };
+
+    let weatherOn = settings.weatherEnabled !== false;
+    const weatherToggle = document.getElementById('weather-toggle');
+    weatherToggle.onclick = () => {
+      weatherOn = !weatherOn;
+      weatherToggle.classList.toggle('on', weatherOn);
     };
 
     let newsOn = !!settings.newsEnabled;
@@ -2274,6 +2286,9 @@ const App = (() => {
       settings.newsEnabled = newsOn;
       settings.newsLowercase = newsLc;
 
+      const wasWeatherOn = settings.weatherEnabled !== false;
+      settings.weatherEnabled = weatherOn;
+
       const wasSpotifyOn = settings.spotifyEnabled;
       settings.spotifyEnabled = spotifyOn;
 
@@ -2295,6 +2310,14 @@ const App = (() => {
         SpotifyService.stop();
       }
 
+      if (weatherOn && !wasWeatherOn) {
+        ensureWeatherTile();
+        WeatherService.start();
+      } else if (!weatherOn && wasWeatherOn) {
+        removeWeatherTile();
+        WeatherService.stop();
+      }
+
       if (gridlockOn) compactGrid();
       render();
       hideModal();
@@ -2306,6 +2329,19 @@ const App = (() => {
         showToast('No changes made');
       }
     };
+  }
+
+  // WEATHER TILE MANAGEMENT
+  function ensureWeatherTile() {
+    if (tiles.find(t => t.id === WEATHER_TILE_ID)) return;
+    const spot = findNextFreeSpot('wide');
+    tiles.unshift({ id: WEATHER_TILE_ID, name: 'Weather', icon: 'weather', url: 'weather://', color: '#1e40af', size: 'wide', col: spot.col, row: spot.row, isWeather: true });
+    save();
+  }
+
+  function removeWeatherTile() {
+    tiles = tiles.filter(t => t.id !== WEATHER_TILE_ID);
+    save();
   }
 
   // NEWS TILE MANAGEMENT
@@ -2515,20 +2551,19 @@ const App = (() => {
     const saved = load();
     tiles = saved || JSON.parse(JSON.stringify(DEFAULT_TILES));
 
-    // ensure weather tile always exists
-    const existingWeather = tiles.find(t => t.id === WEATHER_TILE_ID);
-    if (!existingWeather) {
-      const spot = findNextFreeSpot('wide');
-      tiles.unshift({ id: WEATHER_TILE_ID, name: 'Weather', icon: 'weather', url: 'weather://', color: '#1e40af', size: 'wide', col: spot.col, row: spot.row, isWeather: true });
-      save();
-    } else if (!existingWeather.url) {
-      existingWeather.url = 'weather://';
-      save();
-    }
-
     const savedSettings = loadSettings();
     if (savedSettings) {
       settings = { ...settings, ...savedSettings };
+    }
+
+    // ensure weather tile exists if enabled
+    if (settings.weatherEnabled !== false) {
+      ensureWeatherTile();
+      const existingWeather = tiles.find(t => t.id === WEATHER_TILE_ID);
+      if (existingWeather && !existingWeather.url) {
+        existingWeather.url = 'weather://';
+        save();
+      }
     }
 
     // Wire the network services now that settings and tiles are loaded
