@@ -1,8 +1,9 @@
-<====================>
-   Guidelines for AI Coding Agents
-<====================>
+<======================>\
+Guidelines for AI Coding Agents\
+<======================>
 
    Guidelines by Leopard Industries - Last Updated 14 - 7 - 2026
+   
    Guidelines are reusable for any project...
 
 ##  General Principles
