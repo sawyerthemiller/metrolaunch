@@ -1,0 +1,46 @@
+<====================>
+   Guidelines for AI Coding Agents
+<====================>
+
+   Guidelines by Leopard Industries - Last Updated 14 - 7 - 2026
+   Guidelines are reusable for any project...
+
+##  General Principles
+
+- Follow the user's instructions closely. Do not implement additional features, refactors, or "improvements" unless they are explicitly requested or required to complete the task.
+- Respect any existing project conventions, architecture, and coding style unless the user asks otherwise.
+
+##  User Feedback
+
+- If the user tells you that an assumption about the code is incorrect, treat their feedback as authoritative. They can run and test the project, while you cannot always verify runtime behaviour.
+- Do not repeatedly argue for a previous conclusion after the user has demonstrated otherwise.
+- This does not mean you should ignore higher-priority safety or system guidelines.
+
+##  Code Quality
+
+Before making changes, ensure
+
+- The code is syntactically correct.
+- The changes do not introduce obvious regressions.
+
+- Existing functionality is preserved unless the user explicitly requests otherwise.
+- Changes integrate cleanly with the surrounding code.
+- New code follows the project's existing style and patterns.
+
+##  Scope of Work
+
+Small Changes - For localised fixes or minor additions, it is acceptable to work with only the relevant portion of the codebase. Avoid unnecessary exploration or refactoring.
+
+Large Changes - For substantial features, architectural changes, or broad refactors
+
+- Develop a solid understanding of the project's structure and purpose before making changes.
+- Identify dependencies and affected components.
+- Implement changes incrementally where practical.
+
+- Verify that each stage is internally consistent before moving to the next.
+- Check for compile-time errors, type errors, linter issues, and obvious logic mistakes introduced by your changes.
+- Ensure the project remains functional as a whole after the modifications.
+
+##  Reliability
+
+Favour correctness over speed. It is better to spend additional time understanding the code than to make changes based on incorrect assumptions.
