@@ -24,7 +24,7 @@
   function cleanHeadline(title) {
     if (!title) return '';
     return title
-    
+      .replace(/GitHub/g, 'Github')
       .replace(/A\.I\.?/gi, 'AI')
       .replace(/\s*\[([^\]]+)\]/g, ' $1')
       .replace(/[-+\u2013\u2014\u2212]\s*\$/g, '')
