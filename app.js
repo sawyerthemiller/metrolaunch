@@ -2150,7 +2150,10 @@ const App = (() => {
             <button class="btn-primary" id="adv-close">Close</button>
           </div>
         `);
-        document.getElementById('adv-close').onclick = showSettingsModal;
+        document.getElementById('adv-close').onclick = () => {
+          if (typeof handleRefreshClick === 'function') handleRefreshClick();
+          showSettingsModal();
+        };
 
         const fontToggle = document.getElementById('disable-font-toggle');
         let fontOff = !!settings.disableForcedFont;
@@ -2170,7 +2173,6 @@ const App = (() => {
           settings.disableRegexCleaning = regexOff;
           applySettings();
           render();
-          if (typeof handleRefreshClick === 'function') handleRefreshClick();
         };
 
         const meltToggle = document.getElementById('spotify-melt-toggle');
