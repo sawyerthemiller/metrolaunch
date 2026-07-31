@@ -794,6 +794,7 @@ body:not(.is-desktop) .header {
   overflow: hidden;
   letter-spacing: 0.45px;
   text-align: center;
+  transform: translateZ(1px);
 }
 
 .spotify-artist {
@@ -807,6 +808,7 @@ body:not(.is-desktop) .header {
   z-index: 1;
   text-align: center;
   margin-top: 4px;
+  transform: translateZ(1px);
 }
 
 .weather-nodata {

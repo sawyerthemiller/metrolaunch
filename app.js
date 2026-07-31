@@ -2170,6 +2170,7 @@ const App = (() => {
           settings.disableRegexCleaning = regexOff;
           applySettings();
           render();
+          if (typeof handleRefreshClick === 'function') handleRefreshClick();
         };
 
         const meltToggle = document.getElementById('spotify-melt-toggle');
