@@ -140,25 +140,30 @@
       });
   }
 
-  function _renderSpotifyTile(el, parsedTrack, parsedArtist, coverUrl) {
+  function _renderSpotifyTile(el, parsedTrack, parsedArtist, coverUrl, shadeText) {
     const escHtml = deps.escHtml;
     const settings = deps.getSettings();
     const meltClass = settings.spotifyMeltEnabled ? 'spotify-bg-blur melting' : 'spotify-bg-blur';
+    const shadeTextClass = shadeText ? ' spotify-text-shade' : '';
     
     let blurEl = el.querySelector('.spotify-bg-blur');
     let trackEl = el.querySelector('.spotify-track');
     let artistEl = el.querySelector('.spotify-artist');
+    let wrapperEl = el.querySelector('.spotify-text-wrapper');
     
-    if (!blurEl || !trackEl || !artistEl) {
+    if (!blurEl || !trackEl || !artistEl || !wrapperEl) {
       el.innerHTML =
         `<div class="${meltClass}"></div>` +
+        `<div class="spotify-text-wrapper${shadeTextClass}">` +
         `<div class="spotify-track"></div>` +
-        `<div class="spotify-artist"></div>`;
+        `<div class="spotify-artist"></div>` +
+        `</div>`;
       blurEl = el.querySelector('.spotify-bg-blur');
       trackEl = el.querySelector('.spotify-track');
       artistEl = el.querySelector('.spotify-artist');
     } else {
       blurEl.className = meltClass;
+      wrapperEl.className = `spotify-text-wrapper${shadeTextClass}`;
     }
     
     el.classList.toggle('melting-active', !!(settings.spotifyMeltEnabled && coverUrl));
@@ -189,11 +194,13 @@
     const parsedArtist = cleanArtistName(data.artist);
     const parsedTrack = cleanTrackName(data.track);
 
+    const shadeText = !!tile?.spotifyShadeText;
+
     if (showCover && data.coverUrl) {
       // preload the image so the tile doesn't flash without a background
       const img = new Image();
       img.src = data.coverUrl;
-      const apply = () => elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, data.coverUrl));
+      const apply = () => elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, data.coverUrl, shadeText));
       if (img.complete) {
         apply();
       } else {
@@ -201,7 +208,7 @@
         img.onerror = apply;  // still render the tile, just without the image
       }
     } else {
-      elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, null));
+      elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, null, shadeText));
     }
   }
 

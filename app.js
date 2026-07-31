@@ -1704,6 +1704,10 @@ const App = (() => {
         <input type="hidden" id="news-color" value="${tile.color}">
         <div class="color-picker-row" id="color-picker-news">${colorSwatchesHtml(tile.color, 'color-picker-news')}</div>
       </div>
+      <div class="toggle-row" style="margin-top: 12px; margin-bottom: 24px;">
+        <span class="toggle-label">Remove job promotion stories</span>
+        <div class="toggle-switch${tile.removeJobs !== false ? ' on' : ''}" id="news-remove-jobs-toggle"></div>
+      </div>
       <div class="modal-actions">
         <button class="btn-secondary" id="news-cancel">Cancel</button>
         <button class="btn-primary" id="news-save">Save</button>
@@ -1711,12 +1715,25 @@ const App = (() => {
     `);
 
     attachColorPicker('color-picker-news', 'news-color');
+    
+    const jobsToggle = document.getElementById('news-remove-jobs-toggle');
+    jobsToggle.onclick = () => jobsToggle.classList.toggle('on');
+
     document.getElementById('news-cancel').onclick = hideModal;
     document.getElementById('news-save').onclick = () => {
+      const isJobsOn = jobsToggle.classList.contains('on');
+      const changedJobs = tile.removeJobs !== false !== isJobsOn;
+      
       updateTile(NEWS_TILE_ID, {
         size: document.getElementById('news-size').value,
         color: document.getElementById('news-color').value,
+        removeJobs: isJobsOn,
       });
+      
+      if (changedJobs) {
+        NewsService.purgeCache();
+        NewsService.fetchData();
+      }
       hideModal();
       showToast('News tile updated');
     };
@@ -1732,7 +1749,6 @@ const App = (() => {
         <select id="spotify-size">
           <option value="medium"${tile.size === 'medium' ? ' selected' : ''}>Medium (2x2)</option>
           <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
-          <option value="large"${tile.size === 'large' ? ' selected' : ''}>Large (4x4)</option>
         </select>
       </div>
       <div class="form-group">
@@ -1755,6 +1771,10 @@ const App = (() => {
         <span class="toggle-label">Show cover art background</span>
         <div class="toggle-switch${tile.spotifyCoverArt ? ' on' : ''}" id="spotify-cover-art"></div>
       </div>
+      <div class="toggle-row" style="margin-top: 12px;">
+        <span class="toggle-label">Shade text content</span>
+        <div class="toggle-switch${tile.spotifyShadeText ? ' on' : ''}" id="spotify-shade-text"></div>
+      </div>
 
       <div class="form-group" id="spotify-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
         <label>Color</label>
@@ -1774,6 +1794,13 @@ const App = (() => {
     coverArtToggle.onclick = () => {
       coverArt = !coverArt;
       coverArtToggle.classList.toggle('on', coverArt);
+    };
+
+    let shadeText = !!tile.spotifyShadeText;
+    const shadeTextToggle = document.getElementById('spotify-shade-text');
+    shadeTextToggle.onclick = () => {
+      shadeText = !shadeText;
+      shadeTextToggle.classList.toggle('on', shadeText);
     };
 
     const testBtn = document.getElementById('spotify-test');
@@ -1802,6 +1829,7 @@ const App = (() => {
         spotifyUsername: settings.spotifyUsername,
         spotifyInterval: settings.spotifyInterval,
         spotifyCoverArt: coverArt,
+        spotifyShadeText: shadeText,
         url: settings.spotifyUrl
       });
       // Force a redone fetch and restart polling since the preference changed
@@ -2112,15 +2140,30 @@ const App = (() => {
       };
       advPill.onclick = () => {
         settings.advancedEnabled = advOn;
+        const sTile = tiles.find(t => t.id === SPOTIFY_TILE_ID);
+        const meltAllowed = settings.spotifyEnabled && sTile && sTile.spotifyCoverArt;
+        const opacityStyle = meltAllowed ? '' : 'opacity: 0.5; pointer-events: none;';
         showModal(`
           <h2>Advanced & Experimental</h2>
-          <div style="display: flex; align-items: stretch; margin-bottom: 24px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; text-align: left;">
-            <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding-right: 16px; color: #facc15;">
-              <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+          <div id="adv-warning-box" style="margin-bottom: 24px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; text-align: left;">
+            <div id="adv-warning-expanded" style="display: ${settings.advWarningCollapsed ? 'none' : 'block'};">
+              <div style="display: flex; align-items: stretch;">
+                <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding-right: 16px; padding-bottom: 12px; color: #facc15;">
+                  <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                </div>
+                <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
+                <div style="flex: 1; padding-left: 16px; padding-bottom: 12px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
+                  Starting in version 1.7.0, large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
+                </div>
+              </div>
+              <div style="height: 1px; background: rgba(255, 255, 255, 0.2); margin-bottom: 12px;"></div>
+              <div id="adv-warning-collapse-btn" style="text-align: center; font-size: 11px; letter-spacing: 1px; cursor: pointer; color: var(--text-muted); font-weight: bold;">
+                COLLAPSE
+              </div>
             </div>
-            <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
-            <div style="flex: 1; padding-left: 16px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
-              Starting in version 1.7.0, large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
+            <div id="adv-warning-collapsed" style="display: ${settings.advWarningCollapsed ? 'flex' : 'none'}; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); font-size: 13px; font-weight: bold;">
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="margin-right: 8px; color: #facc15;"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+              View Warning Information
             </div>
           </div>
           <div class="toggle-row">
@@ -2135,15 +2178,22 @@ const App = (() => {
           </div>
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will stop cleaning characters and beautification of other user-facing text feilds</div>
 
-          
           <div class="toggle-row" style="margin-top: 12px;">
-            <span class="toggle-label">Melt the album artwork</span>
-            <div class="toggle-switch${settings.spotifyMeltEnabled ? ' on' : ''}" id="spotify-melt-toggle"></div>
+            <span class="toggle-label">Completely disable cache</span>
+            <div class="toggle-switch${settings.disableCache ? ' on' : ''}" id="disable-cache-toggle"></div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 4px; margin-top: -8px;">turns the album cover into a medley of colors and locks the live tile in its display state during playback - lower values look more realistic</div>
-          <div class="form-group" style="margin-top: 8px;">
-            <label>Animation speed - <span id="melt-speed-val">${settings.spotifyMeltSpeed || 15}</span>s</label>
-            <input type="range" id="spotify-melt-speed" min="5" max="20" value="${settings.spotifyMeltSpeed || 15}" dir="rtl">
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">useful for testing the app because it will auto update every time without changing the version</div>
+          
+          <div style="${opacityStyle}">
+            <div class="toggle-row" style="margin-top: 12px;">
+              <span class="toggle-label">Melt the album artwork</span>
+              <div class="toggle-switch${settings.spotifyMeltEnabled ? ' on' : ''}" id="spotify-melt-toggle"></div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 4px; margin-top: -8px;">turns the album cover into a medley of colors and locks the live tile in its display state during playback - lower values look more realistic</div>
+            <div class="form-group" style="margin-top: 8px;">
+              <label>Animation speed - <span id="melt-speed-val">${settings.spotifyMeltSpeed || 15}</span>s</label>
+              <input type="range" id="spotify-melt-speed" min="5" max="20" value="${settings.spotifyMeltSpeed || 15}" dir="rtl" ${meltAllowed ? '' : 'disabled'}>
+            </div>
           </div>
 
           <div class="modal-actions" style="margin-top:24px;">
@@ -2153,6 +2203,20 @@ const App = (() => {
         document.getElementById('adv-close').onclick = () => {
           if (typeof handleRefreshClick === 'function') handleRefreshClick();
           showSettingsModal();
+        };
+
+        document.getElementById('adv-warning-collapse-btn').onclick = () => {
+          settings.advWarningCollapsed = true;
+          document.getElementById('adv-warning-expanded').style.display = 'none';
+          document.getElementById('adv-warning-collapsed').style.display = 'flex';
+          applySettings();
+        };
+
+        document.getElementById('adv-warning-collapsed').onclick = () => {
+          settings.advWarningCollapsed = false;
+          document.getElementById('adv-warning-collapsed').style.display = 'none';
+          document.getElementById('adv-warning-expanded').style.display = 'block';
+          applySettings();
         };
 
         const fontToggle = document.getElementById('disable-font-toggle');
@@ -2175,15 +2239,34 @@ const App = (() => {
           render();
         };
 
-        const meltToggle = document.getElementById('spotify-melt-toggle');
-        let meltOn = !!settings.spotifyMeltEnabled;
-        meltToggle.onclick = () => {
-          meltOn = !meltOn;
-          meltToggle.classList.toggle('on', meltOn);
-          settings.spotifyMeltEnabled = meltOn;
+        const cacheToggle = document.getElementById('disable-cache-toggle');
+        let cacheOff = !!settings.disableCache;
+        cacheToggle.onclick = async () => {
+          cacheOff = !cacheOff;
+          cacheToggle.classList.toggle('on', cacheOff);
+          settings.disableCache = cacheOff;
           applySettings();
+          if (cacheOff) {
+            await nukeServiceWorkerAndCaches();
+          } else {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('./sw.js');
+            }
+          }
           render();
         };
+
+        const meltToggle = document.getElementById('spotify-melt-toggle');
+        let meltOn = !!settings.spotifyMeltEnabled;
+        if (meltAllowed) {
+          meltToggle.onclick = () => {
+            meltOn = !meltOn;
+            meltToggle.classList.toggle('on', meltOn);
+            settings.spotifyMeltEnabled = meltOn;
+            applySettings();
+            render();
+          };
+        }
 
         const meltSpeedSlider = document.getElementById('spotify-melt-speed');
         meltSpeedSlider.oninput = () => {

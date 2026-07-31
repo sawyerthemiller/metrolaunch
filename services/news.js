@@ -32,10 +32,12 @@
       .replace(/\s*\[([^\]]+)\]/g, ' $1')
       .replace(/[-+\u2013\u2014\u2212]\s*\$/g, '')
 
-      .replace(/["'’”“@:;+\u00B1$?,\u235C\u2192]/g, '')
+      .replace(/["'’”“`@:;+\u00B1$?,\u235C\u2192]/g, '')
       .replace(/[\u2013\u2014_]/g, '-')
       .replace(/\s*\.{3,}$/, '...')
       .replace(/ő/g, 'o')
+      .replace(/\bvs\./gi, 'vs')
+      .replace(/\b0+(\d+)/g, '$1')
 
       .trim();
   }
@@ -80,8 +82,12 @@
         return Promise.all(top.map(id => fetch(ITEM_URL(id), { cache: 'no-store' }).then(r => r.json())));
       })
       .then(stories => {
+        const tile = deps && deps.getTile && deps.getTile(TILE_ID);
+        const removeJobs = tile ? tile.removeJobs !== false : true;
+
         data = stories
           .filter(s => s?.title && s.url)
+          .filter(s => !(removeJobs && s.title.toLowerCase().includes('hiring')))
           .map(s => ({ title: s.title, url: s.url }));
         cacheSet(data);
         index = 0;

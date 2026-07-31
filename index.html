@@ -173,6 +173,17 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
+        try {
+          const s = JSON.parse(localStorage.getItem('metro_settings') || '{}');
+          if (s.disableCache) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+              for (const reg of regs) reg.unregister();
+            });
+            console.log('ServiceWorker registration skipped (cache disabled)');
+            return;
+          }
+        } catch (e) {}
+
         navigator.serviceWorker.register('./sw.js')
           .then(() => {
             console.log('ServiceWorker registration successful');

@@ -797,6 +797,24 @@ body:not(.is-desktop) .header {
   transform: translateZ(1px);
 }
 
+.spotify-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.spotify-text-shade {
+  background-color: rgba(0, 0, 0, 0.55);
+  padding: 8px 12px;
+  border-radius: 6px;
+  width: 92%;
+  box-sizing: border-box;
+}
+
 .spotify-artist {
   position: relative;
   font-size: 12px;
