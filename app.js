@@ -1236,7 +1236,8 @@ const App = (() => {
 
     overlay.querySelector('.update-never').onclick = () => {
       overlay.remove();
-      settings.skipUpdateCheck = true;
+      settings.skippedUpdateVersion = remoteVer;
+      delete settings.skipUpdateCheck;
       saveSettings();
       metroAlert(
         'Sounds good',
@@ -1256,7 +1257,7 @@ const App = (() => {
 
   async function checkForUpdate() {
     if (!navigator.onLine) return;
-    if (settings.skipUpdateCheck) return;
+    if (settings.disableCache) return;
     // Fixes the update checker from showing up on every reload
     if (!navigator.serviceWorker || !navigator.serviceWorker.controller) return;
     try {
@@ -1268,6 +1269,17 @@ const App = (() => {
       if (!localRes.ok || !remoteRes.ok) return;
       const local = (await localRes.text()).trim();
       const remote = (await remoteRes.text()).trim();
+      
+      // Migrate old setting
+      if (settings.skipUpdateCheck) {
+        settings.skippedUpdateVersion = remote;
+        delete settings.skipUpdateCheck;
+        saveSettings();
+        return;
+      }
+      
+      if (settings.skippedUpdateVersion === remote) return;
+
       // Any mismatch triggers the popup - so if a downgrade is required, it will be shown
       if (local && remote && local !== remote) {
         showUpdatePopup(local, remote);
@@ -2363,6 +2375,9 @@ const App = (() => {
         'This will delete all cached assets and reload the page to fetch fresh files, thus performing an update. Your launcher data (tiles, settings) will be preserved',
         'Purge & Reload',
         async () => {
+          delete settings.skipUpdateCheck;
+          delete settings.skippedUpdateVersion;
+          saveSettings();
           await nukeServiceWorkerAndCaches();
           location.reload();
         },
@@ -2697,7 +2712,9 @@ const App = (() => {
         }
       }
 
-      fetch('./version.txt')
+      const fetchUrl = settings.disableCache ? `./version.txt?t=${Date.now()}` : './version.txt';
+      const fetchOpts = settings.disableCache ? { cache: 'no-store' } : {};
+      fetch(fetchUrl, fetchOpts)
         .then(res => res.text())
         .catch(() => 'Unknown')
         .then(version => {
@@ -2863,6 +2880,10 @@ const App = (() => {
     });
 
     window.addEventListener('resize', () => { computeCellSize(); render(); });
+
+    if (settings.disableCache) {
+      setTimeout(() => showToast('Live copy fetched from network'), 500);
+    }
   }
 
   return { init, hideModal, showToast };

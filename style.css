@@ -805,6 +805,7 @@ body:not(.is-desktop) .header {
   position: relative;
   z-index: 1;
   width: 100%;
+  transform: translateZ(1px);
 }
 
 .spotify-text-shade {
