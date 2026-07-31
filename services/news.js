@@ -23,6 +23,9 @@
 
   function cleanHeadline(title) {
     if (!title) return '';
+    if (deps && deps.getSettings && deps.getSettings().disableRegexCleaning) {
+      return title.trim();
+    }
     return title
       .replace(/GitHub/g, 'Github')
       .replace(/A\.I\.?/gi, 'AI')
@@ -31,7 +34,7 @@
 
       .replace(/["'’”“@:;+\u00B1$?,\u235C\u2192]/g, '')
       .replace(/[\u2013\u2014_]/g, '-')
-      .replace(/\.{4,}$/, '...')
+      .replace(/\s*\.{3,}$/, '...')
       .replace(/ő/g, 'o')
 
       .trim();

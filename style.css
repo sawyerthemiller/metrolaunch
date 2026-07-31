@@ -696,20 +696,20 @@ body:not(.is-desktop) .header {
 }
 
 .news-headline {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 400;
-  line-height: 1.35;
+  line-height: 1.25;
   color: #fff;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: 0.45px;
+  letter-spacing: 0.35px;
 }
 
 .news-source {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -720,20 +720,31 @@ body:not(.is-desktop) .header {
 
 .spotify-face {
   padding: 10px 12px;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 4px;
   width: 100%;
   position: relative;
   overflow: hidden;
 }
 
+.spotify-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
 .spotify-bg-blur {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: -15%;
+  left: -15%;
+  right: -15%;
+  bottom: -15%;
   z-index: 0;
   background-size: cover;
   background-position: center;
@@ -741,6 +752,32 @@ body:not(.is-desktop) .header {
   opacity: 1.0;
   transform: scale(1.1);
   /* to hide blur edges */
+}
+
+@keyframes spotifyMelt {
+  0% { transform: scale(2.0) translate(0%, 0%) rotate(0deg); filter: blur(16px) saturate(130%) brightness(90%) hue-rotate(0deg); }
+  25% { transform: scale(2.4) translate(6%, 12%) rotate(90deg); filter: blur(20px) saturate(130%) brightness(100%) hue-rotate(15deg); }
+  50% { transform: scale(2.2) translate(-6%, 8%) rotate(180deg); filter: blur(16px) saturate(130%) brightness(90%) hue-rotate(-10deg); }
+  75% { transform: scale(2.4) translate(6%, -12%) rotate(270deg); filter: blur(20px) saturate(130%) brightness(100%) hue-rotate(20deg); }
+  100% { transform: scale(2.0) translate(0%, 0%) rotate(360deg); filter: blur(16px) saturate(130%) brightness(90%) hue-rotate(0deg); }
+}
+
+.spotify-bg-blur.melting {
+  background-size: cover;
+  animation: spotifyMelt var(--spotify-melt-speed, 15s) infinite linear;
+  filter: brightness(0.9);
+  opacity: 1.0;
+}
+
+.spotify-content.melting-active::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background-color: #000;
+  z-index: -1;
 }
 
 .spotify-track {
@@ -756,6 +793,7 @@ body:not(.is-desktop) .header {
   -webkit-box-orient: vertical;
   overflow: hidden;
   letter-spacing: 0.45px;
+  text-align: center;
 }
 
 .spotify-artist {
@@ -764,10 +802,11 @@ body:not(.is-desktop) .header {
   color: rgba(255, 255, 255, 0.85);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-top: auto;
   font-family: 'Segoe UI Supro';
   text-shadow: 0 0 0.4px rgba(255, 255, 255, 0.6), 0 0 0.4px rgba(255, 255, 255, 0.6);
   z-index: 1;
+  text-align: center;
+  margin-top: 4px;
 }
 
 .weather-nodata {
@@ -1047,6 +1086,17 @@ body.is-desktop .modal-sheet {
 
 .modal-actions button:active {
   background: rgba(255, 255, 255, 0.15);
+}
+
+.modal-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+body.disable-forced-font,
+body.disable-forced-font * {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 }
 
 .btn-primary {

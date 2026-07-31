@@ -221,8 +221,13 @@ const App = (() => {
       liveTileIntervals.push(setTimeout(function spotifyCycle() {
         const el = document.querySelector(`[data-id="${SPOTIFY_TILE_ID}"] .live-tile-inner`);
         if (el && navigator.onLine && SpotifyService.hasData() && !editMode) {
-          flipTile(el, true);
-          liveTileIntervals.push(setTimeout(() => flipTile(el, false), 4000 + Math.random() * 2000));
+          if (settings.spotifyMeltEnabled) {
+            el.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
+            el.style.transform = 'translateY(0%)';
+          } else {
+            flipTile(el, true);
+            liveTileIntervals.push(setTimeout(() => flipTile(el, false), 4000 + Math.random() * 2000));
+          }
         }
         liveTileIntervals.push(setTimeout(spotifyCycle, 7000 + Math.random() * 5000));
       }, delay));
@@ -408,7 +413,14 @@ const App = (() => {
       gridEl.classList.add(`align-${lAlign}`);
     }
 
+    // disable forced font
+    document.body.classList.toggle('disable-forced-font', !!settings.disableForcedFont);
+
+    // spotify melt speed
+    document.documentElement.style.setProperty('--spotify-melt-speed', `${settings.spotifyMeltSpeed || 15}s`);
+
     saveSettings();
+    startLiveTileFlip();
   }
 
   // COLLISION
@@ -940,9 +952,9 @@ const App = (() => {
       }, LONG_PRESS_MS);
     }, { passive: false });
 
-    gridEl.addEventListener('touchmove', (e) => {
+    window.addEventListener('touchmove', (e) => {
       if (dragState) { e.preventDefault(); const p = xy(e); moveDrag(p.x, p.y); }
-      else {
+      else if (touchTile) {
         clearTimeout(longPressTimer);
         const p = xy(e);
         if (Math.abs(p.x - touchStartX) > 8 || Math.abs(p.y - touchStartY) > 8) {
@@ -951,7 +963,7 @@ const App = (() => {
       }
     }, { passive: false });
 
-    gridEl.addEventListener('touchend', (e) => {
+    window.addEventListener('touchend', (e) => {
       clearTimeout(longPressTimer);
       let m = false;
       if (dragState) { m = endDrag(); }
@@ -984,7 +996,7 @@ const App = (() => {
       touchTile = null;
     });
 
-    gridEl.addEventListener('touchcancel', () => { clearTimeout(longPressTimer); if (dragState) endDrag(); touchTile = null; });
+    window.addEventListener('touchcancel', () => { clearTimeout(longPressTimer); if (dragState) endDrag(); touchTile = null; });
 
     let mouseDown = false;
     let mouseMoved = false;
@@ -1933,6 +1945,19 @@ const App = (() => {
 
       <div class="form-divider"></div>
 
+      <div class="form-section-title${sectionClass('advanced')}" data-section="advanced">Advanced & Experimental <span class="section-chevron">\u25BC</span></div>
+      <div class="section-body${sectionClass('advanced')}" id="sec-advanced">
+        <div class="toggle-row">
+          <span class="toggle-label">Enable Advanced Features</span>
+          <div class="toggle-switch${settings.advancedEnabled ? ' on' : ''}" id="advanced-toggle"></div>
+        </div>
+        <div class="modal-actions" style="margin-top:8px; margin-bottom:0;">
+          <button class="btn-secondary" id="advanced-settings-pill" style="border-radius: 9999px;" ${!settings.advancedEnabled ? 'disabled' : ''}>View More Settings</button>
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+
       <div class="form-section-title${sectionClass('cache')}" data-section="cache">Manage Cache <span class="section-chevron">\u25BC</span></div>
       <div class="section-body${sectionClass('cache')}" id="sec-cache">
         <div class="modal-actions" style="margin-bottom:8px;">
@@ -2075,6 +2100,96 @@ const App = (() => {
       launchAnimOn = !launchAnimOn;
       animToggle.classList.toggle('on', launchAnimOn);
     };
+
+    let advOn = !!settings.advancedEnabled;
+    const advToggle = document.getElementById('advanced-toggle');
+    const advPill = document.getElementById('advanced-settings-pill');
+    if (advToggle) {
+      advToggle.onclick = () => {
+        advOn = !advOn;
+        advToggle.classList.toggle('on', advOn);
+        advPill.disabled = !advOn;
+      };
+      advPill.onclick = () => {
+        settings.advancedEnabled = advOn;
+        showModal(`
+          <h2>Advanced & Experimental</h2>
+          <div style="display: flex; align-items: stretch; margin-bottom: 24px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; text-align: left;">
+            <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding-right: 16px; color: #facc15;">
+              <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+            </div>
+            <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
+            <div style="flex: 1; padding-left: 16px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
+              Starting in version 1.7.0, large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
+            </div>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Disable launcher's forced font</span>
+            <div class="toggle-switch${settings.disableForcedFont ? ' on' : ''}" id="disable-font-toggle"></div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">uses the default OS font for webkit - may be more useful on jailbroken devices</div>
+          
+          <div class="toggle-row" style="margin-top: 12px;">
+            <span class="toggle-label">Disable regex cleaning</span>
+            <div class="toggle-switch${settings.disableRegexCleaning ? ' on' : ''}" id="disable-regex-toggle"></div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will stop cleaning characters and beautification of other user-facing text feilds</div>
+
+          
+          <div class="toggle-row" style="margin-top: 12px;">
+            <span class="toggle-label">Melt the album artwork</span>
+            <div class="toggle-switch${settings.spotifyMeltEnabled ? ' on' : ''}" id="spotify-melt-toggle"></div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 4px; margin-top: -8px;">turns the album cover into a medley of colors and locks the live tile in its display state during playback - lower values look more realistic</div>
+          <div class="form-group" style="margin-top: 8px;">
+            <label>Animation speed - <span id="melt-speed-val">${settings.spotifyMeltSpeed || 15}</span>s</label>
+            <input type="range" id="spotify-melt-speed" min="5" max="20" value="${settings.spotifyMeltSpeed || 15}" dir="rtl">
+          </div>
+
+          <div class="modal-actions" style="margin-top:24px;">
+            <button class="btn-primary" id="adv-close">Close</button>
+          </div>
+        `);
+        document.getElementById('adv-close').onclick = showSettingsModal;
+
+        const fontToggle = document.getElementById('disable-font-toggle');
+        let fontOff = !!settings.disableForcedFont;
+        fontToggle.onclick = () => {
+          fontOff = !fontOff;
+          fontToggle.classList.toggle('on', fontOff);
+          settings.disableForcedFont = fontOff;
+          applySettings();
+          render();
+        };
+        
+        const regexToggle = document.getElementById('disable-regex-toggle');
+        let regexOff = !!settings.disableRegexCleaning;
+        regexToggle.onclick = () => {
+          regexOff = !regexOff;
+          regexToggle.classList.toggle('on', regexOff);
+          settings.disableRegexCleaning = regexOff;
+          applySettings();
+          render();
+        };
+
+        const meltToggle = document.getElementById('spotify-melt-toggle');
+        let meltOn = !!settings.spotifyMeltEnabled;
+        meltToggle.onclick = () => {
+          meltOn = !meltOn;
+          meltToggle.classList.toggle('on', meltOn);
+          settings.spotifyMeltEnabled = meltOn;
+          applySettings();
+          render();
+        };
+
+        const meltSpeedSlider = document.getElementById('spotify-melt-speed');
+        meltSpeedSlider.oninput = () => {
+          document.getElementById('melt-speed-val').textContent = meltSpeedSlider.value;
+          settings.spotifyMeltSpeed = parseInt(meltSpeedSlider.value, 10);
+          applySettings();
+        };
+      };
+    }
 
     document.getElementById('bg-random').onclick = () => {
       document.getElementById('bg-url').value = `https://picsum.photos/1080/1920?t=${Date.now()}`;
@@ -2279,6 +2394,10 @@ const App = (() => {
       settings.hideSmallLabels = hslOn;
       settings.gridlock = gridlockOn;
       settings.launchAnim = launchAnimOn;
+      settings.advancedEnabled = advOn;
+      if (!advOn) {
+        settings.advancedFeatures = false;
+      }
       settings.headerTitle = document.getElementById('header-title-input').value.trim() || 'Hello';
       settings.labelAlignment = document.getElementById('label-alignment-sel').value;
 

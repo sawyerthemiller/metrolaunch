@@ -20,6 +20,7 @@
 
   function cleanArtistName(artist) {
     if (!artist) return '';
+    if (deps && deps.getSettings && deps.getSettings().disableRegexCleaning) return artist.trim();
     let parsed = artist.replace(/P!NK/gi, 'PINK');
     parsed = parsed.replace(/(^|\W)\$(?=\w)/g, '$1S');
     parsed = parsed.replace(/\$/g, 's');
@@ -32,6 +33,7 @@
 
   function cleanTrackName(track) {
     if (!track) return '';
+    if (deps && deps.getSettings && deps.getSettings().disableRegexCleaning) return track.trim();
     let parsed = track.replace(/(^|\W)\$(?=\w)/g, '$1S');
     parsed = parsed.replace(/\$/g, 's');
     
@@ -112,31 +114,63 @@
               cUrl = `${urlObj.origin}${basePath}${d.coverUrl.replace(/^\//, '')}`;
             }
           }
-          data = { track: d.track, artist: d.artist, coverUrl: cUrl };
-          handlePlaybackChange(hadDataBefore);
+          const newData = { track: d.track, artist: d.artist, coverUrl: cUrl };
+          if (!data || data.track !== newData.track || data.artist !== newData.artist || data.coverUrl !== newData.coverUrl) {
+            data = newData;
+            handlePlaybackChange(hadDataBefore);
+          }
         } else {
           nullCount++;
           if (nullCount >= 2) {
-            data = null;
-            handlePlaybackChange(hadDataBefore);
+            if (data !== null) {
+              data = null;
+              handlePlaybackChange(hadDataBefore);
+            }
           }
         }
       })
       .catch(() => {
         nullCount++;
         if (nullCount >= 2) {
-          data = null;
-          handlePlaybackChange(hadDataBefore);
+          if (data !== null) {
+            data = null;
+            handlePlaybackChange(hadDataBefore);
+          }
         }
       });
   }
 
-  function _renderSpotifyTile(el, parsedTrack, parsedArtist, bgStyle) {
+  function _renderSpotifyTile(el, parsedTrack, parsedArtist, coverUrl) {
     const escHtml = deps.escHtml;
-    el.innerHTML =
-      `<div class="spotify-bg-blur"${bgStyle}></div>` +
-      `<div class="spotify-track">${escHtml(parsedTrack)}</div>` +
-      `<div class="spotify-artist">${escHtml(parsedArtist)}</div>`;
+    const settings = deps.getSettings();
+    const meltClass = settings.spotifyMeltEnabled ? 'spotify-bg-blur melting' : 'spotify-bg-blur';
+    
+    let blurEl = el.querySelector('.spotify-bg-blur');
+    let trackEl = el.querySelector('.spotify-track');
+    let artistEl = el.querySelector('.spotify-artist');
+    
+    if (!blurEl || !trackEl || !artistEl) {
+      el.innerHTML =
+        `<div class="${meltClass}"></div>` +
+        `<div class="spotify-track"></div>` +
+        `<div class="spotify-artist"></div>`;
+      blurEl = el.querySelector('.spotify-bg-blur');
+      trackEl = el.querySelector('.spotify-track');
+      artistEl = el.querySelector('.spotify-artist');
+    } else {
+      blurEl.className = meltClass;
+    }
+    
+    el.classList.toggle('melting-active', !!(settings.spotifyMeltEnabled && coverUrl));
+    
+    if (coverUrl) {
+      blurEl.style.backgroundImage = `url("${coverUrl.replace(/"/g, '\\"')}")`;
+    } else {
+      blurEl.style.backgroundImage = '';
+    }
+    
+    trackEl.textContent = parsedTrack;
+    artistEl.textContent = parsedArtist;
   }
 
   function updateFace() {
@@ -159,7 +193,7 @@
       // preload the image so the tile doesn't flash without a background
       const img = new Image();
       img.src = data.coverUrl;
-      const bgStyle = ` style="background-image: url('${escHtml(data.coverUrl)}');"`;      const apply = () => elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, bgStyle));
+      const apply = () => elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, data.coverUrl));
       if (img.complete) {
         apply();
       } else {
@@ -167,7 +201,7 @@
         img.onerror = apply;  // still render the tile, just without the image
       }
     } else {
-      elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, ''));
+      elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, null));
     }
   }
 
