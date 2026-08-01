@@ -62,7 +62,7 @@ self.addEventListener('fetch', event => {
 
     const url = new URL(event.request.url);
 
-    // If the request has cache-busting paramsget out of the way
+    // If the request has cache-busting params get out of the way
     // I'm not in your way chef... GORDON - 'Fuck off upstairs then!!!'
     if (url.searchParams.has('t') || url.searchParams.has('_nocache') || url.searchParams.has('_ml_reload')) {
         return;
