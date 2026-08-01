@@ -1309,7 +1309,6 @@ const App = (() => {
 
   async function checkForUpdate() {
     if (!navigator.onLine) return;
-    if (settings.disableCache) return;
     // Fixes the update checker from showing up on every reload
     if (!navigator.serviceWorker || !navigator.serviceWorker.controller) return;
     try {
@@ -2286,11 +2285,11 @@ const App = (() => {
           </div>
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - works on ios 17.4 to 26.4 ONLY - see haptics JS file for credit</div>
 
-          <div class="toggle-row" style="margin-top: 12px;">
+          <div class="toggle-row" style="margin-top: 12px; display: none;">
             <span class="toggle-label">Completely disable cache</span>
             <div class="toggle-switch${settings.disableCache ? ' on' : ''}" id="disable-cache-toggle"></div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">useful for testing the app because it will auto update every time without changing the version on server - may not work on some browsers despite being on and agressive de-caching</div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px; display: none;">useful for testing the app because it will auto update every time without changing the version on server - may not work on some browsers despite being on and agressive de-caching</div>
           
           <div style="${opacityStyle}">
             <div class="toggle-row" style="margin-top: 12px;">
@@ -2357,25 +2356,7 @@ const App = (() => {
           if (hapticOff) initHaptics();
         };
 
-        const cacheToggle = document.getElementById('disable-cache-toggle');
-        let cacheOff = !!settings.disableCache;
-        cacheToggle.onclick = async () => {
-          cacheOff = !cacheOff;
-          cacheToggle.classList.toggle('on', cacheOff);
-          settings.disableCache = cacheOff;
-          applySettings();
-          if (cacheOff) {
-            // Clear stale freshness hashes so next load sees all files as new
-            sessionStorage.removeItem('_ml_file_hashes');
-            await nukeServiceWorkerAndCaches();
-          } else {
-            if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.register('./sw.js');
-            }
-          }
-          // Hard reload so the toggle takes full effect immediately
-          window.location.href = window.location.pathname + '?_ml_reload=' + Date.now();
-        };
+        // cacheToggle stub retained in HTML but logic removed
 
         const meltToggle = document.getElementById('spotify-melt-toggle');
         let meltOn = !!settings.spotifyMeltEnabled;
@@ -2824,8 +2805,8 @@ const App = (() => {
         }
       }
 
-      const fetchUrl = settings.disableCache ? `./version.txt?t=${Date.now()}` : './version.txt';
-      const fetchOpts = settings.disableCache ? { cache: 'no-store' } : {};
+      const fetchUrl = './version.txt';
+      const fetchOpts = {};
       fetch(fetchUrl, fetchOpts)
         .then(res => res.text())
         .catch(() => 'Unknown')
@@ -2924,7 +2905,7 @@ const App = (() => {
     const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const now = new Date();
-    const dateStr = `${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]}`;
+    const dateStr = `${DAYS[now.getDay()]}, ${now.getDate().toString().padStart(2, '0')} ${MONTHS[now.getMonth()]}`;
     document.querySelectorAll('.header-date').forEach(el => { el.textContent = dateStr; });
 
     render();
@@ -2993,66 +2974,7 @@ const App = (() => {
 
     window.addEventListener('resize', () => { computeCellSize(); render(); });
 
-    if (settings.disableCache) {
-      // Auto-freshness detects server-side changes and reload without manual purge
-      (async () => {
-        try {
-          if (!navigator.onLine) return;
 
-          // Guard against infinite reload loops — if we just reloaded for freshness, don't check again
-          const reloadGuard = '_ml_freshness_reload';
-          if (sessionStorage.getItem(reloadGuard)) {
-            sessionStorage.removeItem(reloadGuard);
-            setTimeout(() => showToast('Live copy fetched from network'), 500);
-            return;
-          }
-
-          // Fetch critical files directly from the server (bypassing HTTP cache)
-          const filesToCheck = [
-            './version.txt', './app.js', './style.css', './index.html',
-            './services/weather.js', './services/news.js', './services/spotify.js'
-          ];
-
-          // We store a simple hash of each file from the last successful load
-          const STORAGE_KEY = '_ml_file_hashes';
-          const oldHashes = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
-          const newHashes = {};
-          let needsReload = false;
-
-          for (const file of filesToCheck) {
-            try {
-              const res = await fetch(`${file}?_nocache=${Date.now()}`, { cache: 'no-store' });
-              if (!res.ok) continue;
-              const text = await res.text();
-              // new hash system — reliable change detection across the entire file content
-              let h = 5381;
-              for (let i = 0, len = text.length; i < len; i++) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0;
-              const hash = String(h);
-              newHashes[file] = hash;
-              if (oldHashes[file] && oldHashes[file] !== hash) {
-                needsReload = true;
-              }
-            } catch {}
-          }
-
-          // Save current hashes for next comparison
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newHashes));
-
-          if (needsReload) {
-            // Bust the HTTP cache for all critical files before reloading
-            await Promise.all(filesToCheck.map(u => fetch(u, { cache: 'reload' }).catch(() => {})));
-            sessionStorage.setItem(reloadGuard, '1');
-            // Hard navigate to a cache-busted URL so the browser fetches a fresh index.html
-            window.location.href = window.location.pathname + '?_ml_reload=' + Date.now();
-            return;
-          }
-
-          setTimeout(() => showToast('Live copy fetched from network'), 500);
-        } catch {
-          setTimeout(() => showToast('Live copy fetched from network'), 500);
-        }
-      })();
-    }
   }
 
   return { init, hideModal, showToast };

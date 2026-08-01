@@ -12,38 +12,7 @@
   <link rel="apple-touch-icon" href="appico.png">
   <link rel="icon" type="image/png" href="appico.png">
   <link rel="manifest" href="manifest.json">
-  <script>
-    const _s = JSON.parse(localStorage.getItem('metro_settings') || '{}');
-    const _cb = _s.disableCache ? '?t=' + Date.now() : '';
-    if (_s.disableCache) {
-      document.write('<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">');
-      document.write('<meta http-equiv="Pragma" content="no-cache">');
-      document.write('<meta http-equiv="Expires" content="0">');
-      // Nuke all Cache API caches immediately so the SW cannot serve stale files
-      if ('caches' in window) caches.keys().then(function(n) { n.forEach(function(k) { caches.delete(k); }); });
-      // Force reload when page is restored from bfcache
-      window.addEventListener('pageshow', function(e) { if (e.persisted) window.location.href = window.location.pathname + '?_ml_reload=' + Date.now(); });
-      // When the page becomes visible again reload to pick up code changes
-      var _mlLoaded = false;
-      window.addEventListener('load', function() { setTimeout(function() { _mlLoaded = true; }, 1500); });
-      document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && _mlLoaded && navigator.onLine) window.location.href = window.location.pathname + '?_ml_reload=' + Date.now();
-      });
-    }
-    if (_s.disableCache) {
-      // Load CSS via synchronous XHR with cache busting to avoid FOUC and bypass HFS caching
-      var _xhr = new XMLHttpRequest();
-      _xhr.open('GET', './style.css?_nc=' + Date.now(), false);
-      _xhr.send();
-      if (_xhr.status === 200) {
-        var _style = document.createElement('style');
-        _style.textContent = _xhr.responseText;
-        document.head.appendChild(_style);
-      }
-    } else {
-      document.write('<link rel="stylesheet" href="style.css">');
-    }
-  </script>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -197,46 +166,13 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script>
-    if (_s.disableCache) {
-      // When cache is disabled, use fetch with no-store to guarantee browser bypasses ALL HTTP caches
-      (async function() {
-        var _files = ['services/weather.js', 'services/news.js', 'services/spotify.js', 'app.js'];
-        for (var i = 0; i < _files.length; i++) {
-          try {
-            var _r = await fetch('./' + _files[i], { cache: 'no-store' });
-            var _code = await _r.text();
-            var _el = document.createElement('script');
-            _el.textContent = _code;
-            document.body.appendChild(_el);
-          } catch(e) {
-            console.error('Failed to load ' + _files[i], e);
-          }
-        }
-        // Scripts loaded after DOMContentLoaded already fired so manually init
-        if (typeof App !== 'undefined' && App.init) App.init();
-      })();
-    } else {
-      document.write('<script src="services/weather.js"><\/script>');
-      document.write('<script src="services/news.js"><\/script>');
-      document.write('<script src="services/spotify.js"><\/script>');
-      document.write('<script src="app.js"><\/script>');
-    }
-  </script>
+  <script src="services/weather.js"></script>
+  <script src="services/news.js"></script>
+  <script src="services/spotify.js"></script>
+  <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        try {
-          const s = JSON.parse(localStorage.getItem('metro_settings') || '{}');
-          if (s.disableCache) {
-            navigator.serviceWorker.getRegistrations().then(regs => {
-              for (const reg of regs) reg.unregister();
-            });
-            console.log('ServiceWorker registration skipped (cache disabled)');
-            return;
-          }
-        } catch (e) {}
-
         navigator.serviceWorker.register('./sw.js')
           .then(() => {
             console.log('ServiceWorker registration successful');
