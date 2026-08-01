@@ -254,6 +254,35 @@ const App = (() => {
 
   // STATE
   let tiles = [];
+
+  let hapticTriggerFn = null;
+  async function initHaptics() {
+    if (!settings.hapticOnTouch) return;
+    if (!hapticTriggerFn) {
+      try {
+        const m = await import('./ios-haptics.js');
+        hapticTriggerFn = m.hapticTrigger;
+      } catch (e) { return; }
+    }
+    applyHapticToEls(document.querySelectorAll('#launcher-mobile .header-btn'));
+    if (gridEl && gridEl.id === 'tile-grid-mobile') {
+      applyHapticToEls(gridEl.querySelectorAll('.tile'));
+    }
+  }
+
+  function applyHapticToEls(elements) {
+    if (!settings.hapticOnTouch || !hapticTriggerFn || window.innerWidth > 600) return;
+    elements.forEach(el => {
+      if (!el._hapticApplied) { 
+        hapticTriggerFn(el); 
+        if (el.classList.contains('tile')) {
+          el.style.position = 'absolute'; 
+        }
+        el._hapticApplied = true; 
+      }
+    });
+  }
+
   let settings = {
     bgUrl: '',
     bgBlur: 20,
@@ -633,6 +662,10 @@ const App = (() => {
       el.append(badge, handle);
       gridEl.appendChild(el);
     });
+
+    if (settings.hapticOnTouch) {
+      initHaptics();
+    }
 
     gridEl.classList.toggle('edit-mode', editMode);
 
@@ -1131,6 +1164,7 @@ const App = (() => {
     sheet.style.marginBottom = '30px';
     overlay.classList.add('visible');
     overlay.onclick = (e) => { if (e.target === overlay) hideModal(); };
+    applyHapticToEls(sheet.querySelectorAll('button, .toggle-switch, .edit-badge'));
   }
 
   function hideModal() {
@@ -1160,6 +1194,7 @@ const App = (() => {
       `</div>` +
       `</div>`;
     document.body.appendChild(overlay);
+    applyHapticToEls(overlay.querySelectorAll('button'));
     overlay.querySelector('.confirm-cancel').onclick = () => overlay.remove();
     overlay.querySelector('.confirm-danger').onclick = () => { overlay.remove(); onConfirm(); };
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
@@ -1183,6 +1218,7 @@ const App = (() => {
       `</div>` +
       `</div>`;
     document.body.appendChild(overlay);
+    applyHapticToEls(overlay.querySelectorAll('button'));
     overlay.querySelector('.confirm-danger').onclick = () => { overlay.remove(); onConfirm(); };
     if (secondaryLabel) {
       overlay.querySelector('.confirm-cancel').onclick = () => { overlay.remove(); onSecondary(); };
@@ -2245,10 +2281,16 @@ const App = (() => {
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will stop cleaning characters and beautification of other user-facing text feilds</div>
 
           <div class="toggle-row" style="margin-top: 12px;">
+            <span class="toggle-label">Haptic tap on touch</span>
+            <div class="toggle-switch${settings.hapticOnTouch ? ' on' : ''}" id="haptic-touch-toggle"></div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - works on ios 17.4 to 26.4 ONLY - see haptics JS file for credit</div>
+
+          <div class="toggle-row" style="margin-top: 12px;">
             <span class="toggle-label">Completely disable cache</span>
             <div class="toggle-switch${settings.disableCache ? ' on' : ''}" id="disable-cache-toggle"></div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">useful for testing the app because it will auto update every time without changing the version</div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">useful for testing the app because it will auto update every time without changing the version on server - may not work on some browsers despite being on and agressive de-caching</div>
           
           <div style="${opacityStyle}">
             <div class="toggle-row" style="margin-top: 12px;">
@@ -2303,6 +2345,16 @@ const App = (() => {
           settings.disableRegexCleaning = regexOff;
           applySettings();
           render();
+        };
+
+        const hapticToggle = document.getElementById('haptic-touch-toggle');
+        let hapticOff = !!settings.hapticOnTouch;
+        hapticToggle.onclick = () => {
+          hapticOff = !hapticOff;
+          hapticToggle.classList.toggle('on', hapticOff);
+          settings.hapticOnTouch = hapticOff;
+          applySettings();
+          if (hapticOff) initHaptics();
         };
 
         const cacheToggle = document.getElementById('disable-cache-toggle');
@@ -2735,6 +2787,8 @@ const App = (() => {
       document.getElementById('btn-bg-m').onclick = showSettingsModal;
       document.getElementById('btn-reload-m').onclick = handleRefreshClick;
     }
+
+    initHaptics();
 
     // toggle desktop menu
     const btnMenu = document.getElementById('btn-menu');
