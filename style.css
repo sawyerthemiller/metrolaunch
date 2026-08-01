@@ -754,31 +754,7 @@ body:not(.is-desktop) .header {
   /* to hide blur edges */
 }
 
-@keyframes spotifyMelt {
-  0% { transform: scale(2.0) translate(0%, 0%) rotate(0deg); filter: blur(16px) saturate(130%) brightness(90%) hue-rotate(0deg); }
-  25% { transform: scale(2.4) translate(6%, 12%) rotate(90deg); filter: blur(20px) saturate(130%) brightness(100%) hue-rotate(15deg); }
-  50% { transform: scale(2.2) translate(-6%, 8%) rotate(180deg); filter: blur(16px) saturate(130%) brightness(90%) hue-rotate(-10deg); }
-  75% { transform: scale(2.4) translate(6%, -12%) rotate(270deg); filter: blur(20px) saturate(130%) brightness(100%) hue-rotate(20deg); }
-  100% { transform: scale(2.0) translate(0%, 0%) rotate(360deg); filter: blur(16px) saturate(130%) brightness(90%) hue-rotate(0deg); }
-}
 
-.spotify-bg-blur.melting {
-  background-size: cover;
-  animation: spotifyMelt var(--spotify-melt-speed, 15s) infinite linear;
-  filter: brightness(0.9);
-  opacity: 1.0;
-}
-
-.spotify-content.melting-active::before {
-  content: "";
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  background-color: #000;
-  z-index: -1;
-}
 
 .spotify-track {
   position: relative;
@@ -866,7 +842,6 @@ body:not(.is-desktop) .header {
 }
 
 .modal-overlay.visible {
-  display: flex;
   opacity: 1;
   pointer-events: auto;
 }

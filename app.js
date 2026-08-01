@@ -446,8 +446,7 @@ const App = (() => {
     // disable forced font
     document.body.classList.toggle('disable-forced-font', !!settings.disableForcedFont);
 
-    // spotify melt speed
-    document.documentElement.style.setProperty('--spotify-melt-speed', `${settings.spotifyMeltSpeed || 15}s`);
+    // removed spotify melt speed
 
     saveSettings();
     startLiveTileFlip();
@@ -1157,19 +1156,80 @@ const App = (() => {
   }
 
   // MODAL SYSTEM
+  let modalQueue = [];
+  let isModalAnimating = false;
+
   function showModal(html) {
-    const overlay = document.getElementById('modal-overlay');
-    const sheet = document.getElementById('modal-sheet');
-    sheet.innerHTML = html;
-    sheet.style.marginBottom = '30px';
-    overlay.classList.add('visible');
-    overlay.onclick = (e) => { if (e.target === overlay) hideModal(); };
-    applyHapticToEls(sheet.querySelectorAll('button, .toggle-switch, .edit-badge'));
+    return new Promise(resolve => {
+      if (isModalAnimating) {
+        modalQueue.push({ action: 'show', html: html, resolve: resolve });
+        return;
+      }
+
+      const overlay = document.getElementById('modal-overlay');
+      
+      if (overlay.classList.contains('visible') && overlay.style.display !== 'none') {
+        modalQueue.unshift({ action: 'show', html: html, resolve: resolve });
+        hideModal();
+        return;
+      }
+
+      isModalAnimating = true;
+      const sheet = document.getElementById('modal-sheet');
+      sheet.innerHTML = html;
+      sheet.style.marginBottom = '30px';
+      
+      resolve(); // HTML is in the DOM, callers can now bind events safely
+      
+      overlay.style.display = 'flex';
+      void overlay.offsetWidth; // Force reflow
+      overlay.classList.add('visible');
+      
+      overlay.onclick = (e) => { if (e.target === overlay) hideModal(); };
+      applyHapticToEls(sheet.querySelectorAll('button, .toggle-switch, .edit-badge'));
+
+      setTimeout(() => {
+        isModalAnimating = false;
+        processModalQueue();
+      }, 300); // 300ms transition time
+    });
   }
 
   function hideModal() {
-    document.getElementById('modal-overlay').classList.remove('visible');
-    document.getElementById('modal-sheet').style.marginBottom = '';
+    return new Promise(resolve => {
+      if (isModalAnimating) {
+        modalQueue.push({ action: 'hide', resolve: resolve });
+        return;
+      }
+      
+      const overlay = document.getElementById('modal-overlay');
+      if (!overlay.classList.contains('visible')) {
+        resolve();
+        return;
+      }
+
+      isModalAnimating = true;
+      overlay.classList.remove('visible');
+      document.getElementById('modal-sheet').style.marginBottom = '';
+
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        isModalAnimating = false;
+        resolve();
+        processModalQueue();
+      }, 300); // 300ms transition time
+    });
+  }
+
+  function processModalQueue() {
+    if (modalQueue.length > 0) {
+      const next = modalQueue.shift();
+      if (next.action === 'show') {
+        showModal(next.html).then(next.resolve);
+      } else if (next.action === 'hide') {
+        hideModal().then(next.resolve);
+      }
+    }
   }
 
   function metroConfirm(title, message, dangerLabel, onConfirm, color = '#ff6b6b', reverseBtns = false) {
@@ -1410,9 +1470,9 @@ const App = (() => {
   }
 
   // CREATE TILE MODAL
-  function showCreateModal() {
+  async function showCreateModal() {
     const dc = ALL_COLORS[Math.floor(Math.random() * ALL_COLORS.length)];
-    showModal(`
+    await showModal(`
       <h2>New Tile</h2>
       <div class="form-group">
         <label>App Name</label>
@@ -1673,10 +1733,10 @@ const App = (() => {
   }
 
   // WEATHER EDITOR
-  function showWeatherEditor() {
+  async function showWeatherEditor() {
     const tile = tiles.find(t => t.id === WEATHER_TILE_ID);
     if (!tile) return;
-    showModal(`
+    await showModal(`
       <h2>Weather Tile</h2>
       <div class="form-group">
         <label>Postal / Zip Code</label>
@@ -1750,10 +1810,10 @@ const App = (() => {
     };
   }
 
-  function showNewsEditor() {
+  async function showNewsEditor() {
     const tile = tiles.find(t => t.id === NEWS_TILE_ID);
     if (!tile) return;
-    showModal(`
+    await showModal(`
       <h2>News Tile</h2>
       <div class="form-group">
         <label>Tile Size</label>
@@ -1802,10 +1862,10 @@ const App = (() => {
     };
   }
 
-  function showSpotifyEditor() {
+  async function showSpotifyEditor() {
     const tile = tiles.find(t => t.id === SPOTIFY_TILE_ID);
     if (!tile) return;
-    showModal(`
+    await showModal(`
       <h2>Spotify Tile</h2>
       <div class="form-group">
         <label>Tile Size</label>
@@ -1907,9 +1967,9 @@ const App = (() => {
     return settings.collapsedSections?.[key] ? ' collapsed' : '';
   }
 
-  function showSettingsModal() {
+  async function showSettingsModal() {
     // collapsedSections accessed via sectionClass() helper
-    showModal(`
+    await showModal(`
       <h2>Settings</h2>
 
       <div class="modal-actions" style="margin-bottom:12px;">
@@ -2031,7 +2091,7 @@ const App = (() => {
           <div class="toggle-switch${settings.launchAnim !== false ? ' on' : ''}" id="launch-anim-toggle"></div>
         </div>
         <div class="form-group" style="margin-top:8px;">
-          <label>Header says this</label>
+          <label>Header title says</label>
           <input type="text" id="header-title-input" value="${escHtml(settings.headerTitle || 'Hello')}" placeholder="Hello" autocomplete="off">
         </div>
         <div class="form-group">
@@ -2053,7 +2113,7 @@ const App = (() => {
           <div class="toggle-switch${settings.advancedEnabled ? ' on' : ''}" id="advanced-toggle"></div>
         </div>
         <div class="modal-actions" style="margin-top:8px; margin-bottom:0;">
-          <button class="btn-secondary" id="advanced-settings-pill" style="border-radius: 9999px;" ${!settings.advancedEnabled ? 'disabled' : ''}>View More Settings</button>
+          <button class="btn-secondary" id="settings-adv" style="border-radius: 9999px;" ${!settings.advancedEnabled ? 'disabled' : ''}>View More Settings</button>
         </div>
       </div>
 
@@ -2232,19 +2292,19 @@ const App = (() => {
 
     let advOn = !!settings.advancedEnabled;
     const advToggle = document.getElementById('advanced-toggle');
-    const advPill = document.getElementById('advanced-settings-pill');
+    const advPill = document.getElementById('settings-adv');
     if (advToggle) {
       advToggle.onclick = () => {
         advOn = !advOn;
         advToggle.classList.toggle('on', advOn);
         advPill.disabled = !advOn;
       };
-      advPill.onclick = () => {
+      advPill.onclick = async () => {
         settings.advancedEnabled = advOn;
         const sTile = tiles.find(t => t.id === SPOTIFY_TILE_ID);
         const meltAllowed = settings.spotifyEnabled && sTile && sTile.spotifyCoverArt;
         const opacityStyle = meltAllowed ? '' : 'opacity: 0.5; pointer-events: none;';
-        showModal(`
+        await showModal(`
           <h2>Advanced & Experimental</h2>
           <div id="adv-warning-box" style="margin-bottom: 24px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; text-align: left;">
             <div id="adv-warning-expanded" style="display: ${settings.advWarningCollapsed ? 'none' : 'block'};">
@@ -2293,14 +2353,10 @@ const App = (() => {
           
           <div style="${opacityStyle}">
             <div class="toggle-row" style="margin-top: 12px;">
-              <span class="toggle-label">Melt the album artwork</span>
+              <span class="toggle-label">Lock spotify tile during playback</span>
               <div class="toggle-switch${settings.spotifyMeltEnabled ? ' on' : ''}" id="spotify-melt-toggle"></div>
             </div>
-            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 4px; margin-top: -8px;">turns the album cover into a medley of colors and locks the live tile in its display state during playback - lower values look more realistic</div>
-            <div class="form-group" style="margin-top: 8px;">
-              <label>Animation speed - <span id="melt-speed-val">${settings.spotifyMeltSpeed || 15}</span>s</label>
-              <input type="range" id="spotify-melt-speed" min="5" max="20" value="${settings.spotifyMeltSpeed || 15}" dir="rtl" ${meltAllowed ? '' : 'disabled'}>
-            </div>
+            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 4px; margin-top: -8px;">locks the live tile in its display state during playback</div>
           </div>
 
           <div class="modal-actions" style="margin-top:24px;">
@@ -2356,8 +2412,6 @@ const App = (() => {
           if (hapticOff) initHaptics();
         };
 
-        // cacheToggle stub retained in HTML but logic removed
-
         const meltToggle = document.getElementById('spotify-melt-toggle');
         let meltOn = !!settings.spotifyMeltEnabled;
         if (meltAllowed) {
@@ -2366,16 +2420,8 @@ const App = (() => {
             meltToggle.classList.toggle('on', meltOn);
             settings.spotifyMeltEnabled = meltOn;
             applySettings();
-            render();
           };
         }
-
-        const meltSpeedSlider = document.getElementById('spotify-melt-speed');
-        meltSpeedSlider.oninput = () => {
-          document.getElementById('melt-speed-val').textContent = meltSpeedSlider.value;
-          settings.spotifyMeltSpeed = parseInt(meltSpeedSlider.value, 10);
-          applySettings();
-        };
       };
     }
 
@@ -2476,8 +2522,8 @@ const App = (() => {
     };
 
     document.getElementById('settings-sw-check').onclick = async () => {
-      hideModal();
-      showModal('<h2>Service Worker Checker</h2><div class="weather-nodata" style="padding:24px 0;">Checking cache\u2026</div>');
+        hideModal();
+        await showModal('<h2>Service Worker Checker</h2><div class="weather-nodata" style="padding:24px 0;">Checking cache\u2026</div>');
 
       const REQUIRED_ASSETS = [
         './', './index.html', './style.css', './app.js',
@@ -2512,7 +2558,7 @@ const App = (() => {
           if (found) cachedCount++;
         }
       } catch {
-        showModal('<h2>Service Worker Checker</h2><div class="weather-nodata" style="padding:24px 0;">Cache API unavailable... Are you in a secure context such as HTTPS?</div><div class="modal-actions"><button class="btn-primary" id="sw-check-close">Close</button></div>');
+        await showModal('<h2>Service Worker Checker</h2><div class="weather-nodata" style="padding:24px 0;">Cache API unavailable... Are you in a secure context such as HTTPS?</div><div class="modal-actions"><button class="btn-primary" id="sw-check-close">Close</button></div>');
         document.getElementById('sw-check-close').onclick = hideModal;
         return;
       }
@@ -2529,7 +2575,7 @@ const App = (() => {
         </div>`
       ).join('');
 
-      showModal(`
+      await showModal(`
         <h2>Service Worker Checker</h2>
         <div style="text-align:center;padding:12px 0;">
           <div style="font-size:36px;font-weight:700;color:${statusColor};">${pct}%</div>
@@ -2743,6 +2789,52 @@ const App = (() => {
   }
 
   // INIT
+  async function checkOWMApiKey() {
+    if ((!settings.weatherApiKey || !settings.weatherCountry) && !settings.skipApiKeyPrompt) {
+      await showModal(`
+        <h2>Welcome</h2>
+        <p style="font-size: 14px; margin-bottom: 20px; color: rgba(255,255,255,0.8);">
+          Please enter your (free) OWM API key. Get it <a href="https://old.openweathermap.org/price" target="_blank" style="color: var(--accent); text-decoration: none;">here.</a>
+        </p>
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="text" id="inp-owm-api" placeholder="Enter API Key" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Country Code</label>
+          <input type="text" id="inp-owm-country" placeholder="e.g. us" autocomplete="off">
+        </div>
+        <div class="modal-actions" style="display: flex; gap: 10px;">
+          <button class="btn-primary" id="btn-skip-owm" style="background: rgba(255,255,255,0.1); color: #fff;">Skip This</button>
+          <button class="btn-primary" id="btn-save-owm">Save</button>
+        </div>
+      `);
+      document.getElementById('btn-skip-owm').onclick = () => {
+        settings.skipApiKeyPrompt = true;
+        saveSettings();
+        hideModal();
+      };
+      document.getElementById('btn-save-owm').onclick = () => {
+        const apiKey = document.getElementById('inp-owm-api').value.trim();
+        const countryCode = document.getElementById('inp-owm-country').value.trim();
+        if (!apiKey || !countryCode) {
+          showToast('Please enter both key and country code');
+          return;
+        }
+        settings.weatherApiKey = apiKey;
+        settings.weatherCountry = countryCode.toLowerCase();
+        saveSettings();
+        hideModal();
+        showToast('Settings saved');
+        if (settings.weatherZip) WeatherService.start();
+      };
+    } else {
+      if (settings.weatherZip) WeatherService.start();
+      // Run the update check only when we're not simultaneously other modals
+      checkForUpdate();
+    }
+  }
+
   function init() {
     if (checkPlatformGate()) return;
 
@@ -2911,49 +3003,6 @@ const App = (() => {
     render();
     setupInput();
     startLiveTileFlip();
-    if ((!settings.weatherApiKey || !settings.weatherCountry) && !settings.skipApiKeyPrompt) {
-      showModal(`
-        <h2>Welcome</h2>
-        <p style="font-size: 14px; margin-bottom: 20px; color: rgba(255,255,255,0.8);">
-          Please enter your (free) OWM API key. Get it <a href="https://old.openweathermap.org/price" target="_blank" style="color: var(--accent); text-decoration: none;">here.</a>
-        </p>
-        <div class="form-group">
-          <label>API Key</label>
-          <input type="text" id="inp-owm-api" placeholder="Enter API Key" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>Country Code</label>
-          <input type="text" id="inp-owm-country" placeholder="e.g. us" autocomplete="off">
-        </div>
-        <div class="modal-actions" style="display: flex; gap: 10px;">
-          <button class="btn-primary" id="btn-skip-owm" style="background: rgba(255,255,255,0.1); color: #fff;">Skip This</button>
-          <button class="btn-primary" id="btn-save-owm">Save</button>
-        </div>
-      `);
-      document.getElementById('btn-skip-owm').onclick = () => {
-        settings.skipApiKeyPrompt = true;
-        saveSettings();
-        hideModal();
-      };
-      document.getElementById('btn-save-owm').onclick = () => {
-        const apiKey = document.getElementById('inp-owm-api').value.trim();
-        const countryCode = document.getElementById('inp-owm-country').value.trim();
-        if (!apiKey || !countryCode) {
-          showToast('Please enter both key and country code');
-          return;
-        }
-        settings.weatherApiKey = apiKey;
-        settings.weatherCountry = countryCode.toLowerCase();
-        saveSettings();
-        hideModal();
-        showToast('Settings saved');
-        if (settings.weatherZip) WeatherService.start();
-      };
-    } else {
-      if (settings.weatherZip) WeatherService.start();
-      // Run the update check only when we're not simultaneously other modals
-      checkForUpdate();
-    }
     if (settings.newsEnabled) NewsService.start();
     if (settings.spotifyEnabled) SpotifyService.start();
 
@@ -2973,8 +3022,7 @@ const App = (() => {
     });
 
     window.addEventListener('resize', () => { computeCellSize(); render(); });
-
-
+    checkOWMApiKey();
   }
 
   return { init, hideModal, showToast };

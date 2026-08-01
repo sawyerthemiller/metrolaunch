@@ -143,7 +143,6 @@
   function _renderSpotifyTile(el, parsedTrack, parsedArtist, coverUrl, shadeText) {
     const escHtml = deps.escHtml;
     const settings = deps.getSettings();
-    const meltClass = settings.spotifyMeltEnabled ? 'spotify-bg-blur melting' : 'spotify-bg-blur';
     const shadeTextClass = shadeText ? ' spotify-text-shade' : '';
     
     let blurEl = el.querySelector('.spotify-bg-blur');
@@ -153,7 +152,7 @@
     
     if (!blurEl || !trackEl || !artistEl || !wrapperEl) {
       el.innerHTML =
-        `<div class="${meltClass}"></div>` +
+        `<div class="spotify-bg-blur"></div>` +
         `<div class="spotify-text-wrapper${shadeTextClass}">` +
         `<div class="spotify-track"></div>` +
         `<div class="spotify-artist"></div>` +
@@ -162,11 +161,9 @@
       trackEl = el.querySelector('.spotify-track');
       artistEl = el.querySelector('.spotify-artist');
     } else {
-      blurEl.className = meltClass;
+      blurEl.className = 'spotify-bg-blur';
       wrapperEl.className = `spotify-text-wrapper${shadeTextClass}`;
     }
-    
-    el.classList.toggle('melting-active', !!(settings.spotifyMeltEnabled && coverUrl));
     
     if (coverUrl) {
       blurEl.style.backgroundImage = `url("${coverUrl.replace(/"/g, '\\"')}")`;
