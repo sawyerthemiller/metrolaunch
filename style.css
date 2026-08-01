@@ -602,6 +602,7 @@ body:not(.is-desktop) .header {
   font-weight: 200;
   line-height: 1.1;
   color: #fff;
+  white-space: nowrap;
 }
 
 .weather-condition {
