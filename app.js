@@ -273,6 +273,7 @@ const App = (() => {
     weatherEnabled: true,
     newsEnabled: false,
     newsLowercase: false,
+    newsCapitaliseFirst: false,
     spotifyEnabled: false,
     hideSmallLabels: false,
     gridlock: true,
@@ -1943,6 +1944,16 @@ const App = (() => {
           <span class="toggle-label">Force lowercase news</span>
           <div class="toggle-switch${settings.newsLowercase ? ' on' : ''}" id="news-lc-toggle"></div>
         </div>
+        <div class="toggle-row" id="news-cap-row" style="margin-top: -6px;">
+          <div style="display: flex; align-items: center; padding-left: 24px;">
+            <svg width="24" height="18" viewBox="0 0 24 18" id="news-cap-arrow" style="margin-left: -24px; margin-right: 6px; stroke: #888; fill: none; stroke-width: 1.5px; stroke-linejoin: round; stroke-linecap: round; opacity: ${settings.newsLowercase ? '1' : '0.5'};">
+               <path d="M4 -8 L4 8 Q 4 12 8 12 L 22 12" />
+               <path d="M19 9 L 22 12 L 19 15" />
+            </svg>
+            <span class="toggle-label" id="news-cap-label" style="color: ${settings.newsLowercase ? 'var(--text)' : '#888'};">Still capitalise first letter</span>
+          </div>
+          <div class="toggle-switch${settings.newsCapitaliseFirst && settings.newsLowercase ? ' on' : ''}" id="news-cap-toggle" style="opacity: ${settings.newsLowercase ? '1' : '0.5'}; pointer-events: ${settings.newsLowercase ? 'auto' : 'none'};"></div>
+        </div>
       </div>
 
       <div class="form-divider"></div>
@@ -2105,10 +2116,38 @@ const App = (() => {
 
     let newsLc = !!settings.newsLowercase;
     const newsLcToggle = document.getElementById('news-lc-toggle');
+    const newsCapToggle = document.getElementById('news-cap-toggle');
+    const newsCapLabel = document.getElementById('news-cap-label');
+    const newsCapArrow = document.getElementById('news-cap-arrow');
+    
+    let newsCap = !!settings.newsCapitaliseFirst;
+    
     newsLcToggle.onclick = () => {
       newsLc = !newsLc;
       newsLcToggle.classList.toggle('on', newsLc);
+      if (newsCapToggle) {
+        if (newsLc) {
+           newsCapToggle.style.pointerEvents = 'auto';
+           newsCapToggle.style.opacity = '1';
+           newsCapLabel.style.color = 'var(--text)';
+           newsCapArrow.style.opacity = '1';
+        } else {
+           newsCapToggle.style.pointerEvents = 'none';
+           newsCapToggle.style.opacity = '0.5';
+           newsCapLabel.style.color = '#888';
+           newsCapArrow.style.opacity = '0.5';
+           newsCap = false;
+           newsCapToggle.classList.remove('on');
+        }
+      }
     };
+
+    if (newsCapToggle) {
+      newsCapToggle.onclick = () => {
+        newsCap = !newsCap;
+        newsCapToggle.classList.toggle('on', newsCap);
+      };
+    }
 
     let spotifyOn = !!settings.spotifyEnabled;
     const spotifyToggle = document.getElementById('spotify-toggle');
@@ -2160,11 +2199,11 @@ const App = (() => {
           <div id="adv-warning-box" style="margin-bottom: 24px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; text-align: left;">
             <div id="adv-warning-expanded" style="display: ${settings.advWarningCollapsed ? 'none' : 'block'};">
               <div style="display: flex; align-items: stretch;">
-                <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding-right: 16px; padding-bottom: 12px; color: #facc15;">
+                <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0 12px 10px 0; color: #facc15;">
                   <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
                 </div>
                 <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
-                <div style="flex: 1; padding-left: 16px; padding-bottom: 12px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
+                <div style="flex: 1; padding-left: 12px; padding-bottom: 12px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
                   Starting in version 1.7.0, large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
                 </div>
               </div>
@@ -2505,6 +2544,7 @@ const App = (() => {
       const wasNewsOn = settings.newsEnabled;
       settings.newsEnabled = newsOn;
       settings.newsLowercase = newsLc;
+      settings.newsCapitaliseFirst = newsCap;
 
       const wasWeatherOn = settings.weatherEnabled !== false;
       settings.weatherEnabled = weatherOn;
@@ -2882,7 +2922,61 @@ const App = (() => {
     window.addEventListener('resize', () => { computeCellSize(); render(); });
 
     if (settings.disableCache) {
-      setTimeout(() => showToast('Live copy fetched from network'), 500);
+      // Auto-freshness detects server-side changes and reload without manual purge
+      (async () => {
+        try {
+          if (!navigator.onLine) return;
+
+          // Guard against infinite reload loops — if we just reloaded for freshness, don't check again
+          const reloadGuard = '_ml_freshness_reload';
+          if (sessionStorage.getItem(reloadGuard)) {
+            sessionStorage.removeItem(reloadGuard);
+            setTimeout(() => showToast('Live copy fetched from network'), 500);
+            return;
+          }
+
+          // Fetch critical files directly from the server (bypassing HTTP cache)
+          const filesToCheck = [
+            './version.txt', './app.js', './style.css', './index.html',
+            './services/weather.js', './services/news.js', './services/spotify.js'
+          ];
+
+          // We store a simple hash of each file from the last successful load
+          const STORAGE_KEY = '_ml_file_hashes';
+          const oldHashes = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
+          const newHashes = {};
+          let needsReload = false;
+
+          for (const file of filesToCheck) {
+            try {
+              const res = await fetch(`${file}?_nocache=${Date.now()}`, { cache: 'no-store' });
+              if (!res.ok) continue;
+              const text = await res.text();
+              // Simple hash uses length + first and last chars + a sample from the middle
+              const hash = text.length + ':' + text.charCodeAt(0) + ':' + text.charCodeAt(Math.floor(text.length / 2)) + ':' + text.charCodeAt(text.length - 1);
+              newHashes[file] = hash;
+              if (oldHashes[file] && oldHashes[file] !== hash) {
+                needsReload = true;
+              }
+            } catch {}
+          }
+
+          // Save current hashes for next comparison
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newHashes));
+
+          if (needsReload) {
+            // Bust the HTTP cache for all critical files before reloading
+            await Promise.all(filesToCheck.map(u => fetch(u, { cache: 'reload' }).catch(() => {})));
+            sessionStorage.setItem(reloadGuard, '1');
+            location.reload();
+            return;
+          }
+
+          setTimeout(() => showToast('Live copy fetched from network'), 500);
+        } catch {
+          setTimeout(() => showToast('Live copy fetched from network'), 500);
+        }
+      })();
     }
   }
 

@@ -114,7 +114,7 @@
     const settings = deps.getSettings();
     const escHtml = deps.escHtml;
     const offline = !navigator.onLine;
-    const lc = settings.newsLowercase ? ' style="text-transform:lowercase"' : '';
+    let lc = settings.newsLowercase ? ' style="text-transform:lowercase"' : '';
     document.querySelectorAll('.news-back-content').forEach(el => {
       if (offline) {
         // blank while offline — the `online` listener will refetch and repaint
@@ -123,8 +123,16 @@
       }
       const item = currentItem();
       if (item) {
+        let title = cleanHeadline(item.title);
+        if (settings.newsLowercase && settings.newsCapitaliseFirst) {
+          lc = '';
+          title = title.toLowerCase();
+          if (title.length > 0 && title[0].match(/[a-z]/i)) {
+            title = title.charAt(0).toUpperCase() + title.slice(1);
+          }
+        }
         el.innerHTML =
-          `<div class="news-headline"${lc}>${escHtml(cleanHeadline(item.title))}</div>` +
+          `<div class="news-headline"${lc}>${escHtml(title)}</div>` +
           `<div class="news-source">Hacker News</div>`;
       } else {
         el.innerHTML = '<div class="weather-nodata">Loading headlines\u2026</div>';

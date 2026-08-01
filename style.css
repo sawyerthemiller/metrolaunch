@@ -811,7 +811,7 @@ body:not(.is-desktop) .header {
 .spotify-text-shade {
   background-color: rgba(0, 0, 0, 0.55);
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: var(--tile-radius);
   width: 92%;
   box-sizing: border-box;
 }

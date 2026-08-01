@@ -12,7 +12,26 @@
   <link rel="apple-touch-icon" href="appico.png">
   <link rel="icon" type="image/png" href="appico.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <script>
+    const _s = JSON.parse(localStorage.getItem('metro_settings') || '{}');
+    const _cb = _s.disableCache ? '?t=' + Date.now() : '';
+    if (_s.disableCache) {
+      document.write('<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">');
+      document.write('<meta http-equiv="Pragma" content="no-cache">');
+      document.write('<meta http-equiv="Expires" content="0">');
+      // Nuke all Cache API caches immediately so the SW cannot serve stale files
+      if ('caches' in window) caches.keys().then(function(n) { n.forEach(function(k) { caches.delete(k); }); });
+      // Force reload when page is restored from bfcache (back/forward, iOS app resume)
+      window.addEventListener('pageshow', function(e) { if (e.persisted) location.reload(); });
+      // When the page becomes visible again (iOS app switching, tab switching), reload to pick up code changes
+      var _mlLoaded = false;
+      window.addEventListener('load', function() { setTimeout(function() { _mlLoaded = true; }, 1500); });
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && _mlLoaded && navigator.onLine) location.reload();
+      });
+    }
+    document.write('<link rel="stylesheet" href="style.css' + _cb + '">');
+  </script>
 </head>
 
 <body>
@@ -166,10 +185,12 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script src="services/weather.js"></script>
-  <script src="services/news.js"></script>
-  <script src="services/spotify.js"></script>
-  <script src="app.js"></script>
+  <script>
+    document.write('<script src="services/weather.js' + _cb + '"><\/script>');
+    document.write('<script src="services/news.js' + _cb + '"><\/script>');
+    document.write('<script src="services/spotify.js' + _cb + '"><\/script>');
+    document.write('<script src="app.js' + _cb + '"><\/script>');
+  </script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
