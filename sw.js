@@ -1,4 +1,4 @@
-const CACHE_NAME = 'metro-launcher-v17';
+const CACHE_NAME = 'metro-launcher-v18';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -60,6 +60,12 @@ self.addEventListener('fetch', event => {
     if (!event.request.url.startsWith('http')) return;
 
     const url = new URL(event.request.url);
+
+    // If the request has cache-busting paramsget out of the way
+    // I'm not in your way chef... GORDON - 'Fuck off upstairs then!!!'
+    if (url.searchParams.has('t') || url.searchParams.has('_nocache') || url.searchParams.has('_ml_reload')) {
+        return;
+    }
     
     // explicitly prevent caching of dynamic data for live tiles
     if (url.hostname.includes('leopardindustries.net') ||  // for spotify status

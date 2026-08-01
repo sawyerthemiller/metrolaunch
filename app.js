@@ -614,7 +614,13 @@ const App = (() => {
         badge.addEventListener('touchend', editClick);
       } else {
         badge.innerHTML = UI_SVG.x;
-        const badgeClick = (e) => { e.stopPropagation(); e.preventDefault(); deleteTile(t.id); };
+        const badgeClick = (e) => { 
+          e.stopPropagation(); 
+          e.preventDefault(); 
+          metroConfirm('Delete Tile', 'Do you really want to delete this tile as you cannot undo this...', 'Delete', () => {
+            deleteTile(t.id);
+          }, '#ff6b6b', true);
+        };
         badge.addEventListener('click', badgeClick);
         badge.addEventListener('touchend', badgeClick);
       }
@@ -1132,16 +1138,25 @@ const App = (() => {
     document.getElementById('modal-sheet').style.marginBottom = '';
   }
 
-  function metroConfirm(title, message, dangerLabel, onConfirm, color = '#ff6b6b') {
+  function metroConfirm(title, message, dangerLabel, onConfirm, color = '#ff6b6b', reverseBtns = false) {
     const overlay = document.createElement('div');
     overlay.className = 'confirm-overlay';
+    
+    let btnHtml = '';
+    if (reverseBtns) {
+      btnHtml = `<button class="confirm-danger" style="color:${color}; border-color:${color};">${dangerLabel}</button>` +
+                `<button class="confirm-cancel">Cancel</button>`;
+    } else {
+      btnHtml = `<button class="confirm-cancel">Cancel</button>` +
+                `<button class="confirm-danger" style="color:${color}; border-color:${color};">${dangerLabel}</button>`;
+    }
+
     overlay.innerHTML =
       `<div class="confirm-box">` +
       `<h3>${title}</h3>` +
       `<p>${message}</p>` +
       `<div class="confirm-actions">` +
-      `<button class="confirm-cancel">Cancel</button>` +
-      `<button class="confirm-danger" style="color:${color}; border-color:${color};">${dangerLabel}</button>` +
+      btnHtml +
       `</div>` +
       `</div>`;
     document.body.appendChild(overlay);
@@ -1981,7 +1996,7 @@ const App = (() => {
           <div class="toggle-switch${settings.launchAnim !== false ? ' on' : ''}" id="launch-anim-toggle"></div>
         </div>
         <div class="form-group" style="margin-top:8px;">
-          <label>Header Title</label>
+          <label>Header says this</label>
           <input type="text" id="header-title-input" value="${escHtml(settings.headerTitle || 'Hello')}" placeholder="Hello" autocomplete="off">
         </div>
         <div class="form-group">
@@ -2153,7 +2168,7 @@ const App = (() => {
     const spotifyToggle = document.getElementById('spotify-toggle');
     spotifyToggle.onclick = () => {
       if (!spotifyOn) {
-        metroAlert('Hold up...', 'This WILL NOT work out of the box. You must read the github read-me for information on how to set this up. A Mac with Python installed is required...');
+        metroAlert('Hold up...', 'This WILL NOT work out of the box. You must read the github read-me for information on how to set this up. A computer with Python installed is required...');
       }
       spotifyOn = !spotifyOn;
       spotifyToggle.classList.toggle('on', spotifyOn);
@@ -2298,13 +2313,16 @@ const App = (() => {
           settings.disableCache = cacheOff;
           applySettings();
           if (cacheOff) {
+            // Clear stale freshness hashes so next load sees all files as new
+            sessionStorage.removeItem('_ml_file_hashes');
             await nukeServiceWorkerAndCaches();
           } else {
             if ('serviceWorker' in navigator) {
               navigator.serviceWorker.register('./sw.js');
             }
           }
-          render();
+          // Hard reload so the toggle takes full effect immediately
+          window.location.href = window.location.pathname + '?_ml_reload=' + Date.now();
         };
 
         const meltToggle = document.getElementById('spotify-melt-toggle');
@@ -2915,7 +2933,7 @@ const App = (() => {
       WeatherService.updateFace();
       NewsService.updateFace();
       SpotifyService.updateFace();
-      // Snap any live tile that happens to be mid-flip back to its frontface
+      // Snap any live tile that happens to be middle of flip back to its frontface
       document.querySelectorAll('.live-tile .live-tile-inner').forEach(inner => flipTile(inner, false));
     });
 
@@ -2952,8 +2970,10 @@ const App = (() => {
               const res = await fetch(`${file}?_nocache=${Date.now()}`, { cache: 'no-store' });
               if (!res.ok) continue;
               const text = await res.text();
-              // Simple hash uses length + first and last chars + a sample from the middle
-              const hash = text.length + ':' + text.charCodeAt(0) + ':' + text.charCodeAt(Math.floor(text.length / 2)) + ':' + text.charCodeAt(text.length - 1);
+              // new hash system — reliable change detection across the entire file content
+              let h = 5381;
+              for (let i = 0, len = text.length; i < len; i++) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0;
+              const hash = String(h);
               newHashes[file] = hash;
               if (oldHashes[file] && oldHashes[file] !== hash) {
                 needsReload = true;
@@ -2968,7 +2988,8 @@ const App = (() => {
             // Bust the HTTP cache for all critical files before reloading
             await Promise.all(filesToCheck.map(u => fetch(u, { cache: 'reload' }).catch(() => {})));
             sessionStorage.setItem(reloadGuard, '1');
-            location.reload();
+            // Hard navigate to a cache-busted URL so the browser fetches a fresh index.html
+            window.location.href = window.location.pathname + '?_ml_reload=' + Date.now();
             return;
           }
 
