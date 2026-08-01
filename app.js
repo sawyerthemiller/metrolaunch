@@ -2501,7 +2501,7 @@ const App = (() => {
       const REQUIRED_ASSETS = [
         './', './index.html', './style.css', './app.js',
         './services/weather.js', './services/news.js', './services/spotify.js',
-        './manifest.json', './version.txt',
+        './manifest.json', './version.txt', './ios-haptics.js',
         './segoe-ui-supro.otf',
         './weather_bg/01d.jpg', './weather_bg/01n.jpg',
         './weather_bg/02d.jpg', './weather_bg/02n.jpg',
