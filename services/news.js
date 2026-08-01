@@ -32,14 +32,15 @@
       .replace(/\s*\[([^\]]+)\]/g, ' $1')
       .replace(/[-+\u2013\u2014\u2212]\s*\$/g, '')
 
-      .replace(/["'’”“`@:;+\u00B1$?,\u235C\u2192]/g, '')
+      .replace(/["'’”“`@:;+\u00B1$?,\u235C\u2192•·]/g, '')
       .replace(/[\u2013\u2014_]/g, '-')
       .replace(/\s*\.{3,}$/, '...')
       .replace(/ő/g, 'o')
       .replace(/\bvs\./gi, 'vs')
       .replace(/\b0+(\d+)/g, '$1')
 
-      .trim();
+      .trim()
+      .replace(/([^.])\.$/, '$1');
   }
 
   function cacheGet() {
@@ -133,6 +134,7 @@
         }
         el.innerHTML =
           `<div class="news-headline"${lc}>${escHtml(title)}</div>` +
+          `<div class="news-divider"></div>` +
           `<div class="news-source">Hacker News</div>`;
       } else {
         el.innerHTML = '<div class="weather-nodata">Loading headlines\u2026</div>';

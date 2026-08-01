@@ -105,8 +105,8 @@
     el.innerHTML =
       `<div class="weather-bg-blur"${bgStyle}></div>` +
       `<div class="weather-location">${escHtml(data.location)}</div>` +
-      `<div class="weather-temp">${escHtml(data.temp)}</div>` +
-      `<div class="weather-condition">${escHtml(data.condition)}</div>`;
+      `<div class="weather-condition">${escHtml(data.condition)}</div>` +
+      `<div class="weather-temp">${escHtml(data.temp)}</div>`;
   }
 
   function updateFace() {
