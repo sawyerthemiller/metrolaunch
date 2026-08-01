@@ -2307,29 +2307,27 @@ const App = (() => {
         await showModal(`
           <h2>Advanced & Experimental</h2>
           <div id="adv-warning-box" style="margin-bottom: 24px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; text-align: left;">
-            <div id="adv-warning-grid" style="display: grid; grid-template-rows: ${settings.advWarningCollapsed ? '0fr 1fr' : '1fr 0fr'}; transition: grid-template-rows 0.3s ease-out;">
-              <div style="overflow: hidden;">
-                <div id="adv-warning-expanded" style="opacity: ${settings.advWarningCollapsed ? '0' : '1'}; transition: opacity 0.3s ease-out; padding-bottom: 4px;">
-                  <div style="display: flex; align-items: stretch;">
-                    <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0 12px 10px 0; color: #facc15;">
-                      <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-                    </div>
-                    <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
-                    <div style="flex: 1; padding-left: 12px; padding-bottom: 12px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
-                      Starting in version 1.7.0 large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
-                    </div>
+            <div id="adv-warning-expanded" style="max-height: ${settings.advWarningCollapsed ? '0px' : '400px'}; opacity: ${settings.advWarningCollapsed ? '0' : '1'}; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease;">
+              <div style="padding-bottom: 4px;">
+                <div style="display: flex; align-items: stretch;">
+                  <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0 12px 10px 0; color: #facc15;">
+                    <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
                   </div>
-                  <div style="height: 1px; background: rgba(255, 255, 255, 0.2); margin-bottom: 12px;"></div>
-                  <div id="adv-warning-collapse-btn" style="text-align: center; font-size: 11px; letter-spacing: 1px; cursor: pointer; color: var(--text-muted); font-weight: bold;">
-                    COLLAPSE
+                  <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
+                  <div style="flex: 1; padding-left: 12px; padding-bottom: 12px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
+                    Starting in version 1.7.0 large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
                   </div>
+                </div>
+                <div style="height: 1px; background: rgba(255, 255, 255, 0.2); margin-bottom: 12px;"></div>
+                <div id="adv-warning-collapse-btn" style="text-align: center; font-size: 11px; letter-spacing: 1px; cursor: pointer; color: var(--text-muted); font-weight: bold;">
+                  COLLAPSE
                 </div>
               </div>
-              <div style="overflow: hidden;">
-                <div id="adv-warning-collapsed" style="opacity: ${settings.advWarningCollapsed ? '1' : '0'}; transition: opacity 0.3s ease-out; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); font-size: 13px; font-weight: bold; height: 100%; min-height: 24px; padding: 4px 0;">
-                  <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="margin-right: 8px; color: #facc15;"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-                  View Warning Information
-                </div>
+            </div>
+            <div id="adv-warning-collapsed" style="max-height: ${settings.advWarningCollapsed ? '100px' : '0px'}; opacity: ${settings.advWarningCollapsed ? '1' : '0'}; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease;">
+              <div style="display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); font-size: 13px; font-weight: bold; padding: 4px 0;">
+                <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="margin-right: 8px; color: #facc15;"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                View Warning Information
               </div>
             </div>
           </div>
@@ -2349,7 +2347,7 @@ const App = (() => {
             <span class="toggle-label">Haptic tap on touch</span>
             <div class="toggle-switch${settings.hapticOnTouch ? ' on' : ''}" id="haptic-touch-toggle"></div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - works on ios 17.4 to 26.4 ONLY - see haptics JS file for credit</div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - might work on ios 17.4 to 26.4 ONLY - see haptics JS file for credit</div>
 
           <div class="toggle-row" style="margin-top: 12px; display: none;">
             <span class="toggle-label">Completely disable cache</span>
@@ -2376,17 +2374,19 @@ const App = (() => {
 
         document.getElementById('adv-warning-collapse-btn').onclick = () => {
           settings.advWarningCollapsed = true;
-          document.getElementById('adv-warning-grid').style.gridTemplateRows = '0fr 1fr';
+          document.getElementById('adv-warning-expanded').style.maxHeight = '0px';
           document.getElementById('adv-warning-expanded').style.opacity = '0';
+          document.getElementById('adv-warning-collapsed').style.maxHeight = '100px';
           document.getElementById('adv-warning-collapsed').style.opacity = '1';
           applySettings();
         };
 
         document.getElementById('adv-warning-collapsed').onclick = () => {
           settings.advWarningCollapsed = false;
-          document.getElementById('adv-warning-grid').style.gridTemplateRows = '1fr 0fr';
-          document.getElementById('adv-warning-expanded').style.opacity = '1';
+          document.getElementById('adv-warning-collapsed').style.maxHeight = '0px';
           document.getElementById('adv-warning-collapsed').style.opacity = '0';
+          document.getElementById('adv-warning-expanded').style.maxHeight = '400px';
+          document.getElementById('adv-warning-expanded').style.opacity = '1';
           applySettings();
         };
 
