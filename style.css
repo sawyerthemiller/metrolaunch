@@ -337,6 +337,8 @@ body:not(.is-desktop) .header {
 
 .tile {
   position: absolute;
+  left: 0;
+  top: 0;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--tile-radius);
   cursor: pointer;
@@ -348,8 +350,7 @@ body:not(.is-desktop) .header {
   overflow: hidden;
   transition:
     transform var(--transition),
-    left var(--transition),
-    top var(--transition),
+    translate var(--transition),
     width var(--transition),
     height var(--transition),
     opacity 0.15s;
@@ -835,6 +836,8 @@ body:not(.is-desktop) .header {
 
 .drop-placeholder {
   position: absolute;
+  left: 0;
+  top: 0;
   background: rgba(255, 255, 255, 0.05);
   border: 1px dashed rgba(255, 255, 255, 0.25);
   border-radius: var(--tile-radius);
@@ -889,6 +892,26 @@ body.is-desktop .modal-overlay {
 
 .modal-sheet::-webkit-scrollbar {
   display: none;
+}
+
+.modal-sheet.all-collapsed {
+  padding-top: 0;
+}
+
+.modal-sheet.all-collapsed::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  display: block;
+  height: 8px;
+  background: #000;
+  z-index: 10;
+  margin-left: -22px;
+  margin-right: -22px;
+}
+
+.modal-sheet.all-collapsed h2 {
+  margin-top: 16px;
 }
 
 body.is-desktop .modal-sheet {

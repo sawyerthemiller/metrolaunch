@@ -558,7 +558,7 @@ const App = (() => {
 
       const px = tilePx(t);
       Object.assign(el.style, {
-        left: `${px.x}px`, top: `${px.y}px`,
+        translate: `${px.x}px ${px.y}px`,
         width: `${px.w}px`, height: `${px.h}px`,
       });
 
@@ -827,7 +827,7 @@ const App = (() => {
 
     let ph = gridEl.querySelector('.drop-placeholder');
     if (!ph) { ph = document.createElement('div'); ph.className = 'drop-placeholder'; gridEl.appendChild(ph); }
-    Object.assign(ph.style, { left: `${px.x}px`, top: `${px.y}px`, width: `${px.w}px`, height: `${px.h}px` });
+    Object.assign(ph.style, { translate: `${px.x}px ${px.y}px`, width: `${Math.round(px.w)}px`, height: `${Math.round(px.h)}px` });
   }
 
   function moveDrag(clientX, clientY) {
@@ -874,8 +874,7 @@ const App = (() => {
     const newX = clientX - rect.left - dragState.offsetX;
     const newY = clientY - rect.top - dragState.offsetY;
 
-    el.style.left = `${newX}px`;
-    el.style.top = `${newY}px`;
+    el.style.translate = `${newX}px ${newY}px`;
     el.style.transition = 'none';
 
     const snapCol = clamp(Math.round(newX / (cellSize + GRID_GAP)), 0, GRID_COLS - TILE_SIZES[tile.size].cols);
@@ -902,10 +901,9 @@ const App = (() => {
 
       const ph = gridEl.querySelector('.drop-placeholder');
       if (ph) {
-        ph.style.left = `${snapCol * (cellSize + GRID_GAP)}px`;
-        ph.style.top = `${snapRow * (cellSize + GRID_GAP)}px`;
-        ph.style.width = `${s.cols * cellSize + (s.cols - 1) * GRID_GAP}px`;
-        ph.style.height = `${s.rows * cellSize + (s.rows - 1) * GRID_GAP}px`;
+        ph.style.translate = `${snapCol * (cellSize + GRID_GAP)}px ${snapRow * (cellSize + GRID_GAP)}px`;
+        ph.style.width = `${Math.round(s.cols * cellSize + (s.cols - 1) * GRID_GAP)}px`;
+        ph.style.height = `${Math.round(s.rows * cellSize + (s.rows - 1) * GRID_GAP)}px`;
       }
       dragState._snapCol = snapCol;
       dragState._snapRow = snapRow;
@@ -916,8 +914,7 @@ const App = (() => {
         const oel = gridEl.querySelector(`[data-id="${ot.id}"]`);
         if (oel) {
           const op = tilePx(ot);
-          oel.style.left = `${op.x}px`;
-          oel.style.top = `${op.y}px`;
+          oel.style.translate = `${op.x}px ${op.y}px`;
         }
       });
     }
@@ -2138,6 +2135,13 @@ const App = (() => {
 
     document.getElementById('modal-sheet').style.marginBottom = '30px';
 
+    const checkAllCollapsed = () => {
+      const titles = document.querySelectorAll('.form-section-title[data-section]');
+      if (!titles.length) return;
+      const allCollapsed = Array.from(titles).every(t => t.classList.contains('collapsed'));
+      document.getElementById('modal-sheet').classList.toggle('all-collapsed', allCollapsed);
+    };
+
     // collapsible sections
     const localCollapsed = { ...(settings.collapsedSections || {}) };
     document.querySelectorAll('.form-section-title[data-section]').forEach(title => {
@@ -2150,8 +2154,10 @@ const App = (() => {
         body.classList.toggle('collapsed', isCollapsed);
         settings.collapsedSections = localCollapsed;
         saveSettings();
+        checkAllCollapsed();
       };
     });
+    checkAllCollapsed();
 
     const blurSlider = document.getElementById('bg-blur');
     const darkenSlider = document.getElementById('bg-darken');
@@ -2641,7 +2647,10 @@ const App = (() => {
       settings.launchAnim = launchAnimOn;
       settings.advancedEnabled = advOn;
       if (!advOn) {
-        settings.advancedFeatures = false;
+        settings.disableForcedFont = false;
+        settings.disableRegexCleaning = false;
+        settings.hapticOnTouch = false;
+        settings.spotifyMeltEnabled = false;
       }
       settings.headerTitle = document.getElementById('header-title-input').value.trim() || 'Hello';
       settings.labelAlignment = document.getElementById('label-alignment-sel').value;
