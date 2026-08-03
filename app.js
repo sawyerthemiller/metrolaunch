@@ -58,7 +58,7 @@ document.addEventListener('touchstart', (e) => {
 const App = (() => {
 
   // CONFIG
-  const GRID_COLS = 6;
+  let GRID_COLS = 6;
   const GRID_GAP = 4;
   const LONG_PRESS_MS = 500;
   const STORAGE_KEY = 'metro_launcher_tiles';
@@ -357,8 +357,9 @@ const App = (() => {
     const contentH = maxRow * (cellSize + GRID_GAP);
     // Extra room only while editing/dragging so tiles can be moved past the last row
     // Outside edit mode, snug the grid to its actual content so it doesn't scroll for no reason
-    const buffer = editMode ? 120 : 0;
-    return contentH + buffer;
+    const baseBuffer = editMode ? 120 : 0;
+    const navBuffer = settings.windowsNavBar ? 50 : 0;
+    return contentH + baseBuffer + navBuffer;
   }
 
   function hexToRgba(hex, opacity01) {
@@ -427,6 +428,10 @@ const App = (() => {
     // tile border radius
     document.documentElement.style.setProperty('--tile-radius', `${settings.tileRadius || 0}px`);
 
+    // live tile text scale based on grid columns
+    const liveTileScale = 6 / GRID_COLS;
+    document.documentElement.style.setProperty('--live-tile-scale', liveTileScale.toFixed(2));
+
     // hide dynamic content or notch
     document.querySelectorAll('.header').forEach(h => {
       h.classList.toggle('hide-dynamic', !!settings.hideDynamicContent);
@@ -469,7 +474,7 @@ const App = (() => {
     const s = TILE_SIZES[tile.size];
     if (col < 0 || col + s.cols > GRID_COLS || row < 0) return false;
     for (const t of tiles) {
-      if (t.id === excludeId) continue;
+      if (t.id === excludeId || t.visibility === 'search') continue;
       if (overlaps({ ...tile, col, row }, t)) return false;
     }
     return true;
@@ -484,7 +489,7 @@ const App = (() => {
       moved = false;
       iterations++;
       for (const t of tiles) {
-        if (t.id === changedId) continue;
+        if (t.id === changedId || t.visibility === 'search') continue;
         if (overlaps(changed, t)) {
           const sc = TILE_SIZES[changed.size];
           t.row = changed.row + sc.rows;
@@ -494,7 +499,7 @@ const App = (() => {
       if (moved) {
         for (let i = 0; i < tiles.length; i++) {
           for (let j = i + 1; j < tiles.length; j++) {
-            if (tiles[i].id === changedId || tiles[j].id === changedId) continue;
+            if (tiles[i].visibility === 'search' || tiles[j].visibility === 'search') continue;
             if (overlaps(tiles[i], tiles[j])) {
               const si = TILE_SIZES[tiles[i].size];
               if (tiles[j].row < tiles[i].row + si.rows) {
@@ -516,6 +521,7 @@ const App = (() => {
       changed = false;
       iters++;
       for (const t of sorted) {
+        if (t.visibility === 'search') continue;
         // canPlace reads tile size internally
         let bestRow = t.row;
         for (let r = 0; r < t.row; r++) {
@@ -529,11 +535,11 @@ const App = (() => {
     }
   }
 
-  function findNextFreeSpot(size) {
+  function findNextFreeSpot(size, excludeId = null) {
     const s = TILE_SIZES[size];
     for (let row = 0; row < 200; row++) {
       for (let col = 0; col <= GRID_COLS - s.cols; col++) {
-        if (canPlace({ size }, col, row, null)) return { col, row };
+        if (canPlace({ size }, col, row, excludeId)) return { col, row };
       }
     }
     return { col: 0, row: 0 };
@@ -549,6 +555,8 @@ const App = (() => {
     const useGlobalColor = settings.globalColorEnabled && settings.globalColor;
 
     tiles.forEach(t => {
+      if (t.visibility === 'search') return;
+      
       const el = document.createElement('div');
       el.className = 'tile';
       el.dataset.id = t.id;
@@ -610,16 +618,7 @@ const App = (() => {
       } else {
         const iconWrap = document.createElement('div');
         iconWrap.className = 'tile-icon';
-        if (t.icon && ICONS[t.icon]) {
-          iconWrap.innerHTML = svgIcon(t.icon);
-        } else if (t.icon && (t.icon.startsWith('http') || t.icon.startsWith('data:'))) {
-          let extraStyle = '';
-          if (t.iconForceWhite) extraStyle += 'filter: brightness(0) invert(1); ';
-          if (t.iconScale && t.iconScale !== 1.0) extraStyle += `transform: scale(${t.iconScale}); `;
-          iconWrap.innerHTML = `<img src="${escHtml(t.icon)}" alt="" draggable="false" style="${extraStyle.trim()}">`;
-        } else {
-          iconWrap.innerHTML = svgIcon('cube');
-        }
+        iconWrap.innerHTML = getTileIconHtml(t);
 
         const label = document.createElement('div');
         label.className = 'tile-label';
@@ -752,7 +751,7 @@ const App = (() => {
       let extraStyle = '';
       if (tile.iconForceWhite) extraStyle += 'filter: brightness(0) invert(1); ';
       if (tile.iconScale && tile.iconScale !== 1.0) extraStyle += `transform: scale(${tile.iconScale}); `;
-      iconEl.innerHTML = `<img src="${escHtml(tile.icon)}" alt="" style="${extraStyle.trim()}">`;
+      iconEl.innerHTML = getTileIconHtml(tile);
     } else {
       iconEl.innerHTML = svgIcon('cube');
     }
@@ -2128,6 +2127,10 @@ const App = (() => {
           <div class="toggle-switch${settings.disableDateInHeader ? ' on' : ''}" id="disable-date-toggle"></div>
         </div>
         <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also move the main text to be vertically aligned</div>
+        <div class="toggle-row" style="opacity: ${settings.advancedEnabled && settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.advancedEnabled && settings.windowsNavBar ? 'auto' : 'none'};">
+          <span class="toggle-label">Hide app icons in search</span>
+          <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideSearchIcons ? ' on' : ''}" id="hide-search-icons-toggle"></div>
+        </div>
         <div class="toggle-row">
           <span class="toggle-label">Mask dynamic content</span>
           <div class="toggle-switch${settings.hideDynamicContent ? ' on' : ''}" id="hdc-toggle"></div>
@@ -2252,6 +2255,13 @@ const App = (() => {
       disableDateEnabled = !disableDateEnabled;
       disableDateToggle.classList.toggle('on', disableDateEnabled);
     };
+
+    let hideSearchIconsEnabled = (settings.advancedEnabled && settings.windowsNavBar) ? !!settings.hideSearchIcons : false;
+    const hideSearchIconsToggle = document.getElementById('hide-search-icons-toggle');
+    hideSearchIconsToggle.onclick = () => {
+      hideSearchIconsEnabled = !hideSearchIconsEnabled;
+      hideSearchIconsToggle.classList.toggle('on', hideSearchIconsEnabled);
+    };
     
     let lhOn = !!settings.lightHeader;
     const lhToggle = document.getElementById('light-header-toggle');
@@ -2367,11 +2377,28 @@ const App = (() => {
     let advOn = !!settings.advancedEnabled;
     const advToggle = document.getElementById('advanced-toggle');
     const advPill = document.getElementById('settings-adv');
+    
+    function updateHideSearchIconsState() {
+      const hideIconsRow = hideSearchIconsToggle.parentElement;
+      if (advOn && settings.windowsNavBar) {
+        hideIconsRow.style.opacity = '1';
+        hideIconsRow.style.pointerEvents = 'auto';
+      } else {
+        if (hideSearchIconsEnabled) {
+          hideSearchIconsEnabled = false;
+          hideSearchIconsToggle.classList.remove('on');
+        }
+        hideIconsRow.style.opacity = '0.5';
+        hideIconsRow.style.pointerEvents = 'none';
+      }
+    }
+
     if (advToggle) {
       advToggle.onclick = () => {
         advOn = !advOn;
         advToggle.classList.toggle('on', advOn);
         advPill.disabled = !advOn;
+        updateHideSearchIconsState();
       };
       advPill.onclick = async () => {
         settings.advancedEnabled = advOn;
@@ -2429,6 +2456,21 @@ const App = (() => {
           </div>
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also enable a beta search feature and enhance the functionality of the tiling system</div>
           
+          <div class="toggle-row" style="margin-top: 12px;">
+            <span class="toggle-label">Resize the grid (dangerous)</span>
+            <div class="toggle-switch${settings.resizeGridEnabled ? ' on' : ''}" id="resize-grid-toggle"></div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">very experimental and will mess up your current layout</div>
+          
+          <div id="grid-size-selector" style="display: ${settings.resizeGridEnabled ? 'flex' : 'none'}; justify-content: center; margin-bottom: 16px;">
+            <div style="display: flex; background: rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 4px; position: relative; width: 180px;">
+              <div id="grid-size-slider" style="position: absolute; top: 4px; left: ${settings.gridCols === 4 ? '4px' : settings.gridCols === 5 ? '61px' : '119px'}; width: 57px; height: calc(100% - 8px); background: rgba(255, 255, 255, 0.25); border-radius: 16px; transition: left 0.2s ease; border: 1px solid rgba(255,255,255,0.4); box-sizing: border-box;"></div>
+              <div class="grid-size-option" data-val="4" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">4</div>
+              <div class="grid-size-option" data-val="5" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">5</div>
+              <div class="grid-size-option" data-val="6" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">6</div>
+            </div>
+          </div>
+
           <div style="${opacityStyle}">
             <div class="toggle-row" style="margin-top: 12px;">
               <span class="toggle-label">Lock spotify tile during playback</span>
@@ -2463,6 +2505,52 @@ const App = (() => {
           document.getElementById('adv-warning-expanded').style.opacity = '1';
           applySettings();
         };
+
+        const resizeToggle = document.getElementById('resize-grid-toggle');
+        const gridSelector = document.getElementById('grid-size-selector');
+        let resizeOn = !!settings.resizeGridEnabled;
+        resizeToggle.onclick = () => {
+          resizeOn = !resizeOn;
+          resizeToggle.classList.toggle('on', resizeOn);
+          settings.resizeGridEnabled = resizeOn;
+          gridSelector.style.display = resizeOn ? 'flex' : 'none';
+          if (!resizeOn) {
+            settings.gridCols = 6;
+            GRID_COLS = 6;
+            document.getElementById('grid-size-slider').style.left = '119px';
+            applySettings();
+            save();
+            render();
+          } else {
+            applySettings();
+          }
+        };
+
+        const slider = document.getElementById('grid-size-slider');
+        document.querySelectorAll('.grid-size-option').forEach(el => {
+          el.onclick = () => {
+            if (!settings.resizeGridEnabled) return;
+            const val = parseInt(el.getAttribute('data-val'), 10);
+            settings.gridCols = val;
+            GRID_COLS = val;
+            if (val === 4) slider.style.left = '4px';
+            else if (val === 5) slider.style.left = '61px';
+            else slider.style.left = '119px';
+            
+            [...tiles].sort((a,b) => a.row !== b.row ? a.row - b.row : a.col - b.col).forEach(t => {
+              const s = TILE_SIZES[t.size];
+              if (t.col + s.cols > GRID_COLS) {
+                t.col = Math.max(0, GRID_COLS - s.cols);
+              }
+              pushTilesAway(t.id);
+            });
+            if (settings.gridlock) compactGrid();
+            
+            applySettings();
+            save();
+            render();
+          };
+        });
 
         const fontToggle = document.getElementById('disable-font-toggle');
         let fontOff = !!settings.disableForcedFont;
@@ -2500,6 +2588,7 @@ const App = (() => {
           wpNavOn = !wpNavOn;
           wpNavToggle.classList.toggle('on', wpNavOn);
           settings.windowsNavBar = wpNavOn;
+          if (!wpNavOn) settings.hideSearchIcons = false;
           if (wpNavOn) showNavBarPopupTrigger = true;
           applySettings();
         };
@@ -2618,7 +2707,7 @@ const App = (() => {
         await showModal('<h2>Service Worker Checker</h2><div class="weather-nodata" style="padding:24px 0;">Checking cache\u2026</div>');
 
       const REQUIRED_ASSETS = [
-        './', './index.html', './style.css', './app.js',
+        './', './index.html', './style.css', './app.js', './search.js',
         './services/weather.js', './services/news.js', './services/spotify.js',
         './manifest.json', './version.txt', './ios-haptics.js',
         './segoe-ui-supro.otf',
@@ -2721,6 +2810,7 @@ const App = (() => {
       settings.globalColor = document.getElementById('global-color-val').value;
       settings.hideDynamicContent = hdcEnabled;
       settings.disableDateInHeader = disableDateEnabled;
+      settings.hideSearchIcons = hideSearchIconsEnabled;
       settings.lightHeader = lhOn;
       settings.hideSmallLabels = hslOn;
       settings.gridlock = gridlockOn;
@@ -3059,6 +3149,22 @@ const App = (() => {
     if (savedSettings) {
       settings = { ...settings, ...savedSettings };
     }
+    GRID_COLS = settings.gridCols || 6;
+
+    // sanitize out of bounds tiles
+    let tilesChanged = false;
+    [...tiles].sort((a,b) => a.row !== b.row ? a.row - b.row : a.col - b.col).forEach(t => {
+      const s = TILE_SIZES[t.size];
+      if (t.col + s.cols > GRID_COLS) {
+        t.col = Math.max(0, GRID_COLS - s.cols);
+        pushTilesAway(t.id);
+        tilesChanged = true;
+      }
+    });
+    if (tilesChanged) {
+      if (settings.gridlock) compactGrid();
+      save();
+    }
 
     // ensure weather tile exists if enabled
     if (settings.weatherEnabled !== false) {
@@ -3122,9 +3228,242 @@ const App = (() => {
     checkOWMApiKey();
   }
 
-  return { init, hideModal, showToast };
+  function getTiles() { return tiles; }
+  function getSettings() { return settings; }
+
+  function getTileIconHtml(t) {
+    if (t.icon && ICONS[t.icon]) {
+      return svgIcon(t.icon);
+    } else if (t.icon && (t.icon.startsWith('http') || t.icon.startsWith('data:'))) {
+      let extraStyle = '';
+      if (t.iconForceWhite) extraStyle += 'filter: brightness(0) invert(1); ';
+      if (t.iconScale && t.iconScale !== 1.0) extraStyle += `transform: scale(${t.iconScale}); `;
+      return `<img src="${escHtml(t.icon)}" alt="" draggable="false" style="${extraStyle.trim()}">`;
+    } else {
+      return svgIcon('cube');
+    }
+  }
+
+  function showAdvancedIconControl() {
+    const sortedTiles = [...tiles].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    let html = `
+      <div class="modal-header">
+        <h2>Advanced Icon Control</h2>
+      </div>
+      <div class="modal-body" style="padding-bottom: 0;">
+        <div style="position: relative; height: 260px; margin: 0 -20px;">
+          <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--accent-color, #fff); pointer-events: none; z-index: 10;">▶</div>
+          <div id="adv-roller-list" class="hide-scrollbar" style="height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; position: relative;">
+            <div style="height: 108px;"></div>
+    `;
+    sortedTiles.forEach((t, i) => {
+      html += `
+            <div class="adv-icon-entry" data-id="${t.id}" data-index="${i}" style="height: 44px; padding: 0 20px; box-sizing: border-box; background: rgba(255,255,255,0.05); cursor: pointer; display:flex; align-items:center; scroll-snap-align: center; transition: all 0.2s; transform-origin: left center;">
+              <div style="flex:1; font-size:18px;">${escHtml(t.name || 'Unnamed')}</div>
+            </div>
+      `;
+    });
+    html += `
+            <div style="height: 108px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:20px; display:flex; justify-content:space-between;">
+        <button type="button" class="btn-cancel" onclick="window._advResetState()">Reset State</button>
+        <button type="button" onclick="App.hideModal()">OK</button>
+      </div>
+    `;
+
+    window._advResetState = function() {
+      tiles.forEach(t => {
+        if (t.visibility === 'search') {
+          t.visibility = 'both';
+          pushTilesAway(t.id);
+        } else {
+          t.visibility = 'both';
+        }
+      });
+      if (settings.gridlock) compactGrid();
+      save();
+      render();
+      document.dispatchEvent(new Event('tilesUpdated'));
+      App.hideModal();
+    };
+
+    showModal(html).then(() => {
+      const listEl = document.getElementById('adv-roller-list');
+      const cells = document.querySelectorAll('.adv-icon-entry');
+      let activeIndex = -1;
+      const cellHeight = 44;
+
+      function updateRoller() {
+        if (!cells.length) return;
+        let newActive = Math.round(listEl.scrollTop / cellHeight);
+        if (newActive < 0) newActive = 0;
+        if (newActive >= cells.length) newActive = cells.length - 1;
+
+        if (newActive !== activeIndex) {
+          activeIndex = newActive;
+          if (window.innerWidth <= 600 && navigator.vibrate && settings.hapticOnTouch) {
+            navigator.vibrate(5);
+          }
+          cells.forEach((cell, i) => {
+            if (i === activeIndex) {
+              cell.style.transform = 'scale(1)';
+              cell.style.background = 'rgba(255,255,255,0.15)';
+              cell.style.opacity = '1';
+            } else {
+              cell.style.transform = 'scale(0.85)';
+              cell.style.background = 'rgba(255,255,255,0.05)';
+              cell.style.opacity = '0.5';
+            }
+          });
+        }
+      }
+
+      listEl.addEventListener('scroll', updateRoller);
+      
+      if (cells.length > 0) {
+        const mid = Math.floor((cells.length - 1) / 2);
+        listEl.style.scrollSnapType = 'none';
+        listEl.scrollTop = mid * cellHeight;
+        updateRoller();
+        setTimeout(() => {
+          listEl.style.scrollSnapType = 'y mandatory';
+        }, 50);
+      }
+
+      cells.forEach(el => {
+        el.addEventListener('click', () => {
+          showPerTileSettings(el.getAttribute('data-id'));
+        });
+      });
+    });
+  }
+
+  function showPerTileSettings(id) {
+    const tile = tiles.find(t => t.id === id);
+    if (!tile) return;
+
+    const isLiveTile = tile.isWeather || tile.isNews || tile.isSpotify;
+    const isModified = tile.visibility && tile.visibility !== 'both';
+    const currentVis = tile.visibility || 'both';
+
+    // Store the tile id on the window so the inline onclick can access it
+    window._advTileId = id;
+
+    // Define global save function so inline onclick can always reach it
+    window._advSave = function() {
+      const t = tiles.find(x => x.id === window._advTileId);
+      if (!t) return;
+      const isLive = t.isWeather || t.isNews || t.isSpotify;
+      
+      if (isLive) {
+        const cbLive = document.getElementById('adv-live-hide');
+        if (cbLive) {
+          if (cbLive.classList.contains('checked')) {
+            t.visibility = 'tiles'; // Hidden from search
+          } else {
+            t.visibility = 'both';
+          }
+        }
+      } else {
+        const cb = document.getElementById('adv-modify-behavior');
+        const tg = document.getElementById('adv-vis-toggle');
+        const wasSearch = t.visibility === 'search';
+        if (cb && tg) {
+          if (cb.classList.contains('checked')) {
+            t.visibility = tg.classList.contains('on') ? 'search' : 'tiles';
+          } else {
+            t.visibility = 'both';
+          }
+        }
+        
+        if (wasSearch && t.visibility !== 'search') {
+          pushTilesAway(t.id);
+        }
+      }
+      
+      if (settings.gridlock) {
+        compactGrid();
+      }
+      
+      save();
+      render();
+      document.dispatchEvent(new Event('tilesUpdated'));
+      showAdvancedIconControl();
+    };
+
+    // Define global toggle helpers
+    window._advToggleCheckbox = function() {
+      var cb = document.getElementById('adv-modify-behavior');
+      var sec = document.getElementById('adv-visibility-section');
+      if (cb) cb.classList.toggle('checked');
+      var on = cb && cb.classList.contains('checked');
+      if (sec) {
+        sec.style.opacity = on ? '1' : '0.4';
+        sec.style.pointerEvents = on ? 'auto' : 'none';
+      }
+    };
+
+    window._advToggleVis = function() {
+      var tg = document.getElementById('adv-vis-toggle');
+      if (tg) tg.classList.toggle('on');
+    };
+
+    window._advToggleLiveCb = function() {
+      var cb = document.getElementById('adv-live-hide');
+      if (cb) cb.classList.toggle('checked');
+    };
+    
+    let html = `
+      <div class="modal-header">
+        <h2>advanced control - ${escHtml(tile.name || '')}</h2>
+      </div>
+      <div class="modal-body">
+    `;
+
+    if (isLiveTile) {
+      html += `
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Live tiles can only be hidden from search, so to get rid of a live tile on the start screen, turn it off in the settings...</div>
+        <div class="form-group" style="display:flex; align-items:center; cursor:pointer;" onclick="window._advToggleLiveCb()">
+          <div class="metro-checkbox${currentVis === 'tiles' ? ' checked' : ''}" id="adv-live-hide" style="margin-right:12px;"></div>
+          <span style="font-size:16px;">Hide from search</span>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="form-group" style="display:flex; align-items:center; cursor:pointer;" onclick="window._advToggleCheckbox()">
+          <div class="metro-checkbox${isModified ? ' checked' : ''}" id="adv-modify-behavior" style="margin-right:12px;"></div>
+          <span style="font-size:16px;">modify the standard behavior of this entry</span>
+        </div>
+        
+        <div id="adv-visibility-section" style="margin-top:24px; opacity:${isModified ? '1' : '0.4'}; pointer-events:${isModified ? 'auto' : 'none'}; transition:0.2s;">
+          <div style="font-size:12px; margin-bottom:8px; opacity:0.8; text-transform:uppercase; letter-spacing:1px;">show only in</div>
+          <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="window._advToggleVis()">
+            <span style="font-size:16px;">tiles screen</span>
+            <div class="toggle-switch bi-directional${currentVis === 'search' ? ' on' : ''}" id="adv-vis-toggle"></div>
+            <span style="font-size:16px;">search screen</span>
+          </div>
+        </div>
+      `;
+    }
+
+    html += `
+      </div>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button type="button" class="btn-cancel" onclick="App.showAdvancedIconControl()">Cancel</button>
+        <button type="button" onclick="window._advSave()">OK</button>
+      </div>
+    `;
+
+    showModal(html);
+  }
+
+  return { init, hideModal, showToast, getTiles, getSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl };
 })();
 
+window.App = App;
 document.addEventListener('DOMContentLoaded', App.init);
 
 // Progressive blur overlay for inputs
