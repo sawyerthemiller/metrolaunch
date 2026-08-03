@@ -3046,3 +3046,72 @@ const App = (() => {
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);
+
+// Progressive blur overlay for inputs
+(function() {
+  const overlays = new WeakMap();
+
+  const positionOverlay = (input, overlay) => {
+    overlay.style.top = (input.offsetTop + 1) + 'px';
+    overlay.style.left = (input.offsetLeft + input.offsetWidth - 45 - 1) + 'px';
+    overlay.style.width = '45px';
+    overlay.style.height = (input.offsetHeight - 2) + 'px';
+    
+    const isFocused = document.activeElement === input;
+    const hasText = input.value.length > 0;
+    if (!isFocused && hasText) {
+      overlay.style.opacity = '1';
+    } else {
+      overlay.style.opacity = '0';
+    }
+  };
+
+  const resizeObserver = new ResizeObserver(entries => {
+    for (let entry of entries) {
+      const input = entry.target;
+      const overlay = overlays.get(input);
+      if (overlay) {
+        positionOverlay(input, overlay);
+      }
+    }
+  });
+
+  const attachOverlays = () => {
+    document.querySelectorAll('.form-group input:not([type="range"]):not([type="hidden"])').forEach(input => {
+      if (!overlays.has(input)) {
+        const overlay = document.createElement('div');
+        overlay.className = 'actual-blur-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.backdropFilter = 'blur(8px)';
+        overlay.style.webkitBackdropFilter = 'blur(8px)';
+        overlay.style.maskImage = 'linear-gradient(to right, transparent, black 80%)';
+        overlay.style.webkitMaskImage = 'linear-gradient(to right, transparent, black 80%)';
+        overlay.style.transition = 'opacity 0.2s';
+        overlay.style.transform = 'translateZ(0)';
+        overlay.style.webkitTransform = 'translateZ(0)';
+        overlay.style.backfaceVisibility = 'hidden';
+        overlay.style.webkitBackfaceVisibility = 'hidden';
+        overlay.style.zIndex = '10';
+        
+        if (getComputedStyle(input.parentElement).position === 'static') {
+          input.parentElement.style.position = 'relative';
+        }
+        
+        input.parentElement.appendChild(overlay);
+        overlays.set(input, overlay);
+        resizeObserver.observe(input);
+        
+        input.addEventListener('focus', () => positionOverlay(input, overlay));
+        input.addEventListener('blur', () => positionOverlay(input, overlay));
+        input.addEventListener('input', () => positionOverlay(input, overlay));
+        
+        setTimeout(() => positionOverlay(input, overlay), 0);
+      }
+    });
+  };
+
+  const mutObserver = new MutationObserver(() => attachOverlays());
+  mutObserver.observe(document.body, { childList: true, subtree: true });
+  setTimeout(attachOverlays, 100);
+})();

@@ -970,6 +970,23 @@ body.is-desktop .modal-sheet {
   border-color: #fff;
 }
 
+.form-group input[id$="-url"]:not(:focus) {
+  text-transform: lowercase;
+}
+
+.form-group input:not([type="range"]):not([type="hidden"]):not(:focus):not(:placeholder-shown) {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-image: 
+    linear-gradient(to left, transparent 12px, var(--text) 65px),
+    linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04));
+  background-origin: padding-box, border-box;
+  background-repeat: no-repeat, no-repeat;
+  -webkit-background-clip: text, border-box;
+  background-clip: text, border-box;
+  background-color: transparent;
+}
+
 .form-group input::placeholder {
   color: rgba(255, 255, 255, 0.25);
 }
