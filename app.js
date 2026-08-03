@@ -3049,64 +3049,76 @@ document.addEventListener('DOMContentLoaded', App.init);
 
 // Progressive blur overlay for inputs
 (function() {
-  const overlays = new WeakMap();
-
-  const positionOverlay = (input, overlay) => {
-    overlay.style.top = (input.offsetTop + 1) + 'px';
-    overlay.style.left = (input.offsetLeft + input.offsetWidth - 45 - 1) + 'px';
-    overlay.style.width = '45px';
-    overlay.style.height = (input.offsetHeight - 2) + 'px';
-    
-    const isFocused = document.activeElement === input;
-    const hasText = input.value.length > 0;
-    if (!isFocused && hasText) {
-      overlay.style.opacity = '1';
-    } else {
-      overlay.style.opacity = '0';
-    }
-  };
-
-  const resizeObserver = new ResizeObserver(entries => {
-    for (let entry of entries) {
-      const input = entry.target;
-      const overlay = overlays.get(input);
-      if (overlay) {
-        positionOverlay(input, overlay);
-      }
-    }
-  });
-
   const attachOverlays = () => {
-    document.querySelectorAll('.form-group input:not([type="range"]):not([type="hidden"])').forEach(input => {
-      if (!overlays.has(input)) {
-        const overlay = document.createElement('div');
-        overlay.className = 'actual-blur-overlay';
-        overlay.style.position = 'absolute';
-        overlay.style.pointerEvents = 'none';
-        overlay.style.backdropFilter = 'blur(8px)';
-        overlay.style.webkitBackdropFilter = 'blur(8px)';
-        overlay.style.maskImage = 'linear-gradient(to right, transparent, black 80%)';
-        overlay.style.webkitMaskImage = 'linear-gradient(to right, transparent, black 80%)';
-        overlay.style.transition = 'opacity 0.2s';
-        overlay.style.transform = 'translateZ(0)';
-        overlay.style.webkitTransform = 'translateZ(0)';
-        overlay.style.backfaceVisibility = 'hidden';
-        overlay.style.webkitBackfaceVisibility = 'hidden';
-        overlay.style.zIndex = '10';
+    document.querySelectorAll('.form-group input[type="text"], .form-group input[type="number"]').forEach(input => {
+      if (!input.parentNode.classList.contains('input-blur-wrapper')) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'input-blur-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'flex';
         
-        if (getComputedStyle(input.parentElement).position === 'static') {
-          input.parentElement.style.position = 'relative';
+        if (input.parentElement.classList.contains('input-btn-row')) {
+          wrapper.style.flex = '1 1 auto';
+          wrapper.style.minWidth = '0';
+          wrapper.style.width = 'auto';
+        } else {
+          wrapper.style.width = '100%';
         }
         
-        input.parentElement.appendChild(overlay);
-        overlays.set(input, overlay);
-        resizeObserver.observe(input);
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
         
-        input.addEventListener('focus', () => positionOverlay(input, overlay));
-        input.addEventListener('blur', () => positionOverlay(input, overlay));
-        input.addEventListener('input', () => positionOverlay(input, overlay));
+        const overlay = document.createElement('input');
+        overlay.type = input.type || 'text';
+        overlay.className = input.className;
+        overlay.removeAttribute('id');
+        overlay.removeAttribute('name');
         
-        setTimeout(() => positionOverlay(input, overlay), 0);
+        overlay.style.position = 'absolute';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.margin = '0';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.background = 'transparent';
+        overlay.style.borderColor = 'transparent';
+        
+        overlay.style.color = 'rgba(255, 255, 255, 0.5)';
+        overlay.style.webkitTextFillColor = 'rgba(255, 255, 255, 0.5)';
+        overlay.style.backgroundImage = 'none';
+        overlay.style.textTransform = getComputedStyle(input).textTransform;
+        
+        overlay.style.filter = 'blur(1.25px)';
+        overlay.style.webkitFilter = 'blur(1.25px)';
+        overlay.style.maskImage = 'linear-gradient(to right, transparent calc(100% - 75px), black calc(100% - 12px))';
+        overlay.style.webkitMaskImage = 'linear-gradient(to right, transparent calc(100% - 75px), black calc(100% - 12px))';
+        overlay.style.transition = 'opacity 0.2s';
+        overlay.style.zIndex = '10';
+        overlay.tabIndex = -1;
+        
+        wrapper.appendChild(overlay);
+        
+        const sync = () => {
+          overlay.value = input.value;
+          overlay.scrollLeft = input.scrollLeft;
+          const isFocused = document.activeElement === input;
+          const hasText = input.value.length > 0;
+          overlay.style.opacity = (!isFocused && hasText) ? '1' : '0';
+        };
+        
+        input.addEventListener('focus', sync);
+        input.addEventListener('blur', () => {
+          sync();
+          requestAnimationFrame(() => {
+            sync();
+            setTimeout(sync, 50);
+          });
+        });
+        input.addEventListener('change', sync);
+        input.addEventListener('input', sync);
+        input.addEventListener('scroll', sync);
+        sync();
       }
     });
   };
