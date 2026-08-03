@@ -264,7 +264,7 @@ function showSearchContextMenu(tileId, x, y) {
   if (window.communityAPI && window.communityAPI.isSubmitEnabled() && !isDefaultApp) {
     submitHtml = `
       <div class="context-menu-item" data-action="submit">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:8px;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg> Submit to Community
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:8px;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg> Community Submit
       </div>
       <div class="context-menu-divider"></div>
     `;
@@ -297,7 +297,12 @@ function showSearchContextMenu(tileId, x, y) {
       if (tileUrl.toLowerCase().startsWith('livecontainer://')) {
         if (window.showToast) window.showToast('Not allowed for community submission');
       } else if (window.communityAPI) {
-        window.communityAPI.submitApp(tile);
+        window.communityAPI.submitApp({
+          name: tile.name,
+          iconUrl: tile.icon || '',
+          color: tile.color || '#0078d4',
+          launchUrl: tileUrl
+        });
       }
     }
   };

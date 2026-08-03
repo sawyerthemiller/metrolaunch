@@ -1025,7 +1025,7 @@ const App = (() => {
       inner.style.alignItems = 'center';
       inner.style.justifyContent = 'center';
       inner.style.color = 'rgba(255, 255, 255, 0.7)';
-      inner.style.fontFamily = '"Segoe UI", sans-serif';
+      inner.style.fontFamily = '"Segoe UI Supro", sans-serif';
       inner.style.fontSize = '14px';
       inner.textContent = 'Empty folder';
     } else {
@@ -1516,30 +1516,32 @@ const App = (() => {
     // ---- Folder hover detection ----
     // We only allow dropping into EXISTING folders. No folder creation via drag-and-drop.
     let hoverTarget = null;
-    const dragS = TILE_SIZES[tile.size];
-    const dragW = dragS.cols * cellSize + (dragS.cols - 1) * GRID_GAP;
-    const dragH = dragS.rows * cellSize + (dragS.rows - 1) * GRID_GAP;
-    const dragCenterX = newX + dragW / 2;
-    const dragCenterY = newY + dragH / 2;
+    if (!isSpecialTile(tile)) {
+      const dragS = TILE_SIZES[tile.size];
+      const dragW = dragS.cols * cellSize + (dragS.cols - 1) * GRID_GAP;
+      const dragH = dragS.rows * cellSize + (dragS.rows - 1) * GRID_GAP;
+      const dragCenterX = newX + dragW / 2;
+      const dragCenterY = newY + dragH / 2;
 
-    for (const ot of tiles) {
-      if (ot.id === tile.id || ot.visibility === 'search') continue;
-      if (!isFolder(ot)) continue; // ONLY target existing folders
-      
-      const otS = TILE_SIZES[ot.size];
-      const otX = ot.col * (cellSize + GRID_GAP);
-      const otY = ot.row * (cellSize + GRID_GAP);
-      const otW = otS.cols * cellSize + (otS.cols - 1) * GRID_GAP;
-      const otH = otS.rows * cellSize + (otS.rows - 1) * GRID_GAP;
-      
-      // Center 60% of the target folder is the drop zone
-      const marginW = otW * 0.2;
-      const marginH = otH * 0.2;
-      
-      if (dragCenterX >= otX + marginW && dragCenterX <= otX + otW - marginW &&
-          dragCenterY >= otY + marginH && dragCenterY <= otY + otH - marginH) {
-        hoverTarget = ot;
-        break;
+      for (const ot of tiles) {
+        if (ot.id === tile.id || ot.visibility === 'search') continue;
+        if (!isFolder(ot)) continue; // ONLY target existing folders
+        
+        const otS = TILE_SIZES[ot.size];
+        const otX = ot.col * (cellSize + GRID_GAP);
+        const otY = ot.row * (cellSize + GRID_GAP);
+        const otW = otS.cols * cellSize + (otS.cols - 1) * GRID_GAP;
+        const otH = otS.rows * cellSize + (otS.rows - 1) * GRID_GAP;
+        
+        // Center 60% of the target folder is the drop zone
+        const marginW = otW * 0.2;
+        const marginH = otH * 0.2;
+        
+        if (dragCenterX >= otX + marginW && dragCenterX <= otX + otW - marginW &&
+            dragCenterY >= otY + marginH && dragCenterY <= otY + otH - marginH) {
+          hoverTarget = ot;
+          break;
+        }
       }
     }
     
@@ -3687,6 +3689,7 @@ const App = (() => {
     clearTimeout(showToast._t);
     showToast._t = setTimeout(() => el.classList.remove('visible'), 2000);
   }
+  window.showToast = showToast;
 
   // PLATFORM GATE
   function checkPlatformGate() {

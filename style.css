@@ -526,11 +526,11 @@ body:not(.is-desktop) .header {
 
 @keyframes tile-wobble {
   0% {
-    transform: rotate(-0.4deg);
+    rotate: -0.4deg;
   }
 
   100% {
-    transform: rotate(0.4deg);
+    rotate: 0.4deg;
   }
 }
 
