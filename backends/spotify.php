@@ -18,6 +18,8 @@
 define('DATA_FILE',   __DIR__ . '/spotify_users.json');
 define('COVER_CACHE', __DIR__ . '/spotify_cover_cache.json');
 define('CREDS_FILE',  __DIR__ . '/discogs_creds.txt');
+define('COMMUNITY_DATA_FILE', __DIR__ . '/community_apps.json');
+define('VOTE_FILE',   __DIR__ . '/unique_users.txt');
 
 // ── CORS headers ──
 header('Access-Control-Allow-Origin: *');
@@ -60,6 +62,26 @@ function load_discogs_creds(): array {
         }
     }
     return $out;
+}
+
+/**
+ * Load admin code for community endpoints
+ */
+function load_admin_code(): string {
+    if (!is_readable(CREDS_FILE)) return '';
+    $lines = @file(CREDS_FILE, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!$lines) return '';
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || $line[0] === ';') continue;
+        if (preg_match('/^[\'"]?([A-Za-z_][A-Za-z0-9_]*)[\'"]?\s*=\s*[\'"]?([^\'"]*)[\'"]?\s*$/', $line, $m)) {
+            $name  = strtoupper($m[1]);
+            if ($name === 'ADMIN_CODE') {
+                return $m[2];
+            }
+        }
+    }
+    return '';
 }
 
 // ── generic helpers ──
@@ -141,6 +163,76 @@ function read_data_locked(): array {
     if (!$raw) return [];
     $data = json_decode($raw, true);
     return is_array($data) ? $data : [];
+}
+
+/**
+ * Lock handlers for Community data
+ */
+function with_community_data_lock(callable $mutator): array {
+    $fp = @fopen(COMMUNITY_DATA_FILE, 'c+');
+    if (!$fp) {
+        json_response(['error' => 'Server data store unavailable'], 500);
+    }
+    $locked = false;
+    for ($i = 0; $i < 50; $i++) {
+        if (flock($fp, LOCK_EX | LOCK_NB)) { $locked = true; break; }
+        usleep(100_000);
+    }
+    if (!$locked) {
+        fclose($fp);
+        json_response(['error' => 'Server too busy'], 503);
+    }
+    clearstatcache(true, COMMUNITY_DATA_FILE);
+    $size = filesize(COMMUNITY_DATA_FILE);
+    $data = [];
+    if ($size > 0) {
+        rewind($fp);
+        $raw = fread($fp, $size);
+        $parsed = json_decode($raw, true);
+        if (is_array($parsed)) $data = $parsed;
+    }
+    $new_data = $mutator($data);
+    if ($new_data !== null) {
+        ftruncate($fp, 0);
+        rewind($fp);
+        fwrite($fp, json_encode($new_data, JSON_PRETTY_PRINT));
+        fflush($fp);
+    }
+    flock($fp, LOCK_UN);
+    fclose($fp);
+    return $new_data ?? $data;
+}
+
+function increment_vote_lock(): int {
+    $fp = @fopen(VOTE_FILE, 'c+');
+    if (!$fp) {
+        json_response(['error' => 'Server data store unavailable'], 500);
+    }
+    $locked = false;
+    for ($i = 0; $i < 50; $i++) {
+        if (flock($fp, LOCK_EX | LOCK_NB)) { $locked = true; break; }
+        usleep(100_000);
+    }
+    if (!$locked) {
+        fclose($fp);
+        json_response(['error' => 'Server too busy'], 503);
+    }
+    clearstatcache(true, VOTE_FILE);
+    $size = filesize(VOTE_FILE);
+    $count = 0;
+    if ($size > 0) {
+        rewind($fp);
+        $raw = fread($fp, $size);
+        $count = (int)trim($raw);
+    }
+    $count++;
+    ftruncate($fp, 0);
+    rewind($fp);
+    fwrite($fp, (string)$count);
+    fflush($fp);
+    flock($fp, LOCK_UN);
+    fclose($fp);
+    return $count;
 }
 
 // ── cover art (Discogs) ──
@@ -473,7 +565,87 @@ switch ($action) {
                 'POST ?action=update'               => 'Push song status',
                 'GET  ?action=status&username=...'  => 'Get current status',
                 'GET  ?action=cover&username=...'   => 'Get cover art image',
+                'POST ?action=vote'                 => 'Increments unique users',
+                'POST ?action=submit'               => 'Submits a custom app tile',
+                'GET  ?action=list'                 => 'Retrieves custom app tiles',
+                'POST ?action=delete'               => 'Deletes an app with ADMIN_CODE',
             ],
         ]);
+        break;
+        
+    // ── community endpoints ──
+    case 'vote':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            json_response(['error' => 'Method Not Allowed'], 405);
+        }
+        $new_count = increment_vote_lock();
+        json_response(['success' => true, 'count' => $new_count]);
+        break;
+
+    case 'list':
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            json_response(['error' => 'Method Not Allowed'], 405);
+        }
+        if (!file_exists(COMMUNITY_DATA_FILE)) {
+            json_response(['apps' => []]);
+        }
+        $raw = file_get_contents(COMMUNITY_DATA_FILE);
+        $parsed = json_decode($raw, true);
+        if (!is_array($parsed)) $parsed = [];
+        json_response(['apps' => $parsed]);
+        break;
+
+    case 'submit':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            json_response(['error' => 'Method Not Allowed'], 405);
+        }
+        $body = read_post_body();
+        if (empty($body['name'])) {
+            json_response(['error' => 'Missing app name'], 400);
+        }
+
+        $app = [
+            'id' => uniqid('ca_'),
+            'name' => $body['name'],
+            'iconUrl' => $body['iconUrl'] ?? '',
+            'color' => $body['color'] ?? '#0078d4',
+            'launchUrl' => $body['launchUrl'] ?? '',
+            'date' => date('Y/m/d')
+        ];
+
+        with_community_data_lock(function($data) use ($app) {
+            foreach ($data as $existing) {
+                if (strtolower($existing['name']) === strtolower($app['name'])) {
+                    json_response(['error' => 'That app has already been submitted'], 409);
+                }
+            }
+            $data[] = $app;
+            return $data;
+        });
+
+        json_response(['success' => true]);
+        break;
+
+    case 'delete':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            json_response(['error' => 'Method Not Allowed'], 405);
+        }
+        $body = read_post_body();
+        $provided_code = $body['admin_code'] ?? '';
+        $id = $body['id'] ?? '';
+        
+        $expected_code = load_admin_code();
+        if (empty($expected_code) || $provided_code !== $expected_code) {
+            json_response(['error' => 'Unauthorized or invalid code'], 401);
+        }
+
+        with_community_data_lock(function($data) use ($id) {
+            $filtered = array_filter($data, function($item) use ($id) {
+                return $item['id'] !== $id;
+            });
+            return array_values($filtered);
+        });
+
+        json_response(['success' => true]);
         break;
 }

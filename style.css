@@ -244,6 +244,8 @@ body:not(.is-desktop) .header {
   justify-content: center;
   transition: background 0.15s, border-color 0.15s;
   padding: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .header-btn svg {
@@ -350,11 +352,11 @@ body:not(.is-desktop) .header {
   overflow: hidden;
   transition:
     transform var(--transition),
-    translate var(--transition),
+    top var(--transition),
+    left var(--transition),
     width var(--transition),
     height var(--transition),
     opacity 0.15s;
-  will-change: transform;
   z-index: 1;
 }
 
@@ -502,6 +504,14 @@ body:not(.is-desktop) .header {
   display: block;
 }
 
+.tile-grid.folder-expanded .tile {
+  transition:
+    transform var(--transition),
+    width var(--transition),
+    height var(--transition),
+    opacity 0.15s;
+}
+
 .tile-grid.edit-mode .tile {
   animation: tile-wobble 0.35s ease-in-out infinite alternate;
 }
@@ -539,8 +549,6 @@ body:not(.is-desktop) .header {
   display: flex;
   flex-direction: column;
   transform: translateY(calc(-100% / 3));
-  will-change: transform;
-  backface-visibility: hidden;
 }
 
 .live-tile-face {
@@ -1619,6 +1627,8 @@ body.disable-forced-font * {
   outline: none;
   margin-top: 10px;
   margin-bottom: 20px;
+  border-radius: 0;
+  -webkit-appearance: none;
 }
 .search-input:focus {
   border-color: white;
@@ -1724,4 +1734,144 @@ body.disable-forced-font * {
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* ========== FOLDER TILES ========== */
+
+.folder-tile {
+  overflow: hidden;
+}
+
+.folder-tile .folder-count-face,
+.folder-tile .folder-chevron-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.folder-count-face {
+  gap: 2px;
+}
+
+.folder-app-count {
+  font-size: calc(42px * var(--live-tile-scale, 1));
+  font-weight: 300;
+  color: #fff;
+  line-height: 1;
+}
+
+/* Override any label alignment — folder name is ALWAYS centered */
+.folder-name-label {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: auto !important;
+  margin-top: 2px;
+  text-align: center !important;
+  font-size: calc(12px * var(--live-tile-scale, 1));
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.folder-type-label {
+  font-size: calc(11px * var(--live-tile-scale, 1));
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+.folder-chevron-face {
+  justify-content: center;
+}
+
+.folder-chevron {
+  width: calc(32px * var(--live-tile-scale, 1));
+  height: calc(32px * var(--live-tile-scale, 1));
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Blinking animation for folder drag hover */
+.tile.folder-blink {
+  animation: blink 0.25s ease-in-out 4; /* 2 full blinks (4 half-cycles at 0.25s) = 1s */
+}
+
+/* ========== FOLDER EXPANDED CONTAINER ========== */
+
+.folder-expanded-container {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 50;
+  border-top: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  padding: 18px 0;
+  overflow: visible;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: height 0.3s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.folder-expanded-container .tile {
+  pointer-events: auto;
+  z-index: 51;
+}
+
+/* Hide resize handle inside folder (size is changed via context menu) */
+.folder-expanded-container .tile .resize-handle {
+  display: none !important;
+}
+
+.tile.tile-pushed-by-folder {
+  z-index: 3;
+}
+
+.folder-expanded-inner {
+  position: relative;
+  width: 100%;
+  min-height: 20px;
+}
+
+.metro-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  font-size: 16px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-family: 'Segoe UI Supro';
+  outline: none;
+}
+
+.metro-input:focus {
+  border-color: #fff;
 }

@@ -62,7 +62,7 @@ function openSearch() {
     el.textContent = 'Search';
   });
   
-  document.querySelectorAll('.header-actions').forEach(el => {
+  document.querySelectorAll('.header-actions > *:not(.search-actions)').forEach(el => {
     el.style.display = 'none';
   });
   
@@ -92,7 +92,7 @@ function closeSearch() {
     }
   });
   
-  document.querySelectorAll('.header-actions').forEach(el => {
+  document.querySelectorAll('.header-actions > *:not(.search-actions)').forEach(el => {
     el.style.display = '';
   });
   
@@ -109,7 +109,7 @@ function closeSearch() {
 function renderSearchList() {
   if (!window.App) return;
   
-  const tiles = window.App.getTiles();
+  const tiles = window.App.getFlatTiles ? window.App.getFlatTiles() : window.App.getTiles();
   const settings = window.App.getSettings();
   
   // Group tiles by first letter
@@ -195,18 +195,112 @@ function renderSearchList() {
     }
     container.innerHTML = html;
     
-    // Add click listeners to items
+    // Add click and long-press listeners to items
     const items = container.querySelectorAll('.search-item');
     items.forEach(item => {
-      item.addEventListener('click', () => {
+      let longPressTimer;
+      let isLongPress = false;
+      let startX = 0;
+      let startY = 0;
+      
+      const clearTimer = () => clearTimeout(longPressTimer);
+      
+      item.addEventListener('touchstart', (e) => {
+        isLongPress = false;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        longPressTimer = setTimeout(() => {
+          isLongPress = true;
+          const id = item.getAttribute('data-id');
+          showSearchContextMenu(id, startX, startY);
+        }, 600);
+      }, {passive: true});
+      
+      item.addEventListener('touchmove', (e) => {
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > 10 || dy > 10) clearTimer();
+      }, {passive: true});
+      
+      item.addEventListener('touchend', (e) => {
+        clearTimer();
+        if (isLongPress) {
+          e.preventDefault(); // Prevent click if we handled long press
+        }
+      });
+      
+      // Desktop right click
+      item.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const id = item.getAttribute('data-id');
+        showSearchContextMenu(id, e.clientX, e.clientY);
+      });
+      
+      item.addEventListener('click', (e) => {
+        if (isLongPress) {
+          isLongPress = false;
+          return;
+        }
         const id = item.getAttribute('data-id');
         const tile = tiles.find(t => t.id === id);
-        if (tile && window.App.launchApp) {
+        if (tile && window.App && window.App.launchApp) {
           window.App.launchApp(tile);
         }
       });
     });
   });
+}
+
+function showSearchContextMenu(tileId, x, y) {
+  const menu = document.getElementById('context-menu');
+  if (!menu) return;
+  const tile = window.App ? window.App.getTiles().find(t => t.id === tileId) : null;
+  if (!tile) return;
+  
+  const DEFAULT_APP_NAMES = ['weather', 'messages', 'chrome', 'maps', 'mail', 'camera', 'settings', 'photos', 'music', 'youtube'];
+  const isDefaultApp = DEFAULT_APP_NAMES.includes((tile.name || '').toLowerCase());
+  
+  let submitHtml = '';
+  if (window.communityAPI && window.communityAPI.isSubmitEnabled() && !isDefaultApp) {
+    submitHtml = `
+      <div class="context-menu-item" data-action="submit">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:8px;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg> Submit to Community
+      </div>
+      <div class="context-menu-divider"></div>
+    `;
+  }
+  
+  menu.innerHTML = `
+    ${submitHtml}
+    <div class="context-menu-item danger" data-action="delete">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Remove
+    </div>
+  `;
+  
+  menu.style.left = `${Math.min(x, window.innerWidth - 200)}px`;
+  menu.style.top = `${Math.min(y, window.innerHeight - 100)}px`;
+  menu.classList.add('visible');
+  
+  menu.onclick = (e) => {
+    const item = e.target.closest('.context-menu-item');
+    if (!item) return;
+    const action = item.dataset.action;
+    menu.classList.remove('visible');
+    
+    if (action === 'delete') {
+      if (window.App && window.App.deleteTile) {
+        window.App.deleteTile(tileId);
+        renderSearchList();
+      }
+    } else if (action === 'submit') {
+      const tileUrl = tile.url || tile.launchUrl || '';
+      if (tileUrl.toLowerCase().startsWith('livecontainer://')) {
+        if (window.showToast) window.showToast('Not allowed for community submission');
+      } else if (window.communityAPI) {
+        window.communityAPI.submitApp(tile);
+      }
+    }
+  };
 }
 
 function escapeHtml(unsafe) {

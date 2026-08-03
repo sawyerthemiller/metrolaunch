@@ -1,9 +1,11 @@
-const CACHE_NAME = 'metro-launcher-v21';
+const CACHE_NAME = 'metro-launcher-v22';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './style.css',
     './app.js',
+    './search.js',
+    './community.js',
     './services/weather.js',
     './services/news.js',
     './services/spotify.js',
