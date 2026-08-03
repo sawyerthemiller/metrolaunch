@@ -62,8 +62,8 @@
                 <button type="button" class="header-btn" id="btn-add" title="Add tile">
                   <svg viewBox="0 0 24 24">
                     <title>Add tile</title>
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <line x1="12" y1="3" x2="12" y2="21" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
                   </svg>
                 </button>
                 <button type="button" class="header-btn edit-btn" id="btn-edit" title="Edit mode">
@@ -78,6 +78,18 @@
         </div>
         <div class="grid-scroll" id="grid-scroll-inner">
           <div class="tile-grid" id="tile-grid-inner"></div>
+        </div>
+        <!-- Windows Phone Nav Bar (Desktop) -->
+        <div class="wp-nav-bar" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: rgba(0,0,0,0.7); z-index: 1000; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+          <div class="nav-normal-icons" style="display: flex; gap: 80px; align-items: center; width: 100%; height: 100%; justify-content: center;">
+            <img src="navbar_icon/back.png" alt="Back" style="width: 32px; height: 32px; opacity: 0.7; filter: brightness(0) invert(1);">
+            <img src="navbar_icon/start.png" alt="Start" onclick="window.location.href='shortcuts://run-shortcut?name=realhome'" style="width: 28px; height: 28px; opacity: 0.7; filter: brightness(0) invert(1); cursor: pointer;">
+            <img src="navbar_icon/search.png" alt="Search" style="width: 32px; height: 32px; opacity: 0.7; filter: brightness(0) invert(1);">
+          </div>
+          <div class="nav-edit-buttons" style="display: none; width: 100%; height: 100%;">
+            <div onclick="discardEditMode()" style="flex: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; border-right: 1px solid rgba(255,255,255,0.2); font-family: 'Segoe UI Supro'; font-weight: 500;">Discard</div>
+            <div onclick="saveEditMode()" style="flex: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; font-family: 'Segoe UI Supro'; font-weight: 500;">Save</div>
+          </div>
         </div>
       </div>
     </div>
@@ -125,8 +137,8 @@
             <button type="button" class="header-btn" id="btn-add-m" title="Add tile">
               <svg viewBox="0 0 24 24">
                 <title>Add tile</title>
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
+                <line x1="12" y1="3" x2="12" y2="21" />
+                <line x1="3" y1="12" x2="21" y2="12" />
               </svg>
             </button>
             <button type="button" class="header-btn edit-btn" id="btn-edit-m" title="Edit mode">
@@ -141,6 +153,18 @@
     </div>
     <div class="grid-scroll" id="grid-scroll-mobile">
       <div class="tile-grid" id="tile-grid-mobile"></div>
+    </div>
+    <!-- Windows Phone Nav Bar (Mobile) -->
+    <div class="wp-nav-bar" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: rgba(0,0,0,0.7); z-index: 1000; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+      <div class="nav-normal-icons" style="display: flex; gap: 80px; align-items: center; width: 100%; height: 100%; justify-content: center;">
+        <img src="navbar_icon/back.png" alt="Back" style="width: 32px; height: 32px; opacity: 0.7; filter: brightness(0) invert(1);">
+        <img src="navbar_icon/start.png" alt="Start" onclick="window.location.href='shortcuts://run-shortcut?name=realhome'" style="width: 28px; height: 28px; opacity: 0.7; filter: brightness(0) invert(1); cursor: pointer;">
+        <img src="navbar_icon/search.png" alt="Search" style="width: 32px; height: 32px; opacity: 0.7; filter: brightness(0) invert(1);">
+      </div>
+      <div class="nav-edit-buttons" style="display: none; width: 100%; height: 100%;">
+        <div onclick="discardEditMode()" style="flex: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; border-right: 1px solid rgba(255,255,255,0.2); font-family: 'Segoe UI Supro'; font-weight: 500;">Discard</div>
+        <div onclick="saveEditMode()" style="flex: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; font-family: 'Segoe UI Supro'; font-weight: 500;">Save</div>
+      </div>
     </div>
   </div>
 

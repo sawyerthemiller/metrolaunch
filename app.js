@@ -317,6 +317,7 @@ const App = (() => {
   let gridEl, scrollEl, bgLayerEl;
   let dragState = null;
   let longPressTimer = null;
+  let showNavBarPopupTrigger = false;
 
   // UTILITIES
   function _uid() {
@@ -430,6 +431,7 @@ const App = (() => {
     document.querySelectorAll('.header').forEach(h => {
       h.classList.toggle('hide-dynamic', !!settings.hideDynamicContent);
       h.classList.toggle('light-bg', !!settings.lightHeader && !settings.hideDynamicContent);
+      h.classList.toggle('disable-date', !!settings.disableDateInHeader);
     });
 
     // header title
@@ -445,6 +447,10 @@ const App = (() => {
 
     // disable forced font
     document.body.classList.toggle('disable-forced-font', !!settings.disableForcedFont);
+
+    document.querySelectorAll('.wp-nav-bar').forEach(bar => {
+      bar.style.display = settings.windowsNavBar ? 'flex' : 'none';
+    });
 
     // removed spotify melt speed
 
@@ -793,11 +799,42 @@ const App = (() => {
   }
 
   // EDIT MODE
-  function toggleEditMode() {
-    editMode = !editMode;
+  let preEditPositions = {};
+
+  window.discardEditMode = function() {
+    for (const t of tiles) {
+      if (preEditPositions[t.id]) {
+        t.col = preEditPositions[t.id].col;
+        t.row = preEditPositions[t.id].row;
+      }
+    }
+    if (settings.gridlock) compactGrid();
+    save();
+    toggleEditMode(true);
+  };
+
+  window.saveEditMode = function() {
+    save();
+    toggleEditMode();
+  };
+
+  function toggleEditMode(isDiscarding = false) {
+    if (!editMode && !isDiscarding) {
+      preEditPositions = {};
+      for (const t of tiles) {
+        preEditPositions[t.id] = { col: t.col, row: t.row };
+      }
+      editMode = true;
+    } else {
+      editMode = false;
+      preEditPositions = {};
+    }
     render();
     document.querySelectorAll('.header-btn.edit-btn').forEach(b => {
       b.classList.toggle('active', editMode);
+    });
+    document.querySelectorAll('.wp-nav-bar').forEach(bar => {
+      bar.classList.toggle('is-edit', editMode);
     });
     if (editMode) showToast('Edit mode');
   }
@@ -1213,7 +1250,12 @@ const App = (() => {
         overlay.style.display = 'none';
         isModalAnimating = false;
         resolve();
+        const hasQueuedModals = modalQueue.length > 0;
         processModalQueue();
+        if (!hasQueuedModals && showNavBarPopupTrigger) {
+          showNavBarPopupTrigger = false;
+          showNavBarBetaPopup();
+        }
       }, 300); // 300ms transition time
     });
   }
@@ -1227,6 +1269,20 @@ const App = (() => {
         hideModal().then(next.resolve);
       }
     }
+  }
+
+  function showNavBarBetaPopup() {
+    metroConfirm(
+      'The Navigation Bar',
+      'This is possibly the most beta feature in the launcher yet, so apologies if it\'s not super polished...<br><br>' +
+      '<a href="https://github.com/0xjohnnydev/cyanide" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); margin-bottom: 8px; color: var(--text); text-decoration: none; position: relative;">Learn how to disable the home bar</a>' +
+      '<a href="https://github.com/leminlimez/Nugget" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); margin-bottom: 8px; color: var(--text); text-decoration: none; position: relative;">Learn how to disable the dynamic island</a>' +
+      '<a href="#" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); color: var(--text); text-decoration: none; position: relative;">Install the Apple homescreen shortcut</a>' +
+      '<style>.confirm-overlay .confirm-cancel { display: none !important; } .confirm-overlay .confirm-danger { width: 100%; }</style>',
+      'OK',
+      () => {},
+      'var(--accent)'
+    );
   }
 
   function metroConfirm(title, message, dangerLabel, onConfirm, color = '#ff6b6b', reverseBtns = false) {
@@ -2068,7 +2124,12 @@ const App = (() => {
       <div class="form-section-title${sectionClass('display')}" data-section="display">Display <span class="section-chevron">\u25BC</span></div>
       <div class="section-body${sectionClass('display')}" id="sec-display">
         <div class="toggle-row">
-          <span class="toggle-label">Hide dynamic content</span>
+          <span class="toggle-label">Disable date in header</span>
+          <div class="toggle-switch${settings.disableDateInHeader ? ' on' : ''}" id="disable-date-toggle"></div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also move the main text to be vertically aligned</div>
+        <div class="toggle-row">
+          <span class="toggle-label">Mask dynamic content</span>
           <div class="toggle-switch${settings.hideDynamicContent ? ' on' : ''}" id="hdc-toggle"></div>
         </div>
         <div class="toggle-row">
@@ -2184,6 +2245,13 @@ const App = (() => {
 
     let hdcEnabled = !!settings.hideDynamicContent;
     const hdcToggle = document.getElementById('hdc-toggle');
+    
+    let disableDateEnabled = !!settings.disableDateInHeader;
+    const disableDateToggle = document.getElementById('disable-date-toggle');
+    disableDateToggle.onclick = () => {
+      disableDateEnabled = !disableDateEnabled;
+      disableDateToggle.classList.toggle('on', disableDateEnabled);
+    };
     
     let lhOn = !!settings.lightHeader;
     const lhToggle = document.getElementById('light-header-toggle');
@@ -2321,7 +2389,7 @@ const App = (() => {
                   </div>
                   <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
                   <div style="flex: 1; padding-left: 12px; padding-bottom: 12px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
-                    Starting in version 1.7.0 large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
+                    Starting in version 2.0.0 large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
                   </div>
                 </div>
                 <div style="height: 1px; background: rgba(255, 255, 255, 0.2); margin-bottom: 12px;"></div>
@@ -2355,11 +2423,11 @@ const App = (() => {
           </div>
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - might work on ios 17.4 to 26.4 ONLY - see haptics JS file for credit</div>
 
-          <div class="toggle-row" style="margin-top: 12px; display: none;">
-            <span class="toggle-label">Completely disable cache</span>
-            <div class="toggle-switch${settings.disableCache ? ' on' : ''}" id="disable-cache-toggle"></div>
+          <div class="toggle-row" style="margin-top: 12px;">
+            <span class="toggle-label">Windows style navigation bar</span>
+            <div class="toggle-switch${settings.windowsNavBar ? ' on' : ''}" id="windows-nav-bar-toggle"></div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px; display: none;">useful for testing the app because it will auto update every time without changing the version on server - may not work on some browsers despite being on and agressive de-caching</div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also enable a beta search feature and enhance the functionality of the tiling system</div>
           
           <div style="${opacityStyle}">
             <div class="toggle-row" style="margin-top: 12px;">
@@ -2424,6 +2492,16 @@ const App = (() => {
           settings.hapticOnTouch = hapticOff;
           applySettings();
           if (hapticOff) initHaptics();
+        };
+
+        const wpNavToggle = document.getElementById('windows-nav-bar-toggle');
+        let wpNavOn = !!settings.windowsNavBar;
+        wpNavToggle.onclick = () => {
+          wpNavOn = !wpNavOn;
+          wpNavToggle.classList.toggle('on', wpNavOn);
+          settings.windowsNavBar = wpNavOn;
+          if (wpNavOn) showNavBarPopupTrigger = true;
+          applySettings();
         };
 
         const meltToggle = document.getElementById('spotify-melt-toggle');
@@ -2544,6 +2622,7 @@ const App = (() => {
         './services/weather.js', './services/news.js', './services/spotify.js',
         './manifest.json', './version.txt', './ios-haptics.js',
         './segoe-ui-supro.otf',
+        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png',
         './weather_bg/01d.jpg', './weather_bg/01n.jpg',
         './weather_bg/02d.jpg', './weather_bg/02n.jpg',
         './weather_bg/03d.jpg', './weather_bg/03n.jpg',
@@ -2641,6 +2720,7 @@ const App = (() => {
       settings.globalColorEnabled = gcEnabled;
       settings.globalColor = document.getElementById('global-color-val').value;
       settings.hideDynamicContent = hdcEnabled;
+      settings.disableDateInHeader = disableDateEnabled;
       settings.lightHeader = lhOn;
       settings.hideSmallLabels = hslOn;
       settings.gridlock = gridlockOn;

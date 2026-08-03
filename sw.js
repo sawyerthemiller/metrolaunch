@@ -1,4 +1,4 @@
-const CACHE_NAME = 'metro-launcher-v19';
+const CACHE_NAME = 'metro-launcher-v21';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -11,6 +11,9 @@ const ASSETS_TO_CACHE = [
     './version.txt',
     './ios-haptics.js',
     './segoe-ui-supro.otf',
+    './navbar_icon/back.png',
+    './navbar_icon/start.png',
+    './navbar_icon/search.png',
     './weather_bg/01d.jpg',
     './weather_bg/01n.jpg',
     './weather_bg/02d.jpg',

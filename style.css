@@ -1547,3 +1547,9 @@ body.disable-forced-font * {
     display: none !important;
   }
 }
+.wp-nav-bar.is-edit .nav-normal-icons { display: none !important; }
+.wp-nav-bar.is-edit .nav-edit-buttons { display: flex !important; }
+
+.header.disable-date .header-date { display: none !important; }
+
+.header.disable-date .header-row { min-height: 57px; }
