@@ -245,7 +245,7 @@ window.communityAPI = {
                 color: app.color,
                 size: 'small'
               });
-              if (window.showToast) window.showToast(`${app.name} added to your tiles!`);
+              if (window.showToast) window.showToast(`Was added to your tiles...`);
             }
           };
           
