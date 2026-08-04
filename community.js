@@ -193,10 +193,11 @@ window.communityAPI = {
           item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
           item.dataset.id = app.id;
           
+          const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
           item.innerHTML = `
             <div>
-              <div style="font-weight: 600; font-size: 16px;">${(app.name || '').toLowerCase()}</div>
-              <div style="font-size: 12px; opacity: 0.5;">${app.date || 'Unknown date'}</div>
+              <div style="font-weight: 600; font-size: 16px;">${esc((app.name || '').toLowerCase())}</div>
+              <div style="font-size: 12px; opacity: 0.5;">${esc(app.date || 'Unknown date')}</div>
             </div>
             <button class="comm-get-btn" style="background: var(--accent); color: white; border: none; border-radius: 20px; padding: 6px 16px; font-weight: 600; cursor: pointer;">GET</button>
           `;
