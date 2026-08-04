@@ -7,8 +7,8 @@ let isSearchOpen = false;
 let currentSearchQuery = '';
 
 function initSearch() {
-  const searchBtns = document.querySelectorAll('.nav-normal-icons img[src="navbar_icon/search.png"]');
-  const backBtns = document.querySelectorAll('.nav-normal-icons img[src="navbar_icon/back.png"]');
+  const searchBtns = document.querySelectorAll('.nav-btn-search');
+  const backBtns = document.querySelectorAll('.nav-btn-back');
   const searchInputs = document.querySelectorAll('.search-input');
   const advancedIconBtns = document.querySelectorAll('#btn-advanced-icon, #btn-advanced-icon-mobile');
   
@@ -36,6 +36,27 @@ function initSearch() {
     input.addEventListener('input', (e) => {
       currentSearchQuery = e.target.value.toLowerCase();
       renderSearchList();
+    });
+  });
+
+  const searchPages = document.querySelectorAll('.search-page');
+  searchPages.forEach(page => {
+    page.addEventListener('scroll', () => {
+      const scrollDist = page.scrollHeight - page.clientHeight;
+      if (scrollDist <= 0) return;
+      
+      const scrolled = page.scrollTop > scrollDist * 0.2;
+      
+      backBtns.forEach(btn => {
+        if (scrolled) {
+          btn.style.transform = 'rotate(90deg)';
+          btn.dataset.isUpBtn = 'true';
+        } else {
+          btn.style.transform = '';
+          btn.dataset.isUpBtn = 'false';
+        }
+        btn.style.transition = 'transform 0.2s';
+      });
     });
   });
 }
@@ -78,10 +99,22 @@ function openSearch() {
   // Clear inputs and re-render
   currentSearchQuery = '';
   document.querySelectorAll('.search-input').forEach(input => input.value = '');
+  document.querySelectorAll('.search-page').forEach(page => page.scrollTop = 0);
+  document.querySelectorAll('.nav-btn-back').forEach(btn => {
+    btn.style.transform = '';
+    btn.dataset.isUpBtn = 'false';
+  });
   renderSearchList();
 }
 
-function closeSearch() {
+function closeSearch(e) {
+  if (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.isUpBtn === 'true') {
+    document.querySelectorAll('.search-page').forEach(page => {
+      page.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    return;
+  }
+
   if (!isSearchOpen) return;
   isSearchOpen = false;
   

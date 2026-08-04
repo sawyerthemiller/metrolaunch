@@ -270,6 +270,7 @@ const App = (() => {
     if (gridEl && gridEl.id === 'tile-grid-mobile') {
       applyHapticToEls(gridEl.querySelectorAll('.tile'));
     }
+    applyHapticToEls(document.querySelectorAll('.wp-nav-bar .nav-icon-btn, .wp-nav-bar .nav-edit-buttons div'));
   }
 
   function applyHapticToEls(elements) {
@@ -1577,7 +1578,7 @@ const App = (() => {
     // We only allow dropping into EXISTING folders. No folder creation via drag-and-drop.
     let hoverTarget = null;
     const dragS = TILE_SIZES[tile.size];
-    if (!isSpecialTile(tile)) {
+    if (!isSpecialTile(tile) && !isFolder(tile)) {
       const dragW = dragS.cols * cellSize + (dragS.cols - 1) * GRID_GAP;
       const dragH = dragS.rows * cellSize + (dragS.rows - 1) * GRID_GAP;
       const dragCenterX = newX + dragW / 2;
@@ -3459,7 +3460,7 @@ const App = (() => {
             if (!settings.resizeGridEnabled) return;
             const val = parseInt(el.getAttribute('data-val'), 10);
             if (val === 6) {
-              showToast('That is default - just turn it off...');
+              showToast('That is default so just turn it off...');
               return;
             }
             settings.gridCols = val;
@@ -4399,7 +4400,7 @@ const App = (() => {
         <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Live tiles can only be hidden from search, so to get rid of a live tile on the start screen, turn it off in the settings...</div>
         <div class="form-group" style="display:flex; align-items:center; cursor:pointer;" onclick="window._advToggleLiveCb()">
           <div class="metro-checkbox${currentVis === 'tiles' ? ' checked' : ''}" id="adv-live-hide" style="margin-right:12px;"></div>
-          <span style="font-size:16px;">Hide from search</span>
+          <span style="font-size:16px;">disable from search list</span>
         </div>
       `;
     } else {
