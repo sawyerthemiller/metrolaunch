@@ -944,14 +944,26 @@ const App = (() => {
     render();
   }
 
+  function updateFolderFaceDisplays() {
+    gridEl.querySelectorAll('.folder-tile').forEach(el => {
+      const isExpanded = el.dataset.id === expandedFolderId;
+      const countFace = el.querySelector('.folder-count-face');
+      const chevronFace = el.querySelector('.folder-chevron-face');
+      if (countFace) countFace.style.display = isExpanded ? 'none' : 'flex';
+      if (chevronFace) chevronFace.style.display = isExpanded ? 'flex' : 'none';
+    });
+  }
+
   function toggleFolderExpand(folderId) {
     if (expandedFolderId === folderId) {
       collapseFolderExpand();
-      setTimeout(render, 50);
+      updateFolderFaceDisplays();
     } else {
       if (expandedFolderId) collapseFolderExpand();
       expandedFolderId = folderId;
-      setTimeout(render, 50);
+      const folder = tiles.find(t => t.id === folderId);
+      if (folder) renderFolderExpanded(folder);
+      updateFolderFaceDisplays();
     }
   }
 
@@ -960,13 +972,19 @@ const App = (() => {
     folderEditMode = false;
     folderExpandedContainerEl = null;
     gridEl.classList.remove('folder-expanded');
-    // Remove pushed class from tiles
     gridEl.querySelectorAll('.tile-pushed-by-folder').forEach(el => {
       el.classList.remove('tile-pushed-by-folder');
-      el.style.translate = '';
+      const t = tiles.find(x => x.id === el.dataset.id);
+      if (t) {
+        const p = tilePx(t);
+        el.style.translate = `${p.x}px ${p.y}px`;
+      } else {
+        el.style.translate = '';
+      }
     });
     const existing = gridEl.querySelector('.folder-expanded-container');
     if (existing) existing.remove();
+    gridEl.style.height = `${getGridHeight()}px`;
   }
 
   function renderFolderExpanded(folder) {
@@ -1529,8 +1547,8 @@ const App = (() => {
     // ---- Folder hover detection ----
     // We only allow dropping into EXISTING folders. No folder creation via drag-and-drop.
     let hoverTarget = null;
+    const dragS = TILE_SIZES[tile.size];
     if (!isSpecialTile(tile)) {
-      const dragS = TILE_SIZES[tile.size];
       const dragW = dragS.cols * cellSize + (dragS.cols - 1) * GRID_GAP;
       const dragH = dragS.rows * cellSize + (dragS.rows - 1) * GRID_GAP;
       const dragCenterX = newX + dragW / 2;
