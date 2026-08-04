@@ -387,6 +387,7 @@ body:not(.is-desktop) .header {
   width: calc(32px * var(--live-tile-scale, 1));
   height: calc(32px * var(--live-tile-scale, 1));
   fill: #fff;
+  overflow: visible;
 }
 
 .tile-icon img {
