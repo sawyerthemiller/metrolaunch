@@ -947,12 +947,11 @@ const App = (() => {
   function toggleFolderExpand(folderId) {
     if (expandedFolderId === folderId) {
       collapseFolderExpand();
-      render();
+      setTimeout(render, 50);
     } else {
-      // Collapse any currently expanded folder first
       if (expandedFolderId) collapseFolderExpand();
       expandedFolderId = folderId;
-      render();
+      setTimeout(render, 50);
     }
   }
 
@@ -1103,8 +1102,10 @@ const App = (() => {
           return;
         }
         if (child.url) {
-          if (child.forceSafari) window.open(child.url, '_blank');
-          else window.location.href = child.url;
+          playLaunchAnimation(child, (t) => {
+            if (t.forceSafari) window.open(t.url, '_blank');
+            else window.location.href = t.url;
+          });
         } else {
           showToast('No URL scheme set');
         }
@@ -1164,6 +1165,7 @@ const App = (() => {
     });
     gridEl.appendChild(container);
     folderExpandedContainerEl = container;
+    applyHapticToEls(container.querySelectorAll('.tile'));
 
     // Push all tiles whose area intersects the expansion zone
     const expandHeight = container.offsetHeight;
