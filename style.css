@@ -410,6 +410,11 @@ body:not(.is-desktop) .header {
   height: calc(42px * var(--live-tile-scale, 1));
 }
 
+.tile[data-id="__spotify__"][data-size="medium"] .tile-icon svg {
+  width: calc(36px * var(--live-tile-scale, 1));
+  height: calc(36px * var(--live-tile-scale, 1));
+}
+
 .tile-label {
   font-size: calc(11px * var(--live-tile-scale, 1));
   font-weight: 400;
