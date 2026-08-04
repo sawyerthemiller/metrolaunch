@@ -2684,8 +2684,11 @@ const App = (() => {
       });
       
       if (changedJobs || changedStoryControl) {
+        showToast('Refreshing data...');
         NewsService.purgeCache();
-        NewsService.fetchData();
+        NewsService.fetchData().then(() => {
+          showToast('Data refreshed successfully');
+        });
       }
       hideModal();
       showToast('News tile updated');
