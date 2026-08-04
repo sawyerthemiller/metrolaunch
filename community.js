@@ -162,6 +162,17 @@ window.communityAPI = {
     const listContainer = overlay.querySelector('#comm-apps-list');
     const loading = overlay.querySelector('#comm-loading');
     
+    // Add local HTML escape helper since the main one might not be in scope
+    const esc = (str) => String(str).replace(/[&<>'"]/g, 
+      tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag])
+    );
+    
     const loadData = async () => {
       loading.style.display = 'flex';
       Array.from(listContainer.children).forEach(c => {
@@ -195,10 +206,10 @@ window.communityAPI = {
           
           item.innerHTML = `
             <div style="text-align: left;">
-              <div style="font-weight: 600; font-size: 16px;">${(app.name || '').toLowerCase()}</div>
-              <div style="font-size: 12px; opacity: 0.5;">${app.date || 'Unknown date'}</div>
+              <div style="font-weight: 600; font-size: 16px;">${esc((app.name || '').toLowerCase())}</div>
+              <div style="font-size: 12px; opacity: 0.5;">${esc(app.date || 'Unknown date')}</div>
             </div>
-            <button class="comm-get-btn" style="background: #000; color: #fff; border: 2px solid #fff; border-radius: 0; padding: 6px 14px; font-weight: 600; font-size: 14px; cursor: pointer;">GET</button>
+            <button class="comm-get-btn" style="background: #000; color: #fff; border: 2px solid #fff; border-radius: 0; padding: 6px 14px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Segoe UI Supro', sans-serif;">GET</button>
           `;
 
           // Swipe to delete logic

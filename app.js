@@ -3136,6 +3136,13 @@ const App = (() => {
 
     if (advToggle) {
       advToggle.onclick = () => {
+        if (advOn) {
+          const hasAdvancedFeaturesOn = settings.disableForcedFont || settings.disableRegexCleaning || settings.hapticOnTouch || settings.windowsNavBar || settings.resizeGridEnabled || settings.spotifyMeltEnabled;
+          if (hasAdvancedFeaturesOn) {
+            showToast('Options inside prohibit this...');
+            return;
+          }
+        }
         advOn = !advOn;
         advToggle.classList.toggle('on', advOn);
         advPill.disabled = !advOn;
