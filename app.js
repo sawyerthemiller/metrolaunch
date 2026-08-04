@@ -848,7 +848,15 @@ const App = (() => {
       for (const c of children) pushTilesAway(c.id);
       compactGrid();
     } else {
+      const initLen = tiles.length;
       tiles = tiles.filter(x => x.id !== id);
+      if (tiles.length === initLen) {
+        tiles.forEach(t => {
+          if (isFolder(t) && t.children) {
+            t.children = t.children.filter(x => x.id !== id);
+          }
+        });
+      }
     }
     compactGrid();
     save();
@@ -4062,10 +4070,10 @@ const App = (() => {
     `;
 
     window._advResetState = function() {
-      tiles.forEach(t => {
+      getFlatTiles().forEach(t => {
         if (t.visibility === 'search') {
           t.visibility = 'both';
-          pushTilesAway(t.id);
+          if (tiles.includes(t)) pushTilesAway(t.id);
         } else {
           t.visibility = 'both';
         }
@@ -4126,7 +4134,7 @@ const App = (() => {
   }
 
   function showPerTileSettings(id) {
-    const tile = tiles.find(t => t.id === id);
+    const tile = getFlatTiles().find(t => t.id === id);
     if (!tile) return;
 
     const isLiveTile = tile.isWeather || tile.isNews || tile.isSpotify;
@@ -4138,7 +4146,7 @@ const App = (() => {
 
     // Define global save function so inline onclick can always reach it
     window._advSave = function() {
-      const t = tiles.find(x => x.id === window._advTileId);
+      const t = getFlatTiles().find(x => x.id === window._advTileId);
       if (!t) return;
       const isLive = t.isWeather || t.isNews || t.isSpotify;
       
@@ -4164,7 +4172,7 @@ const App = (() => {
         }
         
         if (wasSearch && t.visibility !== 'search') {
-          pushTilesAway(t.id);
+          if (tiles.includes(t)) pushTilesAway(t.id);
         }
       }
       

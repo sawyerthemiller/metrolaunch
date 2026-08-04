@@ -254,7 +254,7 @@ function renderSearchList() {
 function showSearchContextMenu(tileId, x, y) {
   const menu = document.getElementById('context-menu');
   if (!menu) return;
-  const tile = window.App ? window.App.getTiles().find(t => t.id === tileId) : null;
+  const tile = window.App ? window.App.getFlatTiles().find(t => t.id === tileId) : null;
   if (!tile) return;
   
   const DEFAULT_APP_NAMES = ['weather', 'messages', 'chrome', 'maps', 'mail', 'camera', 'settings', 'photos', 'music', 'youtube'];
