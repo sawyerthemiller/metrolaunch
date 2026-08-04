@@ -140,11 +140,12 @@ window.communityAPI = {
       <div class="confirm-box" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; height: 80vh; max-height: 600px; padding: 0;">
         <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
           <h2 style="margin:0; font-weight:300; font-size:20px;">User Apps</h2>
-          <div style="display:flex; gap: 10px; align-items: center;">
-            <button id="comm-refresh-btn" style="background:transparent; border:2px solid var(--text); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0; box-sizing: border-box;">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          <div style="display:flex; align-items: center; border: 1.5px solid var(--text); border-radius: 0;">
+            <button id="comm-refresh-btn" style="background:transparent; border:none; width: 40px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0; box-sizing: border-box;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
             </button>
-            <button id="comm-close-btn" style="background:transparent; border:2px solid var(--text); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color:var(--text); padding: 0; box-sizing: border-box;">
+            <div style="width: 1.5px; height: 32px; background-color: var(--text);"></div>
+            <button id="comm-close-btn" style="background:transparent; border:none; width: 40px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color:var(--text); padding: 0; box-sizing: border-box;">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>

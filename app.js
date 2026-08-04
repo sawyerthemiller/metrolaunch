@@ -3479,7 +3479,7 @@ const App = (() => {
             if (!settings.resizeGridEnabled) return;
             const val = parseInt(el.getAttribute('data-val'), 10);
             if (val === 6) {
-              showToast('That is default so just turn it off...');
+              showToast('That is the default so just turn it off...');
               return;
             }
             settings.gridCols = val;
