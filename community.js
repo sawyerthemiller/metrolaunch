@@ -60,7 +60,7 @@ window.communityAPI = {
           <div class="metro-checkbox ${isSubmitChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px;"></div>
           <div>
             <div style="font-weight:600; font-size:16px;">Enable the submit button on custom tiles</div>
-            <div style="font-size:13px; opacity:0.7;">help people add more apps and cut out the confusion</div>
+            <div style="font-size:13px; opacity:0.7;">shows only in search menu - help people add more apps and cut out the confusion</div>
           </div>
         </div>
 
