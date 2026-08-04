@@ -48,9 +48,9 @@ window.communityAPI = {
         <h3>Community Settings</h3>
         <p style="margin-bottom: 20px;">Please configure your community preferences...</p>
         
-        <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:15px; cursor:pointer;" id="comm-toggle-unique" style="${uniqueDisabled}">
+        <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:15px; cursor:pointer; ${uniqueDisabled}" id="comm-toggle-unique">
           <div class="metro-checkbox ${isUniqueChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px;"></div>
-          <div>
+          <div style="text-align: left;">
             <div style="font-weight:600; font-size:16px;">Enable a single unique user count</div>
             <div style="font-size:13px; opacity:0.7;">this helps me measure how much i should work on it and contains no identifying information</div>
           </div>
@@ -58,7 +58,7 @@ window.communityAPI = {
         
         <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:20px; cursor:pointer;" id="comm-toggle-submit">
           <div class="metro-checkbox ${isSubmitChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px;"></div>
-          <div>
+          <div style="text-align: left;">
             <div style="font-weight:600; font-size:16px;">Enable the submit button on custom tiles</div>
             <div style="font-size:13px; opacity:0.7;">shows only in search menu - help people add more apps and cut out the confusion</div>
           </div>

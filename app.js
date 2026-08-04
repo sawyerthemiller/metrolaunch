@@ -484,7 +484,13 @@ const App = (() => {
       bar.style.boxSizing = 'border-box';
     });
 
-    // removed spotify melt speed
+    if (!settings.spotifyMeltEnabled) {
+      const sEl = document.querySelector(`[data-id="${SPOTIFY_TILE_ID}"] .live-tile-inner`);
+      if (sEl && sEl.style.transform === 'translateY(0%)') {
+        sEl.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
+        sEl.style.transform = 'translateY(calc(-100% / 3))';
+      }
+    }
 
     saveSettings();
     startLiveTileFlip();
@@ -984,7 +990,14 @@ const App = (() => {
       }
     });
     const existing = gridEl.querySelector('.folder-expanded-container');
-    if (existing) existing.remove();
+    if (existing) {
+      existing.style.height = '0px';
+      existing.style.paddingTop = '0px';
+      existing.style.paddingBottom = '0px';
+      existing.style.opacity = '0';
+      existing.style.overflow = 'hidden';
+      setTimeout(() => existing.remove(), 250);
+    }
     gridEl.style.height = `${getGridHeight()}px`;
   }
 
@@ -1188,6 +1201,21 @@ const App = (() => {
 
     // Push all tiles whose area intersects the expansion zone
     const expandHeight = container.offsetHeight;
+    
+    // Animate container opening
+    container.style.height = '0px';
+    container.style.paddingTop = '0px';
+    container.style.paddingBottom = '0px';
+    container.style.opacity = '0';
+    container.style.overflow = 'hidden';
+    
+    void container.offsetHeight; // force reflow
+
+    container.style.height = `${expandHeight}px`;
+    container.style.paddingTop = '18px';
+    container.style.paddingBottom = '18px';
+    container.style.opacity = '1';
+
     tiles.forEach(t => {
       if (t.id === folder.id) return;
       if (t.visibility === 'search') return;
@@ -2582,6 +2610,14 @@ const App = (() => {
         <span class="toggle-label">Use Celsius</span>
         <div class="toggle-switch${settings.weatherUseCelsius ? ' on' : ''}" id="weather-celsius-toggle"></div>
       </div>
+      <div class="toggle-row" style="margin-top: 12px;">
+        <span class="toggle-label">Show condition background</span>
+        <div class="toggle-switch${tile.weatherCoverArt !== false ? ' on' : ''}" id="weather-cover-art"></div>
+      </div>
+      <div class="toggle-row" style="margin-top: 12px;">
+        <span class="toggle-label" id="weather-unblur-art-label">Do not blur condition background</span>
+        <div class="toggle-switch${tile.weatherUnblurArt ? ' on' : ''}" id="weather-unblur-art"></div>
+      </div>
 
       <div class="form-group" id="weather-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
         <label>Color</label>
@@ -2603,6 +2639,40 @@ const App = (() => {
       celsiusToggle.classList.toggle('on', useCelsius);
     };
 
+    let coverArt = tile.weatherCoverArt !== false;
+    const coverArtToggle = document.getElementById('weather-cover-art');
+    
+    let unblurArt = !!tile.weatherUnblurArt;
+    const unblurArtToggle = document.getElementById('weather-unblur-art');
+    const unblurArtLabel = document.getElementById('weather-unblur-art-label');
+
+    function updateWeatherUnblurState() {
+      if (!coverArt) {
+        unblurArt = false;
+        unblurArtToggle.classList.remove('on');
+        unblurArtToggle.style.opacity = '0.5';
+        unblurArtToggle.style.pointerEvents = 'none';
+        unblurArtLabel.style.opacity = '0.5';
+      } else {
+        unblurArtToggle.style.opacity = '1';
+        unblurArtToggle.style.pointerEvents = 'auto';
+        unblurArtLabel.style.opacity = '1';
+      }
+    }
+
+    coverArtToggle.onclick = () => {
+      coverArt = !coverArt;
+      coverArtToggle.classList.toggle('on', coverArt);
+      updateWeatherUnblurState();
+    };
+
+    unblurArtToggle.onclick = () => {
+      unblurArt = !unblurArt;
+      unblurArtToggle.classList.toggle('on', unblurArt);
+    };
+
+    updateWeatherUnblurState();
+
     document.getElementById('weather-cancel').onclick = hideModal;
     document.getElementById('weather-save').onclick = () => {
       const zip = document.getElementById('weather-zip').value.trim();
@@ -2615,6 +2685,8 @@ const App = (() => {
       updateTile(WEATHER_TILE_ID, {
         size: document.getElementById('weather-size').value,
         color: document.getElementById('weather-color').value,
+        weatherCoverArt: coverArt,
+        weatherUnblurArt: unblurArt,
         url: document.getElementById('weather-url').value.trim()
       });
       WeatherService.start();
@@ -2728,6 +2800,10 @@ const App = (() => {
         <div class="toggle-switch${tile.spotifyCoverArt ? ' on' : ''}" id="spotify-cover-art"></div>
       </div>
       <div class="toggle-row" style="margin-top: 12px;">
+        <span class="toggle-label" id="spotify-unblur-art-label">Do not blur the album artwork</span>
+        <div class="toggle-switch${tile.spotifyUnblurArt ? ' on' : ''}" id="spotify-unblur-art"></div>
+      </div>
+      <div class="toggle-row" style="margin-top: 12px;">
         <span class="toggle-label">Shade text content</span>
         <div class="toggle-switch${tile.spotifyShadeText ? ' on' : ''}" id="spotify-shade-text"></div>
       </div>
@@ -2747,10 +2823,37 @@ const App = (() => {
 
     let coverArt = !!tile.spotifyCoverArt;
     const coverArtToggle = document.getElementById('spotify-cover-art');
+    
+    let unblurArt = !!tile.spotifyUnblurArt;
+    const unblurArtToggle = document.getElementById('spotify-unblur-art');
+    const unblurArtLabel = document.getElementById('spotify-unblur-art-label');
+
+    function updateUnblurArtState() {
+      if (!coverArt) {
+        unblurArt = false;
+        unblurArtToggle.classList.remove('on');
+        unblurArtToggle.style.opacity = '0.5';
+        unblurArtToggle.style.pointerEvents = 'none';
+        unblurArtLabel.style.opacity = '0.5';
+      } else {
+        unblurArtToggle.style.opacity = '1';
+        unblurArtToggle.style.pointerEvents = 'auto';
+        unblurArtLabel.style.opacity = '1';
+      }
+    }
+
     coverArtToggle.onclick = () => {
       coverArt = !coverArt;
       coverArtToggle.classList.toggle('on', coverArt);
+      updateUnblurArtState();
     };
+
+    unblurArtToggle.onclick = () => {
+      unblurArt = !unblurArt;
+      unblurArtToggle.classList.toggle('on', unblurArt);
+    };
+
+    updateUnblurArtState();
 
     let shadeText = !!tile.spotifyShadeText;
     const shadeTextToggle = document.getElementById('spotify-shade-text');
@@ -2785,6 +2888,7 @@ const App = (() => {
         spotifyUsername: settings.spotifyUsername,
         spotifyInterval: settings.spotifyInterval,
         spotifyCoverArt: coverArt,
+        spotifyUnblurArt: unblurArt,
         spotifyShadeText: shadeText,
         url: settings.spotifyUrl
       });
@@ -2878,6 +2982,10 @@ const App = (() => {
         <div class="toggle-row">
           <span class="toggle-label">Spotify now playing</span>
           <div class="toggle-switch${settings.spotifyEnabled ? ' on' : ''}" id="spotify-toggle"></div>
+        </div>
+        <div class="toggle-row" id="spotify-cap-row" style="opacity: ${settings.disableRegexCleaning ? '0.5' : '1'}; pointer-events: ${settings.disableRegexCleaning ? 'none' : 'auto'};">
+          <span class="toggle-label">Force capital-case song</span>
+          <div class="toggle-switch${settings.spotifyCapitaliseSong && !settings.disableRegexCleaning ? ' on' : ''}" id="spotify-cap-toggle"></div>
         </div>
         <div class="toggle-row">
           <span class="toggle-label">News tile</span>
@@ -3134,6 +3242,15 @@ const App = (() => {
       spotifyToggle.classList.toggle('on', spotifyOn);
     };
 
+    let spotifyCap = !!settings.spotifyCapitaliseSong;
+    const spotifyCapToggle = document.getElementById('spotify-cap-toggle');
+    if (spotifyCapToggle) {
+      spotifyCapToggle.onclick = () => {
+        spotifyCap = !spotifyCap;
+        spotifyCapToggle.classList.toggle('on', spotifyCap);
+      };
+    }
+
     let hslOn = !!settings.hideSmallLabels;
     const hslToggle = document.getElementById('hsl-toggle');
     hslToggle.onclick = () => {
@@ -3287,6 +3404,10 @@ const App = (() => {
           if (window.communityAPI) window.communityAPI.showUserAppsModal();
         };
         document.getElementById('adv-close').onclick = () => {
+          if (settings.resizeGridEnabled && settings.gridCols === 6) {
+            settings.resizeGridEnabled = false;
+            save();
+          }
           if (typeof handleRefreshClick === 'function') handleRefreshClick();
           showSettingsModal();
         };
@@ -3325,6 +3446,9 @@ const App = (() => {
             save();
             render();
           } else {
+            settings.gridCols = 6;
+            GRID_COLS = 6;
+            document.getElementById('grid-size-slider').style.left = '119px';
             applySettings();
           }
         };
@@ -3334,6 +3458,10 @@ const App = (() => {
           el.onclick = () => {
             if (!settings.resizeGridEnabled) return;
             const val = parseInt(el.getAttribute('data-val'), 10);
+            if (val === 6) {
+              showToast('That is default - just turn it off...');
+              return;
+            }
             settings.gridCols = val;
             GRID_COLS = val;
             if (val === 4) slider.style.left = '4px';
@@ -3371,6 +3499,9 @@ const App = (() => {
           regexOff = !regexOff;
           regexToggle.classList.toggle('on', regexOff);
           settings.disableRegexCleaning = regexOff;
+          if (regexOff && settings.spotifyCapitaliseSong) {
+            settings.spotifyCapitaliseSong = false;
+          }
           applySettings();
           render();
         };
@@ -3657,6 +3788,7 @@ const App = (() => {
 
       const wasSpotifyOn = settings.spotifyEnabled;
       settings.spotifyEnabled = spotifyOn;
+      settings.spotifyCapitaliseSong = spotifyCap;
 
       applySettings();
 
@@ -4110,7 +4242,7 @@ const App = (() => {
           </div>
         </div>
       </div>
-      <div class="modal-actions" style="margin-top:20px; display:flex; justify-content:space-between;">
+      <div class="modal-actions" style="margin-top:24px; margin-bottom:-24px; display:flex; justify-content:space-between;">
         <button type="button" class="btn-cancel" onclick="window._advResetState()">Reset State</button>
         <button type="button" onclick="App.hideModal()">OK</button>
       </div>
@@ -4257,7 +4389,7 @@ const App = (() => {
     
     let html = `
       <div class="modal-header">
-        <h2>advanced control - ${escHtml(tile.name || '')}</h2>
+        <h2>Advanced Control - ${escHtml(tile.name || '')}</h2>
       </div>
       <div class="modal-body">
     `;

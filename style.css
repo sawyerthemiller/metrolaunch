@@ -352,6 +352,7 @@ body:not(.is-desktop) .header {
   overflow: hidden;
   transition:
     transform var(--transition),
+    translate var(--transition),
     scale var(--transition),
     top var(--transition),
     left var(--transition),
@@ -596,6 +597,16 @@ body:not(.is-desktop) .header {
   transform: scale(1.1);
 }
 
+.weather-bg-blur.unblurred {
+  top: -8px !important;
+  bottom: -8px !important;
+  left: -10px !important;
+  right: -10px !important;
+  filter: brightness(0.8) !important;
+  -webkit-filter: brightness(0.8) !important;
+  transform: scale(1) !important;
+}
+
 .weather-location {
   position: relative;
   z-index: 1;
@@ -779,10 +790,10 @@ body:not(.is-desktop) .header {
 
 .spotify-bg-blur {
   position: absolute;
-  top: -15%;
-  left: -15%;
-  right: -15%;
-  bottom: -15%;
+  top: -24px;
+  left: -24px;
+  right: -24px;
+  bottom: -24px;
   z-index: 0;
   background-size: cover;
   background-position: center;
@@ -790,6 +801,16 @@ body:not(.is-desktop) .header {
   opacity: 1.0;
   transform: scale(1.1);
   /* to hide blur edges */
+}
+
+.spotify-bg-blur.unblurred {
+  top: -10px !important;
+  bottom: -10px !important;
+  left: -12px !important;
+  right: -12px !important;
+  filter: brightness(0.6) !important;
+  -webkit-filter: brightness(0.6) !important;
+  transform: scale(1) !important;
 }
 
 
@@ -1669,6 +1690,7 @@ body.disable-forced-font * {
   color: var(--text);
   margin-bottom: 4px;
   text-align: right;
+  text-shadow: 0 0 0.8px var(--text), 0 0 0.8px var(--text);
 }
 .search-group-divider {
   border: none;
@@ -1845,7 +1867,7 @@ body.disable-forced-font * {
   background: rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  transition: height 0.3s ease, opacity 0.3s ease;
+  transition: height var(--transition), padding var(--transition), opacity var(--transition);
   pointer-events: none;
 }
 

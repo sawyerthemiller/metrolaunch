@@ -100,10 +100,11 @@
       });
   }
 
-  function _renderWeatherTile(el, bgStyle) {
+  function _renderWeatherTile(el, bgStyle, unblurArt) {
     const escHtml = deps.escHtml;
+    const blurClass = unblurArt ? 'weather-bg-blur unblurred' : 'weather-bg-blur';
     el.innerHTML =
-      `<div class="weather-bg-blur"${bgStyle}></div>` +
+      `<div class="${blurClass}"${bgStyle}></div>` +
       `<div class="weather-location">${escHtml(data.location)}</div>` +
       `<div class="weather-condition">${escHtml(data.condition)}</div>` +
       `<div class="weather-temp">${escHtml(data.temp)}</div>`;
@@ -114,14 +115,19 @@
     const offline = !navigator.onLine;
     const elements = document.querySelectorAll('.weather-back-content');
 
+    const tile = deps.getTile(TILE_ID);
+    const coverArt = tile?.weatherCoverArt !== false;
+    const unblurArt = !!tile?.weatherUnblurArt;
+
     if (offline) {
       elements.forEach(el => { el.innerHTML = ''; });
     } else if (data) {
-      if (data.bgUrl) {
+      if (coverArt && data.bgUrl) {
         // preload the image so the tile doesn't flash without a background
         const img = new Image();
         img.src = data.bgUrl;
-        const bgStyle = ` style="background-image: url('${escHtml(data.bgUrl)}');"`;        const apply = () => elements.forEach(el => _renderWeatherTile(el, bgStyle));
+        const bgStyle = ` style="background-image: url('${escHtml(data.bgUrl)}');"`;
+        const apply = () => elements.forEach(el => _renderWeatherTile(el, bgStyle, unblurArt));
         if (img.complete) {
           apply();
         } else {
@@ -129,7 +135,7 @@
           img.onerror = apply;
         }
       } else {
-        elements.forEach(el => _renderWeatherTile(el, ''));
+        elements.forEach(el => _renderWeatherTile(el, '', unblurArt));
       }
     } else if (loading) {
       elements.forEach(el => { el.innerHTML = '<div class="weather-nodata">Loading weather\u2026</div>'; });
