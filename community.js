@@ -21,7 +21,7 @@ window.communityAPI = {
     if (localStorage.getItem('metrolaunch_community_unique_user') !== '1') return;
     
     try {
-      const res = await fetch('backends/spotify.php?action=vote', { method: 'POST' });
+      const res = await fetch('https://leopardindustries.net:8088/?action=vote', { method: 'POST' });
       if (!res.ok) throw new Error('Server error');
       // Success, remove pending flag if any
       localStorage.removeItem('metrolaunch_community_vote_pending');
@@ -113,7 +113,7 @@ window.communityAPI = {
 
   submitApp: async function(appData) {
     try {
-      const res = await fetch('backends/spotify.php?action=submit', {
+      const res = await fetch('https://leopardindustries.net:8088/?action=submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(appData)
@@ -169,7 +169,7 @@ window.communityAPI = {
       });
       
       try {
-        const res = await fetch('backends/spotify.php?action=list');
+        const res = await fetch('https://leopardindustries.net:8088/?action=list');
         if (!res.ok) throw new Error('Server error');
         const data = await res.json();
         loading.style.display = 'none';
@@ -315,7 +315,7 @@ window.communityAPI = {
       document.removeEventListener('keydown', keydownHandler);
       
       try {
-        const res = await fetch('backends/spotify.php?action=delete', {
+        const res = await fetch('https://leopardindustries.net:8088/?action=delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: appId, admin_code: code })

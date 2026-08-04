@@ -8,7 +8,7 @@
 
 (function () {
   const TILE_ID = '__spotify__';
-  const SERVER_URL = 'https://leopardindustries.net:8088/spotify.php';
+  const SERVER_URL = 'https://leopardindustries.net:8088/';
   const MIN_INTERVAL_MS = 2000;
 
   let deps = null;

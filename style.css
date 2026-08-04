@@ -352,6 +352,7 @@ body:not(.is-desktop) .header {
   overflow: hidden;
   transition:
     transform var(--transition),
+    scale var(--transition),
     top var(--transition),
     left var(--transition),
     width var(--transition),
@@ -361,7 +362,8 @@ body:not(.is-desktop) .header {
 }
 
 .tile:active:not(.dragging) {
-  transform: scale(0.95);
+  scale: 0.95;
+  transform: translateZ(0);
 }
 
 .tile.dragging {
@@ -369,7 +371,8 @@ body:not(.is-desktop) .header {
   opacity: 0.9;
   transition: none;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
-  transform: scale(1.04);
+  scale: 1.04;
+  transform: translateZ(0);
 }
 
 .tile-icon {
