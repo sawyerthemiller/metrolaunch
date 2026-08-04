@@ -359,6 +359,7 @@ body:not(.is-desktop) .header {
     height var(--transition),
     opacity 0.15s;
   z-index: 1;
+  transform: translateZ(0);
 }
 
 .tile:active:not(.dragging) {
