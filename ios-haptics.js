@@ -28,7 +28,8 @@ function e(el) {
     Object.assign(label.style, {
       position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
       cursor: 'pointer', margin: 0, padding: 0, zIndex: 1,
-      WebkitTapHighlightColor: 'transparent'
+      WebkitTapHighlightColor: 'transparent',
+      touchAction: 'manipulation'
     });
     el.style.position = 'relative';
     el.insertBefore(label, el.firstChild);

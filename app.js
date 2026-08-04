@@ -271,6 +271,9 @@ const App = (() => {
       applyHapticToEls(gridEl.querySelectorAll('.tile'));
     }
     applyHapticToEls(document.querySelectorAll('.wp-nav-bar .nav-icon-btn, .wp-nav-bar .nav-edit-buttons div'));
+    if (window.updateNavbarHaptics) {
+      setTimeout(window.updateNavbarHaptics, 50);
+    }
   }
 
   function applyHapticToEls(elements) {
@@ -285,6 +288,7 @@ const App = (() => {
       }
     });
   }
+  window.applyHaptics = applyHapticToEls;
 
   let settings = {
     bgUrl: '',
@@ -1766,7 +1770,8 @@ const App = (() => {
           const cy = e.changedTouches ? e.changedTouches[0].clientY : (window.innerHeight / 2);
           showContextMenu(touchTile.id, cx, cy);
         } else if (isFolder(touchTile)) {
-          toggleFolderExpand(touchTile.id);
+          const id = touchTile.id;
+          setTimeout(() => toggleFolderExpand(id), 100);
         } else {
           if (isWeatherTile(touchTile)) {
             const url = touchTile.url || 'weather://';
@@ -1822,7 +1827,8 @@ const App = (() => {
         if (editMode) {
           showContextMenu(touchTile.id, e.clientX, e.clientY);
         } else if (isFolder(touchTile)) {
-          toggleFolderExpand(touchTile.id);
+          const id = touchTile.id;
+          setTimeout(() => toggleFolderExpand(id), 100);
         } else {
           if (isWeatherTile(touchTile)) {
             const url = touchTile.url || 'weather://';
@@ -2917,7 +2923,7 @@ const App = (() => {
         <button class="btn-secondary" id="settings-backup">Backup Launcher Data</button>
         <button class="btn-secondary" id="settings-restore">Restore Launcher Data</button>
       </div>
-      <div class="modal-actions" style="margin-bottom:12px;">
+      <div class="modal-actions" style="margin-bottom:12px;${settings.hideDonateButton ? ' display:none;' : ''}" id="donate-btn-wrapper">
         <button class="btn-secondary" id="settings-donate" style="color:#22c55e; border-color:#22c55e;">Donate / Support Me</button>
       </div>
       <div class="form-section-title${sectionClass('bg')}" data-section="bg">Background <span class="section-chevron">\u25BC</span></div>
@@ -3012,6 +3018,10 @@ const App = (() => {
 
       <div class="form-section-title${sectionClass('display')}" data-section="display">Display <span class="section-chevron">\u25BC</span></div>
       <div class="section-body${sectionClass('display')}" id="sec-display">
+        <div class="toggle-row">
+          <span class="toggle-label">Hide donate button</span>
+          <div class="toggle-switch${settings.hideDonateButton ? ' on' : ''}" id="hide-donate-toggle"></div>
+        </div>
         <div class="toggle-row">
           <span class="toggle-label">Disable date in header</span>
           <div class="toggle-switch${settings.disableDateInHeader ? ' on' : ''}" id="disable-date-toggle"></div>
@@ -3139,6 +3149,15 @@ const App = (() => {
     let hdcEnabled = !!settings.hideDynamicContent;
     const hdcToggle = document.getElementById('hdc-toggle');
     
+    let hideDonateEnabled = !!settings.hideDonateButton;
+    const hideDonateToggle = document.getElementById('hide-donate-toggle');
+    hideDonateToggle.onclick = () => {
+      hideDonateEnabled = !hideDonateEnabled;
+      hideDonateToggle.classList.toggle('on', hideDonateEnabled);
+      const donateWrap = document.getElementById('donate-btn-wrapper');
+      if (donateWrap) donateWrap.style.display = hideDonateEnabled ? 'none' : '';
+    };
+
     let disableDateEnabled = !!settings.disableDateInHeader;
     const disableDateToggle = document.getElementById('disable-date-toggle');
     disableDateToggle.onclick = () => {
@@ -3368,7 +3387,7 @@ const App = (() => {
           </div>
           
           <div class="toggle-row" style="margin-top: 12px;">
-            <span class="toggle-label">Resize the grid (dangerous)</span>
+            <span class="toggle-label">Resize the grid (slightly dangerous)</span>
             <div class="toggle-switch${settings.resizeGridEnabled ? ' on' : ''}" id="resize-grid-toggle"></div>
           </div>
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">very experimental and will mess up your current layout</div>
@@ -3392,10 +3411,10 @@ const App = (() => {
 
           <div class="modal-actions" style="margin-top:24px; flex-direction: column; gap: 8px;">
             <div style="display: flex; gap: 8px; width: 100%;">
-              <button class="btn-primary" id="adv-reshow-privacy" style="background: transparent; border: 1px solid var(--accent); color: var(--text); flex: 1; padding: 12px 0;">Reshow Privacy</button>
-              <button class="btn-primary" id="adv-user-apps" style="background: transparent; border: 1px solid var(--accent); color: var(--text); flex: 1; padding: 12px 0;">User Apps</button>
+              <button id="adv-reshow-privacy" style="border: 1px solid var(--accent); color: var(--text); flex: 1; padding: 12px 0;">Reshow Privacy</button>
+              <button id="adv-user-apps" style="border: 1px solid var(--accent); color: var(--text); flex: 1; padding: 12px 0;">User Apps</button>
             </div>
-            <button class="btn-primary" id="adv-close">Close</button>
+            <button id="adv-close">Close</button>
           </div>
         `);
         document.getElementById('adv-reshow-privacy').onclick = () => {
@@ -3762,6 +3781,7 @@ const App = (() => {
       settings.tileRadius = parseInt(radiusSlider.value, 10);
       settings.globalColorEnabled = gcEnabled;
       settings.globalColor = document.getElementById('global-color-val').value;
+      settings.hideDonateButton = hideDonateEnabled;
       settings.hideDynamicContent = hdcEnabled;
       settings.disableDateInHeader = disableDateEnabled;
       settings.hideSearchIcons = hideSearchIconsEnabled;
@@ -4224,12 +4244,12 @@ const App = (() => {
         <h2>Advanced Icon Control</h2>
       </div>
       <div class="modal-body" style="padding-bottom: 0;">
-        <div style="position: relative; height: 260px; margin: 0 -20px;">
-          <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); margin-top: 2px; color: var(--accent-color, #fff); pointer-events: none; z-index: 10;">
+        <div style="position: relative; height: 210px; margin: 0 -20px;">
+          <div style="position: absolute; right: 20px; top: 77px; transform: translateY(-50%); margin-top: 2px; color: var(--accent-color, #fff); pointer-events: none; z-index: 10;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </div>
-          <div id="adv-roller-list" class="hide-scrollbar scrollable-y" style="height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; position: relative;">
-            <div style="height: 108px;"></div>
+          <div id="adv-roller-list" class="hide-scrollbar scrollable-y" style="height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scroll-padding-top: 55px; scroll-padding-bottom: 111px; position: relative;">
+            <div style="height: 55px;"></div>
     `;
     sortedTiles.forEach((t, i) => {
       html += `
@@ -4239,11 +4259,14 @@ const App = (() => {
       `;
     });
     html += `
-            <div style="height: 108px;"></div>
+            <div style="height: 111px;"></div>
           </div>
         </div>
       </div>
-      <div class="modal-actions" style="margin-top:24px; margin-bottom:-24px; display:flex; justify-content:space-between;">
+      <div style="position: relative; height: 36px; margin: 0 -23px; margin-top: -36px; overflow: hidden; pointer-events: none; z-index: 5;">
+        <div style="position: absolute; top: -50px; left: 0; right: 0; bottom: 12px; border: 1px solid var(--border-strong); border-radius: 24px; box-shadow: 0 0 0 50px #000;"></div>
+      </div>
+      <div class="modal-actions" style="margin-top:12px; margin-bottom:-24px; display:flex; justify-content:space-between;">
         <button type="button" class="btn-cancel" onclick="window._advResetState()">Reset State</button>
         <button type="button" onclick="App.hideModal()">OK</button>
       </div>
@@ -4390,32 +4413,32 @@ const App = (() => {
     
     let html = `
       <div class="modal-header">
-        <h2>Advanced Control - ${escHtml(tile.name || '')}</h2>
+        <h2 style="font-size: 19px;"><span style="text-shadow: 0 0 0.8px var(--text), 0 0 0.8px var(--text); margin-right: 15px;">Advanced Control</span>${escHtml(tile.name || '')}</h2>
       </div>
       <div class="modal-body">
     `;
 
     if (isLiveTile) {
       html += `
-        <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Live tiles can only be hidden from search, so to get rid of a live tile on the start screen, turn it off in the settings...</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">The live tiles can only be hidden from search, so to get rid of a live tile on the start screen, turn it off in the settings...</div>
         <div class="form-group" style="display:flex; align-items:center; cursor:pointer;" onclick="window._advToggleLiveCb()">
           <div class="metro-checkbox${currentVis === 'tiles' ? ' checked' : ''}" id="adv-live-hide" style="margin-right:12px;"></div>
-          <span style="font-size:16px;">disable from search list</span>
+          <span style="font-size:16px; transform: translateY(-2px); display: inline-block;">disable from search list</span>
         </div>
       `;
     } else {
       html += `
         <div class="form-group" style="display:flex; align-items:center; cursor:pointer;" onclick="window._advToggleCheckbox()">
           <div class="metro-checkbox${isModified ? ' checked' : ''}" id="adv-modify-behavior" style="margin-right:12px;"></div>
-          <span style="font-size:16px;">modify the standard behavior of this entry</span>
+          <span style="font-size:14px; transform: translateY(-2px); display: inline-block;">modify the standard behaviour of this entry</span>
         </div>
         
         <div id="adv-visibility-section" style="margin-top:24px; opacity:${isModified ? '1' : '0.4'}; pointer-events:${isModified ? 'auto' : 'none'}; transition:0.2s;">
-          <div style="font-size:12px; margin-bottom:8px; opacity:0.8; text-transform:uppercase; letter-spacing:1px;">show only in</div>
-          <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="window._advToggleVis()">
-            <span style="font-size:16px;">tiles screen</span>
+          <div style="font-size:12px; line-height:1; margin-bottom:8px; opacity:0.8; text-transform:uppercase; letter-spacing:1px; text-align:center;">show only in</div>
+          <div style="display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;" onclick="window._advToggleVis()">
+            <span style="font-size:16px; line-height:1;">tiles screen</span>
             <div class="toggle-switch bi-directional${currentVis === 'search' ? ' on' : ''}" id="adv-vis-toggle"></div>
-            <span style="font-size:16px;">search screen</span>
+            <span style="font-size:16px; line-height:1;">search screen</span>
           </div>
         </div>
       `;
@@ -4423,7 +4446,7 @@ const App = (() => {
 
     html += `
       </div>
-      <div class="modal-actions" style="margin-top:20px;">
+      <div class="modal-actions" style="margin-top:20px; margin-bottom:-24px;">
         <button type="button" class="btn-cancel" onclick="App.showAdvancedIconControl()">Cancel</button>
         <button type="button" onclick="window._advSave()">OK</button>
       </div>

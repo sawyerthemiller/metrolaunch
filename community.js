@@ -50,22 +50,22 @@ window.communityAPI = {
         
         <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:15px; cursor:pointer; ${uniqueDisabled}" id="comm-toggle-unique">
           <div class="metro-checkbox ${isUniqueChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px;"></div>
-          <div style="text-align: left;">
-            <div style="font-weight:600; font-size:16px;">Enable a single unique user count</div>
+          <div style="text-align: left; transform: translateY(-2px);">
+            <div style="font-weight:600; font-size:16px;">Enables a single unique user count</div>
             <div style="font-size:13px; opacity:0.7;">this helps me measure how much i should work on it and contains no identifying information</div>
           </div>
         </div>
         
         <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:20px; cursor:pointer;" id="comm-toggle-submit">
           <div class="metro-checkbox ${isSubmitChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px;"></div>
-          <div style="text-align: left;">
-            <div style="font-weight:600; font-size:16px;">Enable the submit button on custom tiles</div>
+          <div style="text-align: left; transform: translateY(-2px);">
+            <div style="font-weight:600; font-size:16px;">Enables the submit button on custom tiles</div>
             <div style="font-size:13px; opacity:0.7;">shows only in search menu - help people add more apps and cut out the confusion</div>
           </div>
         </div>
 
         <div class="confirm-actions">
-          <button class="confirm-danger" style="color:#fff; border-color:var(--accent, #0078d4); flex: 1;">OK</button>
+          <button style="color:#fff; border-color:var(--accent, #0078d4); flex: 1;">OK</button>
         </div>
       </div>
     `;
@@ -90,7 +90,7 @@ window.communityAPI = {
       chkSubmit.classList.toggle('checked');
     };
 
-    overlay.querySelector('.confirm-danger').onclick = () => {
+    overlay.querySelector('.confirm-actions button').onclick = () => {
       const uniqueOn = chkUnique.classList.contains('checked');
       const submitOn = chkSubmit.classList.contains('checked');
 
@@ -137,9 +137,9 @@ window.communityAPI = {
     overlay.className = 'confirm-overlay';
     overlay.style.zIndex = '3000';
     overlay.innerHTML = `
-      <div class="confirm-box" style="width: 320px; display: flex; flex-direction: column; height: 80vh; max-height: 600px; padding: 0;">
+      <div class="confirm-box" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; height: 80vh; max-height: 600px; padding: 0;">
         <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-          <h3 style="margin:0;">User Apps</h3>
+          <h2 style="margin:0; font-weight:300; font-size:20px;">User Apps</h2>
           <div style="display:flex; gap: 10px; align-items: center;">
             <button id="comm-refresh-btn" style="background:transparent; border:2px solid var(--text); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0; box-sizing: border-box;">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
@@ -158,6 +158,7 @@ window.communityAPI = {
     document.body.appendChild(overlay);
 
     overlay.querySelector('#comm-close-btn').onclick = () => overlay.remove();
+    if (window.applyHaptics) window.applyHaptics(overlay.querySelectorAll('button'));
     
     const listContainer = overlay.querySelector('#comm-apps-list');
     const loading = overlay.querySelector('#comm-loading');
@@ -195,7 +196,21 @@ window.communityAPI = {
           return;
         }
 
-        data.apps.forEach(app => {
+        const formatAppDate = (dateStr) => {
+          if (!dateStr) return 'unknown date';
+          try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy} - ${mm} - ${dd}`;
+          } catch(e) {
+            return dateStr;
+          }
+        };
+
+        data.apps.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach(app => {
           const item = document.createElement('div');
           item.style.display = 'flex';
           item.style.justifyContent = 'space-between';
@@ -206,10 +221,10 @@ window.communityAPI = {
           
           item.innerHTML = `
             <div style="text-align: left;">
-              <div style="font-weight: 600; font-size: 16px;">${esc((app.name || '').toLowerCase())}</div>
-              <div style="font-size: 12px; opacity: 0.5;">${esc(app.date || 'unknown date')}</div>
+              <div style="font-weight: 600; font-size: 16px; letter-spacing: 0.5px;">${esc((app.name || '').toLowerCase())}</div>
+              <div style="font-size: 12px; opacity: 0.5;">${esc(formatAppDate(app.date))}</div>
             </div>
-            <button class="comm-get-btn" style="background: #000; color: #fff; border: 2px solid #fff; border-radius: 0; padding: 6px 14px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Segoe UI Supro', sans-serif;">GET</button>
+            <button class="comm-get-btn" style="background: #000; color: #fff; border: 1px solid #fff; border-radius: 0; padding: 6px 14px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Segoe UI Supro', sans-serif;">GET</button>
           `;
 
           // Swipe to delete logic
@@ -262,6 +277,7 @@ window.communityAPI = {
           
           listContainer.appendChild(item);
         });
+        if (window.applyHaptics) window.applyHaptics(Array.from(listContainer.querySelectorAll('.comm-get-btn')));
       } catch (e) {
         loading.textContent = 'no apps available...';
       }

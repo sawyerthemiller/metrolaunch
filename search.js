@@ -59,6 +59,35 @@ function initSearch() {
       });
     });
   });
+
+  document.querySelectorAll('.wp-nav-bar .nav-icon-btn').forEach(btn => {
+    btn.addEventListener('pointerdown', (e) => {
+      if (btn.classList.contains('nav-btn-back') && !isSearchOpen) return;
+      if (btn.classList.contains('nav-btn-search') && isSearchOpen) return;
+      
+      const rect = btn.getBoundingClientRect();
+      const rippleContainer = document.createElement('div');
+      rippleContainer.className = 'nav-ripple-container';
+      
+      const ripple = document.createElement('div');
+      ripple.className = 'nav-ripple';
+      
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+      
+      ripple.style.width = ripple.style.height = `${size}px`;
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+      
+      rippleContainer.appendChild(ripple);
+      btn.appendChild(rippleContainer);
+      
+      setTimeout(() => {
+        rippleContainer.remove();
+      }, 400);
+    });
+  });
 }
 
 function openSearch() {
@@ -105,6 +134,7 @@ function openSearch() {
     btn.dataset.isUpBtn = 'false';
   });
   renderSearchList();
+  if (window.updateNavbarHaptics) window.updateNavbarHaptics();
 }
 
 function closeSearch(e) {
@@ -137,7 +167,26 @@ function closeSearch(e) {
   document.querySelectorAll('.pages-container').forEach(container => {
     container.classList.remove('show-search');
   });
+  
+  if (window.updateNavbarHaptics) window.updateNavbarHaptics();
 }
+
+window.updateNavbarHaptics = function() {
+  document.querySelectorAll('.wp-nav-bar').forEach(bar => {
+    const backBtn = bar.querySelector('.nav-btn-back');
+    const searchBtn = bar.querySelector('.nav-btn-search');
+    
+    if (backBtn) {
+      const backInput = backBtn.querySelector('input[switch]');
+      if (backInput) backInput.style.pointerEvents = isSearchOpen ? 'auto' : 'none';
+    }
+    
+    if (searchBtn) {
+      const searchInput = searchBtn.querySelector('input[switch]');
+      if (searchInput) searchInput.style.pointerEvents = isSearchOpen ? 'none' : 'auto';
+    }
+  });
+};
 
 function renderSearchList() {
   if (!window.App) return;
@@ -203,8 +252,9 @@ function renderSearchList() {
           iconHtml = `<img src="${escapeHtml(tile.icon)}" alt="">`;
         }
         
+        const borderRadius = settings.tileRadius ? `${settings.tileRadius}px` : '0px';
         html += `
-          <div class="search-item-tile" style="background-color: ${bgColor};">
+          <div class="search-item-tile" style="background-color: ${bgColor}; border-radius: ${borderRadius};">
             ${iconHtml}
           </div>
         `;
