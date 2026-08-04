@@ -123,7 +123,7 @@ window.communityAPI = {
         return false;
       }
       if (!res.ok) throw new Error('Server error');
-      if (window.showToast) window.showToast('App submitted to community!');
+      if (window.showToast) window.showToast('App submitted to community :)');
       return true;
     } catch (e) {
       if (window.showToast) window.showToast('Leopard server down - please retry later');
@@ -194,11 +194,11 @@ window.communityAPI = {
           item.dataset.id = app.id;
           
           item.innerHTML = `
-            <div>
+            <div style="text-align: left;">
               <div style="font-weight: 600; font-size: 16px;">${(app.name || '').toLowerCase()}</div>
               <div style="font-size: 12px; opacity: 0.5;">${app.date || 'Unknown date'}</div>
             </div>
-            <button class="comm-get-btn" style="background: var(--accent); color: white; border: none; border-radius: 20px; padding: 6px 16px; font-weight: 600; cursor: pointer;">GET</button>
+            <button class="comm-get-btn" style="background: #000; color: #fff; border: 2px solid #fff; border-radius: 0; padding: 6px 14px; font-weight: 600; font-size: 14px; cursor: pointer;">GET</button>
           `;
 
           // Swipe to delete logic
@@ -229,13 +229,19 @@ window.communityAPI = {
           // GET button logic
           item.querySelector('.comm-get-btn').onclick = (e) => {
             e.stopPropagation();
-            if (window.addTile) {
-              // Re-use addTile logic from app.js if available
-              window.addTile({
+            if (window.App) {
+              const installedNames = window.App.getTiles().map(t => (t.name || '').toLowerCase());
+              if (installedNames.includes((app.name || '').toLowerCase())) {
+                if (window.showToast) window.showToast('Cannot install duplicate app');
+                return;
+              }
+            }
+            if (window.App && window.App.addTile) {
+              window.App.addTile({
                 type: 'app',
                 name: app.name, // the case they were submitted in
                 url: app.launchUrl,
-                iconUrl: app.iconUrl,
+                icon: app.iconUrl,
                 color: app.color,
                 size: 'small'
               });
@@ -264,12 +270,12 @@ window.communityAPI = {
     adminModal.innerHTML = `
       <div class="confirm-box" style="width: 280px; text-align: center;">
         <h3>Administrator Access</h3>
-        <p>Enter 4-digit code to delete.</p>
+        <p>Enter 4-digit code to delete...</p>
         <div style="display:flex; justify-content:center; gap: 10px; margin: 20px 0;">
-          <div class="admin-dot" style="width:16px; height:16px; border-radius:50%; border:2px solid var(--text); display:flex; justify-content:center; align-items:center;"></div>
-          <div class="admin-dot" style="width:16px; height:16px; border-radius:50%; border:2px solid var(--text); display:flex; justify-content:center; align-items:center;"></div>
-          <div class="admin-dot" style="width:16px; height:16px; border-radius:50%; border:2px solid var(--text); display:flex; justify-content:center; align-items:center;"></div>
-          <div class="admin-dot" style="width:16px; height:16px; border-radius:50%; border:2px solid var(--text); display:flex; justify-content:center; align-items:center;"></div>
+          <input type="password" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
         </div>
         <div class="confirm-actions">
           <button class="confirm-cancel">Cancel</button>
@@ -280,39 +286,28 @@ window.communityAPI = {
     
     document.body.appendChild(adminModal);
     
-    let code = '';
-    const dots = adminModal.querySelectorAll('.admin-dot');
+    const inputs = Array.from(adminModal.querySelectorAll('.admin-digit'));
     
-    const keydownHandler = (e) => {
-      if (e.key >= '0' && e.key <= '9' && code.length < 4) {
-        code += e.key;
-        updateDots();
-      } else if (e.key === 'Backspace' && code.length > 0) {
-        code = code.slice(0, -1);
-        updateDots();
-      }
-    };
-    
-    document.addEventListener('keydown', keydownHandler);
-    
-    function updateDots() {
-      dots.forEach((dot, idx) => {
-        if (idx < code.length) {
-          dot.innerHTML = '<div style="width:8px; height:8px; border-radius:50%; background:var(--text);"></div>';
-        } else {
-          dot.innerHTML = '';
+    inputs.forEach((inp, idx) => {
+      inp.addEventListener('input', () => {
+        if (inp.value && idx < inputs.length - 1) inputs[idx + 1].focus();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value && idx > 0) {
+          inputs[idx - 1].focus();
         }
       });
-    }
+    });
+    
+    setTimeout(() => inputs[0].focus(), 100);
 
     adminModal.querySelector('.confirm-cancel').onclick = () => {
-      document.removeEventListener('keydown', keydownHandler);
       adminModal.remove();
     };
 
     adminModal.querySelector('#admin-ok-btn').onclick = async () => {
+      const code = inputs.map(i => i.value).join('');
       if (code.length !== 4) return;
-      document.removeEventListener('keydown', keydownHandler);
       
       try {
         const res = await fetch('https://leopardindustries.net:8088/?action=delete', {

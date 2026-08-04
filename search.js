@@ -219,7 +219,7 @@ function renderSearchList() {
       item.addEventListener('touchmove', (e) => {
         const dx = Math.abs(e.touches[0].clientX - startX);
         const dy = Math.abs(e.touches[0].clientY - startY);
-        if (dx > 10 || dy > 10) clearTimer();
+        if (dx > 20 || dy > 20) clearTimer();
       }, {passive: true});
       
       item.addEventListener('touchend', (e) => {
@@ -258,10 +258,12 @@ function showSearchContextMenu(tileId, x, y) {
   if (!tile) return;
   
   const DEFAULT_APP_NAMES = ['weather', 'messages', 'chrome', 'maps', 'mail', 'camera', 'settings', 'photos', 'music', 'youtube'];
+  const isLiveTile = tile.id.startsWith('__') || (tile.url || '').toLowerCase().startsWith('livecontainer://');
   const isDefaultApp = DEFAULT_APP_NAMES.includes((tile.name || '').toLowerCase());
+  const isSubmittable = !isDefaultApp && !isLiveTile;
   
   let submitHtml = '';
-  if (window.communityAPI && window.communityAPI.isSubmitEnabled() && !isDefaultApp) {
+  if (window.communityAPI && window.communityAPI.isSubmitEnabled() && isSubmittable) {
     submitHtml = `
       <div class="context-menu-item" data-action="submit">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:8px;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg> Community Submit

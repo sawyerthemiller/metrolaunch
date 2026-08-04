@@ -4244,7 +4244,7 @@ const App = (() => {
     showModal(html);
   }
 
-  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl };
+  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile };
 })();
 
 window.App = App;
