@@ -1841,7 +1841,7 @@ body.disable-forced-font * {
   border-bottom: 2px solid #fff;
   padding: 18px 0;
   overflow: visible;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: height 0.3s ease, opacity 0.3s ease;

@@ -86,10 +86,20 @@
       .then(stories => {
         const tile = deps && deps.getTile && deps.getTile(TILE_ID);
         const removeJobs = tile ? tile.removeJobs !== false : true;
+        const storyControl = tile && tile.storyControl ? tile.storyControl.toLowerCase().trim().split(/\s+/) : [];
 
         data = stories
           .filter(s => s?.title && s.url)
           .filter(s => !(removeJobs && s.title.toLowerCase().includes('hiring')))
+          .filter(s => {
+            if (storyControl.length === 0 || (storyControl.length === 1 && storyControl[0] === '')) return true;
+            const lowerTitle = s.title.toLowerCase();
+            const titleWords = lowerTitle.split(/\W+/).filter(w => w.length > 0);
+            return !storyControl.some(word => 
+              lowerTitle.includes(word) || 
+              titleWords.some(tw => tw.length >= 4 && word.includes(tw))
+            );
+          })
           .map(s => ({ title: s.title, url: s.url }));
         cacheSet(data);
         index = 0;

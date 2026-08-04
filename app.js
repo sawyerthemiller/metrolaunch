@@ -357,6 +357,7 @@ const App = (() => {
   function getGridHeight() {
     let maxRow = 0;
     tiles.forEach(t => {
+      if (t.visibility === 'search') return;
       maxRow = Math.max(maxRow, t.row + TILE_SIZES[t.size].rows);
     });
     let contentH = maxRow * (cellSize + GRID_GAP);
@@ -1044,7 +1045,7 @@ const App = (() => {
     let maxChildBottom = 0;
     childPositions.forEach(({ child, col, row }) => {
       const s = TILE_SIZES[child.size || 'medium'];
-      const bottom = (row + s.rows) * (cellSize + GRID_GAP);
+      const bottom = (row + s.rows) * (cellSize + GRID_GAP) - GRID_GAP;
       if (bottom > maxChildBottom) maxChildBottom = bottom;
     });
     if (childPositions.length === 0) {
@@ -1197,7 +1198,7 @@ const App = (() => {
         if (tEl) {
           tEl.classList.add('tile-pushed-by-folder');
           const origPx = tilePx(t);
-          tEl.style.translate = `${origPx.x}px ${origPx.y + expandHeight}px`;
+          tEl.style.translate = `${origPx.x}px ${origPx.y + expandHeight + GRID_GAP}px`;
         }
       }
     });
@@ -2647,6 +2648,11 @@ const App = (() => {
         <span class="toggle-label">Remove job promotion stories</span>
         <div class="toggle-switch${tile.removeJobs !== false ? ' on' : ''}" id="news-remove-jobs-toggle"></div>
       </div>
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label>User story control</label>
+        <input type="text" class="metro-input" id="news-story-control" style="margin-bottom: 0;" placeholder="Tired of those stories anyways..." value="${tile.storyControl || ''}">
+        <div style="font-size: 13px; opacity: 0.7; margin-top: 4px;">Enter space separated words, case insensitive, and stories with them will not be shown</div>
+      </div>
       <div class="modal-actions">
         <button class="btn-secondary" id="news-cancel">Cancel</button>
         <button class="btn-primary" id="news-save">Save</button>
@@ -2655,21 +2661,29 @@ const App = (() => {
 
     attachColorPicker('color-picker-news', 'news-color');
     
+    const storyControlInp = document.getElementById('news-story-control');
+    storyControlInp.addEventListener('blur', () => {
+      storyControlInp.value = storyControlInp.value.toLowerCase();
+    });
+    
     const jobsToggle = document.getElementById('news-remove-jobs-toggle');
     jobsToggle.onclick = () => jobsToggle.classList.toggle('on');
 
     document.getElementById('news-cancel').onclick = hideModal;
     document.getElementById('news-save').onclick = () => {
       const isJobsOn = jobsToggle.classList.contains('on');
+      const newStoryControl = document.getElementById('news-story-control').value;
       const changedJobs = tile.removeJobs !== false !== isJobsOn;
+      const changedStoryControl = (tile.storyControl || '') !== newStoryControl;
       
       updateTile(NEWS_TILE_ID, {
         size: document.getElementById('news-size').value,
         color: document.getElementById('news-color').value,
         removeJobs: isJobsOn,
+        storyControl: newStoryControl,
       });
       
-      if (changedJobs) {
+      if (changedJobs || changedStoryControl) {
         NewsService.purgeCache();
         NewsService.fetchData();
       }
