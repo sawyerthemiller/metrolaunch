@@ -424,6 +424,9 @@ const App = (() => {
 
   // APPLY SETTINGS
   function applySettings() {
+    // Update global grid columns if it changed via backup or settings
+    GRID_COLS = settings.gridCols || 6;
+    
     // Background image
     if (settings.bgUrl) {
       bgLayerEl.style.backgroundImage = `url('${settings.bgUrl}')`;
@@ -618,7 +621,7 @@ const App = (() => {
         countFace.style.display = isExpanded ? 'none' : 'flex';
         const countEl = document.createElement('div');
         countEl.className = 'folder-app-count';
-        countEl.textContent = (t.children || []).length;
+        countEl.textContent = (t.children || []).filter(child => child.visibility !== 'search').length;
         const nameEl = document.createElement('div');
         nameEl.className = 'folder-name-label';
         nameEl.textContent = t.name || 'Folder';
@@ -986,7 +989,7 @@ const App = (() => {
     const inner = document.createElement('div');
     inner.className = 'folder-expanded-inner';
 
-    const children = folder.children || [];
+    const children = (folder.children || []).filter(child => child.visibility !== 'search');
     const tileOp = (settings.tileOpacity != null ? settings.tileOpacity : 85) / 100;
     const useGlobalColor = settings.globalColorEnabled && settings.globalColor;
     const r = settings.tileRadius || 0;

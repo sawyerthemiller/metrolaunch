@@ -207,7 +207,7 @@ window.communityAPI = {
           item.innerHTML = `
             <div style="text-align: left;">
               <div style="font-weight: 600; font-size: 16px;">${esc((app.name || '').toLowerCase())}</div>
-              <div style="font-size: 12px; opacity: 0.5;">${esc(app.date || 'Unknown date')}</div>
+              <div style="font-size: 12px; opacity: 0.5;">${esc(app.date || 'unknown date')}</div>
             </div>
             <button class="comm-get-btn" style="background: #000; color: #fff; border: 2px solid #fff; border-radius: 0; padding: 6px 14px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Segoe UI Supro', sans-serif;">GET</button>
           `;
