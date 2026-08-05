@@ -1783,7 +1783,7 @@ const App = (() => {
           setTimeout(() => toggleFolderExpand(id), 100);
         } else {
           if (isWeatherTile(touchTile)) {
-            const url = touchTile.url || 'weather://';
+            const url = (touchTile.url !== undefined) ? touchTile.url : 'weather://';
             playLaunchAnimation(touchTile, (t) => {
               if (t.forceSafari) window.open(url, '_blank');
               else window.location.href = url;
@@ -1840,7 +1840,7 @@ const App = (() => {
           setTimeout(() => toggleFolderExpand(id), 100);
         } else {
           if (isWeatherTile(touchTile)) {
-            const url = touchTile.url || 'weather://';
+            const url = (touchTile.url !== undefined) ? touchTile.url : 'weather://';
             playLaunchAnimation(touchTile, (t) => {
               if (t.forceSafari) window.open(url, '_blank');
               else window.location.href = url;
@@ -2725,6 +2725,7 @@ const App = (() => {
     if (!tile) return;
     await showModal(`
       <h2>News Tile</h2>
+      <p style="font-size: 13px; opacity: 0.7; margin-top: -10px; margin-bottom: 20px; line-height: 1.4;">To disable 'ugly character' removal, head to advanced settings...</p>
       <div class="form-group">
         <label>Tile Size</label>
         <select id="news-size">
@@ -2732,15 +2733,34 @@ const App = (() => {
           <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
         </select>
       </div>
+      <div class="form-group">
+        <label>News Provider</label>
+        <select id="news-provider">
+          <option value="hn"${!tile.newsProvider || tile.newsProvider === 'hn' ? ' selected' : ''}>app default - hacker news 🌎</option>
+          <option value="cnn"${tile.newsProvider === 'cnn' ? ' selected' : ''}>CNN 🇺🇸</option>
+          <option value="nbc"${tile.newsProvider === 'nbc' ? ' selected' : ''}>NBC 🇺🇸</option>
+          <option value="abc"${tile.newsProvider === 'abc' ? ' selected' : ''}>ABC 🇺🇸</option>
+          <option value="cbs"${tile.newsProvider === 'cbs' ? ' selected' : ''}>CBS 🇺🇸</option>
+          <option value="cbc"${tile.newsProvider === 'cbc' ? ' selected' : ''}>CBC 🇨🇦</option>
+          <option value="bbc"${tile.newsProvider === 'bbc' ? ' selected' : ''}>BBC 🇬🇧</option>
+          <option value="npr"${tile.newsProvider === 'npr' ? ' selected' : ''}>NPR 🇺🇸</option>
+          <option value="fox"${tile.newsProvider === 'fox' ? ' selected' : ''}>FOX 🇺🇸</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label>Custom RSS Feed</label>
+        <input type="text" class="metro-input" id="news-custom-rss" style="margin-bottom: 0;" placeholder="e.g. https://example.com/rss.xml" value="${tile.customRssUrl || ''}">
+      </div>
       <div class="form-group" id="news-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
         <label>Color</label>
         <input type="hidden" id="news-color" value="${tile.color}">
         <div class="color-picker-row" id="color-picker-news">${colorSwatchesHtml(tile.color, 'color-picker-news')}</div>
       </div>
-      <div class="toggle-row" style="margin-top: 12px; margin-bottom: 24px;">
+      <div class="toggle-row" style="margin-top: 12px; margin-bottom: 4px;">
         <span class="toggle-label">Remove job promotion stories</span>
         <div class="toggle-switch${tile.removeJobs !== false ? ' on' : ''}" id="news-remove-jobs-toggle"></div>
       </div>
+      <div style="font-size: 13px; opacity: 0.7; margin-bottom: 24px; line-height: 1.4;">The launcher default news provider is community sourced and sometimes has many 'is hiring' stories so this removes them</div>
       <div class="form-group" style="margin-bottom: 24px;">
         <label>User story control</label>
         <input type="text" class="metro-input" id="news-story-control" style="margin-bottom: 0;" placeholder="Tired of those stories anyways..." value="${tile.storyControl || ''}">
@@ -2760,6 +2780,33 @@ const App = (() => {
     });
     
     const jobsToggle = document.getElementById('news-remove-jobs-toggle');
+    const jobsToggleRow = jobsToggle.closest('.toggle-row');
+    const providerSelect = document.getElementById('news-provider');
+    const customRssInp = document.getElementById('news-custom-rss');
+
+    function updateNewsEditorState() {
+      const isCustom = customRssInp.value.trim().length > 0;
+      providerSelect.disabled = isCustom;
+      providerSelect.style.opacity = isCustom ? '0.5' : '1';
+
+      const provider = providerSelect.value;
+      const isHn = !isCustom && provider === 'hn';
+
+      if (!isHn) {
+        jobsToggle.classList.remove('on');
+        jobsToggleRow.style.opacity = '0.5';
+        jobsToggleRow.style.pointerEvents = 'none';
+      } else {
+        jobsToggleRow.style.opacity = '1';
+        jobsToggleRow.style.pointerEvents = 'auto';
+        if (tile.removeJobs !== false) jobsToggle.classList.add('on');
+      }
+    }
+
+    customRssInp.addEventListener('input', updateNewsEditorState);
+    providerSelect.addEventListener('change', updateNewsEditorState);
+    updateNewsEditorState();
+
     jobsToggle.onclick = () => jobsToggle.classList.toggle('on');
 
     document.getElementById('news-cancel').onclick = hideModal;
@@ -2769,14 +2816,20 @@ const App = (() => {
       const changedJobs = tile.removeJobs !== false !== isJobsOn;
       const changedStoryControl = (tile.storyControl || '') !== newStoryControl;
       
+      const newProvider = document.getElementById('news-provider').value;
+      const newCustomRss = document.getElementById('news-custom-rss').value.trim();
+      const changedSource = tile.newsProvider !== newProvider || tile.customRssUrl !== newCustomRss;
+      
       updateTile(NEWS_TILE_ID, {
         size: document.getElementById('news-size').value,
         color: document.getElementById('news-color').value,
         removeJobs: isJobsOn,
         storyControl: newStoryControl,
+        newsProvider: newProvider,
+        customRssUrl: newCustomRss
       });
       
-      if (changedJobs || changedStoryControl) {
+      if (changedJobs || changedStoryControl || changedSource) {
         showToast('Refreshing data...');
         NewsService.purgeCache();
         NewsService.fetchData().then(() => {
@@ -4160,7 +4213,7 @@ const App = (() => {
     if (settings.weatherEnabled !== false) {
       ensureWeatherTile();
       const existingWeather = tiles.find(t => t.id === WEATHER_TILE_ID);
-      if (existingWeather && !existingWeather.url) {
+      if (existingWeather && existingWeather.url === undefined) {
         existingWeather.url = 'weather://';
         save();
       }

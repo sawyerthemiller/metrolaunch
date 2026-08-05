@@ -350,6 +350,7 @@ body:not(.is-desktop) .header {
   justify-content: center;
   gap: 4px;
   overflow: hidden;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
   transition:
     transform var(--transition),
     translate var(--transition),
@@ -518,6 +519,7 @@ body:not(.is-desktop) .header {
 .tile-grid.folder-expanded .tile {
   transition:
     transform var(--transition),
+    translate var(--transition),
     width var(--transition),
     height var(--transition),
     opacity 0.15s;
@@ -799,7 +801,7 @@ body:not(.is-desktop) .header {
   background-position: center;
   filter: blur(2px) brightness(0.6);
   opacity: 1.0;
-  transform: scale(1.1);
+  transform: scale(1.1) translateZ(0);
   /* to hide blur edges */
 }
 
@@ -810,7 +812,7 @@ body:not(.is-desktop) .header {
   right: -12px !important;
   filter: brightness(0.6) !important;
   -webkit-filter: brightness(0.6) !important;
-  transform: scale(1) !important;
+  transform: scale(1) translateZ(0) !important;
 }
 
 
@@ -1904,6 +1906,8 @@ body.disable-forced-font * {
   -webkit-backdrop-filter: blur(12px);
   transition: height var(--transition), padding var(--transition), opacity var(--transition);
   pointer-events: none;
+  transform: translateZ(0);
+  will-change: height, padding, opacity;
 }
 
 .folder-expanded-container .tile {

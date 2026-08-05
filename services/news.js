@@ -14,6 +14,19 @@
   const ITEM_URL = id => `https://hacker-news.firebaseio.com/v0/item/${id}.json`;
   const HEADLINE_COUNT = 15;
 
+  const RSS_FEEDS = {
+    cnn: 'http://rss.cnn.com/rss/cnn_topstories.rss',
+    nbc: 'https://feeds.nbcnews.com/nbcnews/public/news',
+    abc: 'https://abcnews.go.com/abcnews/topstories',
+    cbs: 'https://www.cbsnews.com/latest/rss/main',
+    cbc: 'https://www.cbc.ca/webfeed/rss/rss-topstories',
+    bbc: 'https://feeds.bbci.co.uk/news/rss.xml',
+    npr: 'https://feeds.npr.org/1001/rss.xml',
+    fox: 'https://moxie.foxnews.com/google-publisher/latest.xml'
+  };
+
+  const PROXY_TOKEN_B64 = 'Q3RsbjM4NGZHZFVYMzlMZA==';
+
   let deps = null;
   let data = [];
   let index = 0;
@@ -62,6 +75,54 @@
     deps = injected;
   }
 
+  function fetchHackerNews() {
+    return fetch(TOP_URL, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(ids => {
+        const top = ids.slice(0, HEADLINE_COUNT);
+        return Promise.all(top.map(id => fetch(ITEM_URL(id), { cache: 'no-store' }).then(r => r.json())));
+      })
+      .then(stories => stories.filter(s => s?.title && s.url).map(s => ({ title: s.title, url: s.url })));
+  }
+
+  function fetchRssNews(feedUrl) {
+    const token = atob(PROXY_TOKEN_B64);
+    const url = `https://pro.cors.lol/?url=${encodeURIComponent(feedUrl)}&token=${token}`;
+    return fetch(url, { cache: 'no-store' })
+      .then(r => r.text())
+      .then(xmlStr => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xmlStr, "text/xml");
+        
+        let items = Array.from(doc.querySelectorAll('item'));
+        if (!items.length) {
+          items = Array.from(doc.querySelectorAll('entry'));
+        }
+        
+        const stories = [];
+        for (const item of items) {
+          if (stories.length >= HEADLINE_COUNT) break;
+          const titleEl = item.querySelector('title');
+          const title = titleEl ? titleEl.textContent : '';
+          
+          let link = '';
+          const linkEl = item.querySelector('link');
+          if (linkEl) {
+            if (linkEl.textContent && linkEl.textContent.trim()) {
+              link = linkEl.textContent.trim();
+            } else if (linkEl.getAttribute('href')) {
+              link = linkEl.getAttribute('href');
+            }
+          }
+          
+          if (title && link) {
+            stories.push({ title, url: link });
+          }
+        }
+        return stories;
+      });
+  }
+
   function fetchData() {
     const cached = cacheGet();
     if (cached?.length) {
@@ -77,19 +138,27 @@
       return Promise.resolve();
     }
 
-    return fetch(TOP_URL, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(ids => {
-        const top = ids.slice(0, HEADLINE_COUNT);
-        return Promise.all(top.map(id => fetch(ITEM_URL(id), { cache: 'no-store' }).then(r => r.json())));
-      })
+    const tile = deps && deps.getTile && deps.getTile(TILE_ID);
+    const provider = tile && tile.newsProvider ? tile.newsProvider : 'hn';
+    const customUrl = tile && tile.customRssUrl ? tile.customRssUrl.trim() : '';
+    
+    let fetchPromise;
+    if (customUrl) {
+      fetchPromise = fetchRssNews(customUrl);
+    } else if (provider === 'hn') {
+      fetchPromise = fetchHackerNews();
+    } else if (RSS_FEEDS[provider]) {
+      fetchPromise = fetchRssNews(RSS_FEEDS[provider]);
+    } else {
+      fetchPromise = fetchHackerNews();
+    }
+
+    return fetchPromise
       .then(stories => {
-        const tile = deps && deps.getTile && deps.getTile(TILE_ID);
         const removeJobs = tile ? tile.removeJobs !== false : true;
         const storyControl = tile && tile.storyControl ? tile.storyControl.toLowerCase().trim().split(/\s+/) : [];
 
         data = stories
-          .filter(s => s?.title && s.url)
           .filter(s => !(removeJobs && s.title.toLowerCase().includes('hiring')))
           .filter(s => {
             if (storyControl.length === 0 || (storyControl.length === 1 && storyControl[0] === '')) return true;
@@ -99,8 +168,7 @@
               lowerTitle.includes(word) || 
               titleWords.some(tw => tw.length >= 4 && word.includes(tw))
             );
-          })
-          .map(s => ({ title: s.title, url: s.url }));
+          });
         cacheSet(data);
         index = 0;
         updateFace();
@@ -143,10 +211,21 @@
             title = title.charAt(0).toUpperCase() + title.slice(1);
           }
         }
+        const tile = deps && deps.getTile && deps.getTile(TILE_ID);
+        const provider = tile && tile.newsProvider ? tile.newsProvider : 'hn';
+        const customUrl = tile && tile.customRssUrl ? tile.customRssUrl.trim() : '';
+        let sourceName = 'Hacker News';
+        if (customUrl) {
+          sourceName = 'Custom RSS';
+        } else {
+          const pnames = { hn: 'Hacker News', cnn: 'CNN', nbc: 'NBC', abc: 'ABC', cbs: 'CBS', cbc: 'CBC', bbc: 'BBC', npr: 'NPR', fox: 'FOX' };
+          sourceName = pnames[provider] || 'Hacker News';
+        }
+
         el.innerHTML =
           `<div class="news-headline"${lc}>${escHtml(title)}</div>` +
           `<div class="news-divider"></div>` +
-          `<div class="news-source">Hacker News</div>`;
+          `<div class="news-source">${escHtml(sourceName)}</div>`;
       } else {
         el.innerHTML = '<div class="weather-nodata">Loading headlines\u2026</div>';
       }
