@@ -32,6 +32,7 @@
   let index = 0;
   let pollTimer = null;
   let hasLoaded = false;
+  let hasFailed = false;
 
   // Text cleaning regex numero uno
 
@@ -174,13 +175,15 @@
             );
           });
         hasLoaded = true;
+        hasFailed = false;
         cacheSet(data);
         index = 0;
         updateFace();
       })
       .catch(() => {
         data = [];
-        hasLoaded = true;
+        hasLoaded = false;
+        hasFailed = true;
         updateFace();
       });
   }
@@ -242,6 +245,8 @@
           }
         }
         el.innerHTML = `<div class="news-headline"${lc}>${escHtml(title)}</div>`;
+      } else if (hasFailed) {
+        el.innerHTML = '<div class="weather-nodata">Failed to load headlines\u2026</div>';
       } else {
         el.innerHTML = '<div class="weather-nodata">Loading headlines\u2026</div>';
       }
@@ -285,6 +290,6 @@
     advanceItem,
     cleanHeadline,
     getData: () => data,
-    hasData: () => data.length > 0,
+    hasData: () => data.length > 0 || hasLoaded || hasFailed,
   };
 })();
