@@ -1008,15 +1008,22 @@ const App = (() => {
     }
   }
 
-  function collapseFolderExpand() {
-    gridEl.classList.add('folder-animating');
-    setTimeout(() => { if (gridEl) gridEl.classList.remove('folder-animating'); }, 150);
+  function collapseFolderExpand(skipAnimation = false) {
+    const noAnim = skipAnimation || settings.disableFolderAnimations;
+    if (!noAnim) {
+      gridEl.classList.add('folder-animating');
+      setTimeout(() => { if (gridEl) gridEl.classList.remove('folder-animating'); }, 150);
+    }
     expandedFolderId = null;
     renderedExpandedFolderId = null;
     folderExpandedContainerEl = null;
     gridEl.classList.remove('folder-expanded');
     gridEl.querySelectorAll('.tile-pushed-by-folder').forEach(el => {
       el.classList.remove('tile-pushed-by-folder');
+      if (noAnim) {
+        el.style.transition = 'none';
+        setTimeout(() => { if (el) el.style.transition = ''; }, 50);
+      }
       const t = tiles.find(x => x.id === el.dataset.id);
       if (t) {
         const p = tilePx(t);
@@ -1028,12 +1035,16 @@ const App = (() => {
     const existing = gridEl.querySelector('.folder-expanded-container');
     if (existing) {
       existing.classList.remove('ready');
-      existing.style.height = '0px';
-      existing.style.paddingTop = '0px';
-      existing.style.paddingBottom = '0px';
-      existing.style.opacity = '0';
-      existing.style.overflow = 'hidden';
-      setTimeout(() => existing.remove(), 250);
+      if (noAnim) {
+        existing.remove();
+      } else {
+        existing.style.height = '0px';
+        existing.style.paddingTop = '0px';
+        existing.style.paddingBottom = '0px';
+        existing.style.opacity = '0';
+        existing.style.overflow = 'hidden';
+        setTimeout(() => existing.remove(), 250);
+      }
     }
     gridEl.style.height = `${getGridHeight()}px`;
   }
@@ -1107,7 +1118,8 @@ const App = (() => {
   }
 
   function renderFolderExpanded(folder, wasExpanded) {
-    if (!wasExpanded) {
+    const skipAnimation = wasExpanded || settings.disableFolderAnimations;
+    if (!skipAnimation) {
       gridEl.classList.add('folder-animating');
       setTimeout(() => { if (gridEl) gridEl.classList.remove('folder-animating'); }, 150);
     }
@@ -1128,7 +1140,7 @@ const App = (() => {
     bg.className = 'folder-expanded-bg';
     container.appendChild(bg);
 
-    if (wasExpanded) {
+    if (skipAnimation) {
       container.classList.add('no-animation');
       container.style.transition = 'none';
       container.classList.add('ready');
@@ -1358,7 +1370,7 @@ const App = (() => {
     // Push all tiles whose area intersects the expansion zone
     const expandHeight = container.offsetHeight;
     
-    if (!wasExpanded) {
+    if (!skipAnimation) {
       // Animate container opening
       container.style.height = '0px';
       container.style.paddingTop = '0px';
@@ -1374,7 +1386,7 @@ const App = (() => {
     container.style.paddingBottom = '18px';
     container.style.opacity = '1';
 
-    applyExpandedFolderGridPush(folder, expandHeight, wasExpanded);
+    applyExpandedFolderGridPush(folder, expandHeight, skipAnimation);
   }
 
   function showFolderCreatePrompt(callback) {
@@ -1438,6 +1450,10 @@ const App = (() => {
         <div class="color-picker-row" id="color-picker-folder-edit">${colorSwatchesHtml(folder.color, 'color-picker-folder-edit')}</div>
       </div>
       ` : ''}
+      <div class="form-group" style="display:flex; align-items:center; cursor:pointer; margin-top:16px;" onclick="const cb=document.getElementById('edit-folder-no-anim'); cb.classList.toggle('checked');">
+        <div class="metro-checkbox${settings.disableFolderAnimations ? ' checked' : ''}" id="edit-folder-no-anim" style="margin-right:12px;"></div>
+        <span style="font-size:14px; transform: translateY(-2px); display: inline-block;">global - do not animate folder open or close</span>
+      </div>
       <div class="modal-actions">
         <button class="btn-danger" id="btn-edit-folder-delete">Delete</button>
         <button class="btn-secondary" id="btn-edit-folder-cancel">Cancel</button>
@@ -1456,6 +1472,10 @@ const App = (() => {
       if (showColor) {
         const colorInput = document.getElementById('edit-folder-color');
         if (colorInput) folder.color = colorInput.value;
+      }
+      const noAnimCb = document.getElementById('edit-folder-no-anim');
+      if (noAnimCb) {
+        settings.disableFolderAnimations = noAnimCb.classList.contains('checked');
       }
       save();
       render();
@@ -2075,7 +2095,18 @@ const App = (() => {
         // Calculate main grid coordinates from screen space
         const rect = gridEl.getBoundingClientRect();
         const dropX = el.getBoundingClientRect().left - rect.left;
-        const dropY = el.getBoundingClientRect().top - rect.top;
+        let dropY = el.getBoundingClientRect().top - rect.top;
+        
+        // Compensate for the visual height expansion of the open folder
+        const folderBottomPx = (folder.row + TILE_SIZES.medium.rows) * (cellSize + GRID_GAP);
+        if (dropY > folderBottomPx) {
+          const expandedContainer = gridEl.querySelector('.folder-expanded-container');
+          if (expandedContainer) {
+            const expandHeight = expandedContainer.offsetHeight;
+            dropY = Math.max(folderBottomPx, dropY - expandHeight - GRID_GAP);
+          }
+        }
+        
         tile.col = clamp(Math.round(dropX / (cellSize + GRID_GAP)), 0, GRID_COLS - TILE_SIZES[tile.size].cols);
         tile.row = Math.max(0, Math.round(dropY / (cellSize + GRID_GAP)));
         
