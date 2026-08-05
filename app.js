@@ -201,7 +201,7 @@ const App = (() => {
       const delay = 4000 + Math.random() * 3000;
       liveTileIntervals.push(setTimeout(function weatherCycle() {
         const el = document.querySelector(`[data-id="${WEATHER_TILE_ID}"] .live-tile-inner`);
-        if (el && navigator.onLine && WeatherService.getData() && !editMode) {
+        if (el && navigator.onLine && WeatherService.getData() && !editMode && !el.classList.contains('is-flipped')) {
           flipTile(el, true);
           liveTileIntervals.push(setTimeout(() => flipTile(el, false), 4000 + Math.random() * 2000));
         }
@@ -213,7 +213,7 @@ const App = (() => {
       const delay = 6000 + Math.random() * 3000;
       liveTileIntervals.push(setTimeout(function newsCycle() {
         const el = document.querySelector(`[data-id="${NEWS_TILE_ID}"] .live-tile-inner`);
-        if (el && navigator.onLine && NewsService.hasData() && !editMode) {
+        if (el && navigator.onLine && NewsService.hasData() && !editMode && !el.classList.contains('is-flipped')) {
           NewsService.advanceItem();
           flipTile(el, true);
           liveTileIntervals.push(setTimeout(() => flipTile(el, false), 4000 + Math.random() * 2000));
@@ -226,7 +226,7 @@ const App = (() => {
       const delay = 3000 + Math.random() * 2000;
       liveTileIntervals.push(setTimeout(function spotifyCycle() {
         const el = document.querySelector(`[data-id="${SPOTIFY_TILE_ID}"] .live-tile-inner`);
-        if (el && navigator.onLine && SpotifyService.hasData() && !editMode) {
+        if (el && navigator.onLine && SpotifyService.hasData() && !editMode && !el.classList.contains('is-flipped')) {
           if (settings.spotifyMeltEnabled) {
             el.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
             el.style.transform = 'translateY(0%)';
