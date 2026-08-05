@@ -1411,7 +1411,7 @@ const App = (() => {
       `<input type="text" class="metro-input" id="folder-name-input" placeholder="Folder name" value="New Folder" autofocus>` +
       `<div class="confirm-actions">` +
       `<button class="confirm-cancel">Cancel</button>` +
-      `<button class="confirm-danger" style="color:#fff; border-color:var(--accent, #0078d4); --btn-color:var(--accent, #0078d4);">OK</button>` +
+      `<button class="confirm-ok" style="color:#fff; border-color:var(--accent, #0078d4);">OK</button>` +
       `</div>` +
       `</div>`;
     document.body.appendChild(overlay);
@@ -1423,7 +1423,7 @@ const App = (() => {
       overlay.remove();
       callback(null);
     };
-    overlay.querySelector('.confirm-danger').onclick = () => {
+    overlay.querySelector('.confirm-ok').onclick = () => {
       const name = input.value.trim() || 'New Folder';
       overlay.remove();
       callback(name);

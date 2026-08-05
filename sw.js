@@ -1,4 +1,4 @@
-const CACHE_NAME = 'metro-launcher-v22';
+const CACHE_NAME = 'metro-launcher-v23';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -75,7 +75,8 @@ self.addEventListener('fetch', event => {
     
     // explicitly prevent caching of dynamic data for live tiles
     if (url.hostname.includes('leopardindustries.net') ||  // for spotify status
-        url.hostname.includes('firebaseio') ||             // for news
+        url.hostname.includes('firebaseio') ||             // for news (default)
+        url.hostname.includes('cors.lol') ||               // for news (custom)
         url.hostname.includes('api.openweathermap.org')) { // for weather
         return;
     }
