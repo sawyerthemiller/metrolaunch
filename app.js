@@ -825,6 +825,15 @@ const App = (() => {
     });
     save();
     render();
+    
+    setTimeout(() => {
+      const cy = spot.row * (cellSize + GRID_GAP);
+      const elHeight = TILE_SIZES[data.size || 'medium'].rows * cellSize + (TILE_SIZES[data.size || 'medium'].rows - 1) * GRID_GAP;
+      const containerHeight = scrollEl.clientHeight;
+      const targetTop = cy + 8 - (containerHeight / 2) + (elHeight / 2);
+      scrollEl.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+    }, 100);
+    
     showToast(`${data.name || 'App'} added`);
   }
 
@@ -930,8 +939,11 @@ const App = (() => {
       render();
       
       setTimeout(() => {
-        const el = gridEl.querySelector(`[data-id="${folder.id}"]`);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const cy = folder.row * (cellSize + GRID_GAP);
+        const elHeight = TILE_SIZES.medium.rows * cellSize + (TILE_SIZES.medium.rows - 1) * GRID_GAP;
+        const containerHeight = scrollEl.clientHeight;
+        const targetTop = cy + 8 - (containerHeight / 2) + (elHeight / 2);
+        scrollEl.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
       }, 100);
       
       showToast('Folder created');
