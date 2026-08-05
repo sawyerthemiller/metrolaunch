@@ -184,9 +184,11 @@ const App = (() => {
     inner.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
     if (!show) {
       inner.style.transform = 'translateY(calc(-100% / 3))';
+      inner.classList.remove('is-flipped');
     } else {
       const up = Math.random() < 0.5;
       inner.style.transform = up ? 'translateY(calc(-200% / 3))' : 'translateY(0%)';
+      inner.classList.add('is-flipped');
     }
   }
 
@@ -2277,9 +2279,14 @@ const App = (() => {
             });
           }
           else if (isNewsTile(touchTile)) {
-            const item = NewsService.currentItem();
-            if (item?.url) { playLaunchAnimation(touchTile, (t) => window.open(item.url, '_blank')); }
-            else { showToast('No headlines loaded'); }
+            const el = document.querySelector(`[data-id="${touchTile.id}"] .live-tile-inner`);
+            if (el && !el.classList.contains('is-flipped')) {
+              // Do nothing on normal face
+            } else {
+              const item = NewsService.currentItem();
+              if (item?.url) { playLaunchAnimation(touchTile, (t) => window.open(item.url, '_blank')); }
+              else { showToast('No headlines loaded'); }
+            }
           }
           else if (isSpotifyTile(touchTile)) {
             playLaunchAnimation(touchTile, (t) => { window.location.href = 'spotify://'; });
@@ -2334,9 +2341,14 @@ const App = (() => {
             });
           }
           else if (isNewsTile(touchTile)) {
-            const item = NewsService.currentItem();
-            if (item?.url) { playLaunchAnimation(touchTile, (t) => window.open(item.url, '_blank')); }
-            else { showToast('No headlines loaded'); }
+            const el = document.querySelector(`[data-id="${touchTile.id}"] .live-tile-inner`);
+            if (el && !el.classList.contains('is-flipped')) {
+              // Do nothing on normal face
+            } else {
+              const item = NewsService.currentItem();
+              if (item?.url) { playLaunchAnimation(touchTile, (t) => window.open(item.url, '_blank')); }
+              else { showToast('No headlines loaded'); }
+            }
           }
           else if (isSpotifyTile(touchTile)) {
             playLaunchAnimation(touchTile, (t) => { window.location.href = 'spotify://'; });
