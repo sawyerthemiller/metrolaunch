@@ -1,7 +1,7 @@
 /* ================================================================
    METRO LAUNCHER — Application Logic
 
-   Delete or undelete this line to test the app update system...
+   ...delete or undelete this line to test the app update system...
    ================================================================ */
 
 // disable pinch zoom on iOS
