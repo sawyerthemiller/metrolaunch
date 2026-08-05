@@ -1547,6 +1547,19 @@ const App = (() => {
         if (el) {
           el.style.translate = `${cx}px ${cy}px`;
         }
+      } else {
+        const ph = gridEl.querySelector('.drop-placeholder');
+        if (ph && dragState && dragState.inFolderDrag) {
+          const cx = col * (cellSize + GRID_GAP);
+          const cy = row * (cellSize + GRID_GAP);
+          const innerRect = inner.getBoundingClientRect();
+          const gridRect = gridEl.getBoundingClientRect();
+          const topOffset = innerRect.top - gridRect.top;
+          const leftOffset = innerRect.left - gridRect.left;
+          ph.style.translate = `${cx + leftOffset}px ${cy + topOffset}px`;
+          ph.style.width = `${s.cols * cellSize + (s.cols - 1) * GRID_GAP}px`;
+          ph.style.height = `${s.rows * cellSize + (s.rows - 1) * GRID_GAP}px`;
+        }
       }
     });
     
@@ -2076,8 +2089,9 @@ const App = (() => {
       }
     }
     
-    if (!tile) return;
+    if (!tile) return false;
     const el = gridEl.querySelector(`[data-id="${dragState.tileId}"]`);
+    const wasMoved = dragState.moved;
 
     // Clean up folder hover state
     const hoverTargetId = dragState.folderHoverTarget;
@@ -2137,8 +2151,7 @@ const App = (() => {
         dragState = null;
         save();
       }
-      
-      return;
+      return wasMoved;
     }
 
     // Check if we should drop into an existing folder
@@ -2154,7 +2167,7 @@ const App = (() => {
 
         // Add to existing folder
         addTileToFolder(tile.id, targetTile.id);
-        return;
+        return wasMoved;
       }
     }
 
@@ -2172,7 +2185,6 @@ const App = (() => {
     if (ph) ph.remove();
     gridEl.style.height = `${getGridHeight()}px`;
 
-    const wasMoved = dragState ? dragState.moved : false;
     dragState = null;
     render();
     return wasMoved;

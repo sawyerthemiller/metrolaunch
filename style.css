@@ -893,7 +893,7 @@ body:not(.is-desktop) .header {
   border: 1px dashed rgba(255, 255, 255, 0.25);
   border-radius: var(--tile-radius);
   pointer-events: none;
-  z-index: 0;
+  z-index: 60;
   transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
