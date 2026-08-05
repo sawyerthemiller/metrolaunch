@@ -49,6 +49,9 @@
     });
     
     // Aesthetic cleanups
+    
+    // Replace hyphens that are strictly bounded by letters/numbers with a space
+    parsed = parsed.replace(/(\w)-(\w)/g, '$1 $2');
 
     parsed = parsed.replace(/\//g, ' ');
     parsed = parsed.replace(/\bfeat\b/gi, 'Featuring');

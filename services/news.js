@@ -31,6 +31,7 @@
   let data = [];
   let index = 0;
   let pollTimer = null;
+  let hasLoaded = false;
 
   // Text cleaning regex numero uno
 
@@ -128,6 +129,7 @@
     const cached = cacheGet();
     if (cached?.length) {
       data = cached;
+      hasLoaded = true;
       index = 0;
       updateFace();
       return Promise.resolve();
@@ -171,12 +173,14 @@
               titleWords.some(tw => tw.length >= 4 && word.includes(tw))
             );
           });
+        hasLoaded = true;
         cacheSet(data);
         index = 0;
         updateFace();
       })
       .catch(() => {
         data = [];
+        hasLoaded = true;
         updateFace();
       });
   }
@@ -228,6 +232,16 @@
           `<div class="news-headline"${lc}>${escHtml(title)}</div>` +
           `<div class="news-divider"></div>` +
           `<div class="news-source">${escHtml(sourceName)}</div>`;
+      } else if (hasLoaded) {
+        let title = 'The set filters have removed all stories';
+        if (settings.newsLowercase && settings.newsCapitaliseFirst) {
+          lc = '';
+          title = title.toLowerCase();
+          if (title.length > 0 && title[0].match(/[a-z]/i)) {
+            title = title.charAt(0).toUpperCase() + title.slice(1);
+          }
+        }
+        el.innerHTML = `<div class="news-headline"${lc}>${escHtml(title)}</div>`;
       } else {
         el.innerHTML = '<div class="weather-nodata">Loading headlines\u2026</div>';
       }

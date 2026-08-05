@@ -651,7 +651,6 @@ body:not(.is-desktop) .header {
   z-index: 1;
   font-size: calc(11px * var(--live-tile-scale, 1));
   color: rgba(255, 255, 255, 0.85);
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   width: 100%;
   overflow: hidden;
@@ -1021,7 +1020,8 @@ body.is-desktop .modal-sheet {
   border-color: #fff;
 }
 
-.form-group input[id$="-url"]:not(:focus) {
+.form-group input[id$="-url"]:not(:focus),
+.form-group input#news-story-control:not(:focus) {
   text-transform: lowercase;
 }
 
@@ -1872,11 +1872,11 @@ body.disable-forced-font * {
 
 .folder-type-label {
   font-size: calc(11px * var(--live-tile-scale, 1));
-  font-weight: 700;
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   pointer-events: none;
+  text-shadow: 0 0 0.4px rgba(255, 255, 255, 0.4), 0 0 0.4px rgba(255, 255, 255, 0.4);
 }
 
 .folder-chevron-face {

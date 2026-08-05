@@ -2504,6 +2504,7 @@ const App = (() => {
 
       isModalAnimating = true;
       const sheet = document.getElementById('modal-sheet');
+      sheet.className = 'modal-sheet';
       sheet.innerHTML = html;
       sheet.style.marginBottom = '30px';
       
@@ -3274,7 +3275,7 @@ const App = (() => {
     
     const storyControlInp = document.getElementById('news-story-control');
     storyControlInp.addEventListener('blur', () => {
-      storyControlInp.value = storyControlInp.value.toLowerCase();
+      storyControlInp.value = storyControlInp.value.replace(/\s+/g, ' ').trim();
     });
     
     const jobsToggle = document.getElementById('news-remove-jobs-toggle');
@@ -3994,6 +3995,7 @@ const App = (() => {
             <button id="adv-close">Close</button>
           </div>
         `);
+        document.getElementById('modal-sheet').classList.add('all-collapsed');
         document.getElementById('adv-reshow-privacy').onclick = () => {
           if (window.communityAPI) window.communityAPI.showPrivacyModal(false);
         };
@@ -4851,6 +4853,10 @@ const App = (() => {
 
     window._advResetState = function() {
       getFlatTiles().forEach(t => {
+        if (t.isNews) {
+          t.visibility = 'tiles';
+          return;
+        }
         if (t.visibility === 'search') {
           t.visibility = 'both';
           if (tiles.includes(t)) pushTilesAway(t.id);
@@ -4931,12 +4937,16 @@ const App = (() => {
       const isLive = t.isWeather || t.isNews || t.isSpotify;
       
       if (isLive) {
-        const cbLive = document.getElementById('adv-live-hide');
-        if (cbLive) {
-          if (cbLive.classList.contains('checked')) {
-            t.visibility = 'tiles'; // Hidden from search
-          } else {
-            t.visibility = 'both';
+        if (t.isNews) {
+          t.visibility = 'tiles';
+        } else {
+          const cbLive = document.getElementById('adv-live-hide');
+          if (cbLive) {
+            if (cbLive.classList.contains('checked')) {
+              t.visibility = 'tiles'; // Hidden from search
+            } else {
+              t.visibility = 'both';
+            }
           }
         }
       } else {
@@ -4996,10 +5006,11 @@ const App = (() => {
     `;
 
     if (isLiveTile) {
+      const isNews = tile.isNews;
       html += `
         <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">The live tiles can only be hidden from search, so to get rid of a live tile on the start screen, turn it off in the settings...</div>
-        <div class="form-group" style="display:flex; align-items:center; cursor:pointer;" onclick="window._advToggleLiveCb()">
-          <div class="metro-checkbox${currentVis === 'tiles' ? ' checked' : ''}" id="adv-live-hide" style="margin-right:12px;"></div>
+        <div class="form-group" style="display:flex; align-items:center; cursor:${isNews ? 'not-allowed' : 'pointer'}; opacity: ${isNews ? '0.5' : '1'};" onclick="${isNews ? '' : 'window._advToggleLiveCb()'}">
+          <div class="metro-checkbox${(currentVis === 'tiles' || isNews) ? ' checked' : ''}" id="adv-live-hide" style="margin-right:12px;"></div>
           <span style="font-size:16px; transform: translateY(-2px); display: inline-block;">disable from search list</span>
         </div>
       `;

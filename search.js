@@ -207,7 +207,7 @@ function renderSearchList() {
   
   tiles.forEach(tile => {
     if (!tile.name) return;
-    if (tile.visibility === 'tiles') return;
+    if (tile.visibility === 'tiles' || tile.isNews || tile.id === 'news-tile') return;
     
     const nameStr = tile.name.trim();
     if (!nameStr) return;
