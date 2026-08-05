@@ -1732,14 +1732,11 @@ const App = (() => {
   }
 
   // EDIT MODE
-  let preEditPositions = {};
+  let preEditTilesJSON = null;
 
   window.discardEditMode = function() {
-    for (const t of tiles) {
-      if (preEditPositions[t.id]) {
-        t.col = preEditPositions[t.id].col;
-        t.row = preEditPositions[t.id].row;
-      }
+    if (preEditTilesJSON) {
+      tiles = JSON.parse(preEditTilesJSON);
     }
     if (settings.gridlock) compactGrid();
     save();
@@ -1754,14 +1751,11 @@ const App = (() => {
   function toggleEditMode(isDiscarding = false, noRender = false) {
     if (typeof isDiscarding !== 'boolean') isDiscarding = false;
     if (!editMode && !isDiscarding) {
-      preEditPositions = {};
-      for (const t of tiles) {
-        preEditPositions[t.id] = { col: t.col, row: t.row };
-      }
+      preEditTilesJSON = JSON.stringify(tiles);
       editMode = true;
     } else {
       editMode = false;
-      preEditPositions = {};
+      preEditTilesJSON = null;
     }
     
     if (!noRender) {

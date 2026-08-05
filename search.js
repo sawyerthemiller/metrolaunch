@@ -24,12 +24,12 @@ function initSearch() {
   
   searchBtns.forEach(btn => {
     btn.style.cursor = 'pointer';
-    btn.addEventListener('pointerup', openSearch);
+    btn.addEventListener('click', openSearch);
   });
   
   backBtns.forEach(btn => {
     btn.style.cursor = 'pointer';
-    btn.addEventListener('pointerup', closeSearch);
+    btn.addEventListener('click', closeSearch);
   });
   
   searchInputs.forEach(input => {
