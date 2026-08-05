@@ -24,12 +24,12 @@ function initSearch() {
   
   searchBtns.forEach(btn => {
     btn.style.cursor = 'pointer';
-    btn.addEventListener('click', openSearch);
+    btn.addEventListener('pointerup', openSearch);
   });
   
   backBtns.forEach(btn => {
     btn.style.cursor = 'pointer';
-    btn.addEventListener('click', closeSearch);
+    btn.addEventListener('pointerup', closeSearch);
   });
   
   searchInputs.forEach(input => {
@@ -65,27 +65,35 @@ function initSearch() {
       if (btn.classList.contains('nav-btn-back') && !isSearchOpen) return;
       if (btn.classList.contains('nav-btn-search') && isSearchOpen) return;
       
-      const rect = btn.getBoundingClientRect();
-      const rippleContainer = document.createElement('div');
-      rippleContainer.className = 'nav-ripple-container';
-      
-      const ripple = document.createElement('div');
-      ripple.className = 'nav-ripple';
-      
-      const size = Math.max(rect.width, rect.height);
-      const x = e.clientX - rect.left - size / 2;
-      const y = e.clientY - rect.top - size / 2;
-      
-      ripple.style.width = ripple.style.height = `${size}px`;
-      ripple.style.left = `${x}px`;
-      ripple.style.top = `${y}px`;
-      
-      rippleContainer.appendChild(ripple);
-      btn.appendChild(rippleContainer);
-      
-      setTimeout(() => {
-        rippleContainer.remove();
-      }, 400);
+      requestAnimationFrame(() => {
+        const rect = btn.getBoundingClientRect();
+        const rippleContainer = document.createElement('div');
+        rippleContainer.className = 'nav-ripple-container';
+        rippleContainer.style.position = 'fixed';
+        rippleContainer.style.top = `${rect.top}px`;
+        rippleContainer.style.left = `${rect.left}px`;
+        rippleContainer.style.width = `${rect.width}px`;
+        rippleContainer.style.height = `${rect.height}px`;
+        rippleContainer.style.zIndex = '9999';
+        
+        const ripple = document.createElement('div');
+        ripple.className = 'nav-ripple';
+        
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        
+        rippleContainer.appendChild(ripple);
+        document.body.appendChild(rippleContainer);
+        
+        setTimeout(() => {
+          rippleContainer.remove();
+        }, 400);
+      });
     });
   });
 }
@@ -349,7 +357,7 @@ function showSearchContextMenu(tileId, x, y) {
   if (window.communityAPI && window.communityAPI.isSubmitEnabled() && isSubmittable) {
     submitHtml = `
       <div class="context-menu-item" data-action="submit">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:8px;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg> Community Submit
+        <img src="share.png" style="width:16px; height:16px; margin-right:8px; object-fit:contain; filter: invert(1); transform: scale(1.1);"> Community Submit
       </div>
       <div class="context-menu-divider"></div>
     `;

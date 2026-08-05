@@ -44,4 +44,14 @@ function e(el) {
     el.insertAdjacentElement('beforeend', t);
   }
 }
-export { e as hapticTrigger };
+function removeHaptics() {
+  document.querySelectorAll('[data-haptic-id]').forEach(el => {
+    el.removeAttribute('data-haptic-id');
+    const switchEl = el.querySelector('input[switch]');
+    if (switchEl) switchEl.remove();
+    const labelEl = el.querySelector('label');
+    if (labelEl) labelEl.remove();
+    el._hapticApplied = false;
+  });
+}
+export { e as hapticTrigger, removeHaptics };

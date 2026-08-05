@@ -497,6 +497,14 @@ const App = (() => {
       }
     }
 
+    if (settings.hapticOnTouch) {
+      initHaptics();
+    } else {
+      import('./ios-haptics.js').then(m => {
+        if (m.removeHaptics) m.removeHaptics();
+      }).catch(() => {});
+    }
+
     saveSettings();
     startLiveTileFlip();
   }
@@ -1471,6 +1479,7 @@ const App = (() => {
   };
 
   function toggleEditMode(isDiscarding = false) {
+    if (typeof isDiscarding !== 'boolean') isDiscarding = false;
     if (!editMode && !isDiscarding) {
       preEditPositions = {};
       for (const t of tiles) {
@@ -1872,8 +1881,13 @@ const App = (() => {
     e.stopPropagation();
     const btnElement = e.currentTarget;
     const menu = document.getElementById('context-menu');
+    
+    if (menu.classList.contains('visible') && menu.querySelector('[data-action="add-tile"]')) {
+      hideContextMenu();
+      return;
+    }
     menu.innerHTML = `
-      <div class="context-menu-item" data-action="add-tile">${UI_SVG.plus} Add tile</div>
+      <div class="context-menu-item" data-action="add-tile"><span style="transform: scale(1.1); display: inline-flex;">${UI_SVG.plus}</span> Add tile</div>
       <div class="context-menu-divider"></div>
       <div class="context-menu-item" data-action="add-folder">${UI_SVG.folder} Add empty folder</div>
     `;

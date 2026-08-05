@@ -1247,6 +1247,7 @@ body.disable-forced-font * {
   stroke-linecap: round;
   stroke-linejoin: round;
   flex-shrink: 0;
+  transform: translateY(1px);
 }
 
 .context-menu-item:hover {
@@ -1677,6 +1678,8 @@ body.disable-forced-font * {
 
 .nav-icon-btn {
   position: relative;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* --- Search UI --- */
