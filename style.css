@@ -32,6 +32,7 @@
   --tile-radius: 0px;
   --tile-opacity: 0.85;
   --transition: 0.25s cubic-bezier(0.2, 0, 0, 1);
+  --folder-transition: 0.15s cubic-bezier(0.2, 0, 0, 1);
   --bg-blur: 0px;
   --bg-darken: 0;
 }
@@ -350,7 +351,7 @@ body:not(.is-desktop) .header {
   justify-content: center;
   gap: 4px;
   overflow: hidden;
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
+
   transition:
     transform var(--transition),
     translate var(--transition),
@@ -362,6 +363,14 @@ body:not(.is-desktop) .header {
     opacity 0.15s;
   z-index: 1;
   transform: translateZ(0);
+}
+
+.tile.needs-mask {
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+.tile-grid.edit-mode .tile.needs-mask {
+  -webkit-mask-image: none !important;
 }
 
 .tile:active:not(.dragging) {
@@ -1551,7 +1560,7 @@ body.disable-forced-font * {
 }
 
 .confirm-actions .confirm-danger:active {
-  background: rgba(255, 80, 80, 0.15);
+  background: color-mix(in srgb, var(--btn-color, #ff5050) 20%, transparent);
 }
 
 /* ========== ORIENTATION LOCK ========== */
@@ -1884,6 +1893,17 @@ body.disable-forced-font * {
   stroke-linejoin: round;
 }
 
+@keyframes tile-drop-ready-blink {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.5); scale: 0.95; }
+  100% { filter: brightness(1); }
+}
+
+.tile.folder-drop-ready {
+  animation: tile-drop-ready-blink 0.5s infinite !important;
+  z-index: 99 !important; /* ensure it stays on top while blinking */
+}
+
 /* Blinking animation for folder drag hover */
 .tile.folder-blink {
   animation: blink 0.25s ease-in-out 4; /* 2 full blinks (4 half-cycles at 0.25s) = 1s */
@@ -1901,13 +1921,50 @@ body.disable-forced-font * {
   border-bottom: 2px solid #fff;
   padding: 18px 0;
   overflow: visible;
-  background: rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: height var(--transition), padding var(--transition), opacity var(--transition);
+  transition: height var(--folder-transition), padding var(--folder-transition);
   pointer-events: none;
   transform: translateZ(0);
-  will-change: height, padding, opacity;
+  will-change: height, padding;
+}
+
+@keyframes folderBgFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.folder-expanded-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transform: translateZ(0);
+}
+
+.folder-expanded-container.ready .folder-expanded-bg {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 1;
+  animation: folderBgFadeIn 0.2s ease;
+}
+
+.folder-expanded-container.no-animation .folder-expanded-bg,
+.folder-expanded-container.no-animation .folder-expanded-inner {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+.tile-grid.folder-animating > .tile {
+  transition:
+    transform var(--folder-transition),
+    translate var(--folder-transition),
+    scale var(--folder-transition),
+    top var(--folder-transition),
+    left var(--folder-transition),
+    width var(--folder-transition),
+    height var(--folder-transition),
+    opacity 0.15s !important;
 }
 
 .folder-expanded-container .tile {
@@ -1924,10 +1981,22 @@ body.disable-forced-font * {
   z-index: 3;
 }
 
+@keyframes folderInnerFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .folder-expanded-inner {
   position: relative;
   width: 100%;
   min-height: 20px;
+  z-index: 1;
+  opacity: 0;
+}
+
+.folder-expanded-container.ready .folder-expanded-inner {
+  opacity: 1;
+  animation: folderInnerFade 0.2s ease;
 }
 
 .metro-input {

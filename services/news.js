@@ -40,6 +40,7 @@
       return title.trim();
     }
     return title
+      .replace(/&/g, 'and')
       .replace(/GitHub/g, 'Github')
       .replace(/A\.I\.?/gi, 'AI')
       .replace(/\s*\[([^\]]+)\]/g, ' $1')
@@ -156,7 +157,8 @@
     return fetchPromise
       .then(stories => {
         const removeJobs = tile ? tile.removeJobs !== false : true;
-        const storyControl = tile && tile.storyControl ? tile.storyControl.toLowerCase().trim().split(/\s+/) : [];
+        const enableStoryControl = tile && !!tile.enableStoryControl;
+        const storyControl = enableStoryControl && tile.storyControl ? tile.storyControl.toLowerCase().trim().split(/\s+/) : [];
 
         data = stories
           .filter(s => !(removeJobs && s.title.toLowerCase().includes('hiring')))

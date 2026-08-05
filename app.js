@@ -319,6 +319,7 @@ const App = (() => {
   };
   let isDesktop = false;
   let editMode = false;
+  let renderedExpandedFolderId = null;
   let cellSize = 0;
 
   let gridEl, scrollEl, bgLayerEl;
@@ -327,7 +328,6 @@ const App = (() => {
   let showNavBarPopupTrigger = false;
   let expandedFolderId = null;
   let folderExpandedContainerEl = null;
-  let folderEditMode = false;
 
   // UTILITIES
   function _uid() {
@@ -612,6 +612,11 @@ const App = (() => {
       el.className = 'tile';
       el.dataset.id = t.id;
       el.dataset.size = t.size;
+      
+      if ((isSpotifyTile(t) && t.spotifyCoverArt) || (isWeatherTile(t) && t.weatherCoverArt !== false)) {
+        el.classList.add('needs-mask');
+      }
+
       const tileColor = useGlobalColor ? settings.globalColor : t.color;
       el.style.background = hexToRgba(tileColor, tileOp);
       el.style.borderRadius = `${settings.tileRadius || 0}px`;
@@ -733,11 +738,14 @@ const App = (() => {
         }
         if (r > 0) badge.style.borderRadius = `${r}px`;
 
-        const handle = document.createElement('div');
-        handle.className = 'resize-handle';
-        if (r > 0) handle.style.borderRadius = `${r}px`;
-
-        el.append(badge, handle);
+        if (!isFolder(t)) {
+          const handle = document.createElement('div');
+          handle.className = 'resize-handle';
+          if (r > 0) handle.style.borderRadius = `${r}px`;
+          el.append(badge, handle);
+        } else {
+          el.append(badge);
+        }
       } else {
         const iconWrap = document.createElement('div');
         iconWrap.className = 'tile-icon';
@@ -756,7 +764,8 @@ const App = (() => {
         const badgeClick = (e) => { 
           e.stopPropagation(); 
           e.preventDefault(); 
-          metroConfirm('Delete Tile', 'Do you really want to delete this tile as you cannot undo this...', 'Delete', () => {
+          const isF = isFolder(t);
+          metroConfirm(isF ? 'Delete Folder' : 'Delete Tile', isF ? 'Do you really want to delete this folder? Apps inside will be moved back to the grid.' : 'Do you really want to delete this tile as you cannot undo this...', 'Delete', () => {
             deleteTile(t.id);
           }, '#ff6b6b', true);
         };
@@ -764,11 +773,14 @@ const App = (() => {
         badge.addEventListener('touchend', badgeClick);
         if (r > 0) badge.style.borderRadius = `${r}px`;
 
-        const handle = document.createElement('div');
-        handle.className = 'resize-handle';
-        if (r > 0) handle.style.borderRadius = `${r}px`;
-
-        el.append(badge, handle);
+        if (!isFolder(t)) {
+          const handle = document.createElement('div');
+          handle.className = 'resize-handle';
+          if (r > 0) handle.style.borderRadius = `${r}px`;
+          el.append(badge, handle);
+        } else {
+          el.append(badge);
+        }
       }
 
       gridEl.appendChild(el);
@@ -784,11 +796,13 @@ const App = (() => {
     if (expandedFolderId) {
       const folder = tiles.find(t => t.id === expandedFolderId);
       if (folder && isFolder(folder)) {
-        renderFolderExpanded(folder);
+        const wasExpanded = (renderedExpandedFolderId === expandedFolderId);
+        renderFolderExpanded(folder, wasExpanded);
       } else {
         expandedFolderId = null;
       }
     }
+    renderedExpandedFolderId = expandedFolderId;
 
     // Repaint all live tiles with their current service data now that the DOM has been rebuilt from scratch
     WeatherService.updateFace();
@@ -849,6 +863,7 @@ const App = (() => {
       // Re-render the folder in-place
       collapseFolderExpand();
       expandedFolderId = folderId;
+      renderedExpandedFolderId = folderId;
       render();
     } else {
       render();
@@ -870,6 +885,10 @@ const App = (() => {
       tiles = tiles.filter(x => x.id !== id);
       for (const c of children) pushTilesAway(c.id);
       compactGrid();
+      showToast('Folder deleted');
+      save();
+      render();
+      return;
     } else {
       const initLen = tiles.length;
       tiles = tiles.filter(x => x.id !== id);
@@ -915,7 +934,7 @@ const App = (() => {
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
       
-      showToast(`Folder "${name}" created`);
+      showToast('Folder created');
     });
   }
 
@@ -957,6 +976,7 @@ const App = (() => {
       // Re-render the expansion
       collapseFolderExpand();
       expandedFolderId = folderId;
+      renderedExpandedFolderId = folderId;
     }
 
     compactGrid();
@@ -981,6 +1001,7 @@ const App = (() => {
     } else {
       if (expandedFolderId) collapseFolderExpand();
       expandedFolderId = folderId;
+      renderedExpandedFolderId = folderId;
       const folder = tiles.find(t => t.id === folderId);
       if (folder) renderFolderExpanded(folder);
       updateFolderFaceDisplays();
@@ -988,8 +1009,10 @@ const App = (() => {
   }
 
   function collapseFolderExpand() {
+    gridEl.classList.add('folder-animating');
+    setTimeout(() => { if (gridEl) gridEl.classList.remove('folder-animating'); }, 150);
     expandedFolderId = null;
-    folderEditMode = false;
+    renderedExpandedFolderId = null;
     folderExpandedContainerEl = null;
     gridEl.classList.remove('folder-expanded');
     gridEl.querySelectorAll('.tile-pushed-by-folder').forEach(el => {
@@ -1004,6 +1027,7 @@ const App = (() => {
     });
     const existing = gridEl.querySelector('.folder-expanded-container');
     if (existing) {
+      existing.classList.remove('ready');
       existing.style.height = '0px';
       existing.style.paddingTop = '0px';
       existing.style.paddingBottom = '0px';
@@ -1014,7 +1038,79 @@ const App = (() => {
     gridEl.style.height = `${getGridHeight()}px`;
   }
 
-  function renderFolderExpanded(folder) {
+  function applyExpandedFolderGridPush(folder, expandHeight, skipAnimation) {
+    const folderPx = tilePx(folder);
+    const folderBottomPx = folderPx.y + folderPx.h + GRID_GAP;
+    const folderBottomRow = folder.row + TILE_SIZES.medium.rows;
+
+    const tempTiles = tiles.map(t => ({ ...t }));
+    
+    let maxShiftRows = 0;
+    tempTiles.forEach(t => {
+      if (t.id === folder.id) return;
+      if (t.visibility === 'search') return;
+      const tileEndRow = t.row + TILE_SIZES[t.size].rows;
+      if (t.row < folderBottomRow && tileEndRow > folderBottomRow) {
+        const shift = folderBottomRow - t.row;
+        if (shift > maxShiftRows) maxShiftRows = shift;
+      }
+    });
+
+    tempTiles.forEach(t => {
+      if (t.id === folder.id) return;
+      if (t.visibility === 'search') return;
+      
+      const tileEndRow = t.row + TILE_SIZES[t.size].rows;
+      if (t.row < folderBottomRow && tileEndRow > folderBottomRow) {
+        t.row = folderBottomRow;
+      } else if (t.row >= folderBottomRow) {
+        t.row += maxShiftRows;
+      }
+    });
+
+    let maxSimulatedY = 0;
+
+    tempTiles.forEach(tTemp => {
+      if (tTemp.id === folder.id) return;
+      if (tTemp.visibility === 'search') return;
+      
+      const tOrig = tiles.find(t => t.id === tTemp.id);
+      const origEndRow = tOrig.row + TILE_SIZES[tOrig.size].rows;
+      const origPx = tilePx(tOrig);
+      
+      if (origEndRow > folderBottomRow) {
+        const tEl = gridEl.querySelector(`[data-id="${tOrig.id}"]`);
+        if (tEl) {
+          tEl.classList.add('tile-pushed-by-folder');
+          if (skipAnimation) tEl.style.transition = 'none';
+          
+          const simulatedY = tTemp.row * (cellSize + GRID_GAP);
+          const newY = simulatedY + expandHeight + GRID_GAP;
+          tEl.style.translate = `${origPx.x}px ${newY}px`;
+          
+          if (skipAnimation) {
+            setTimeout(() => {
+              if (tEl) tEl.style.transition = '';
+            }, 50);
+          }
+          
+          maxSimulatedY = Math.max(maxSimulatedY, newY + origPx.h);
+        }
+      } else {
+        maxSimulatedY = Math.max(maxSimulatedY, origPx.y + origPx.h);
+      }
+    });
+
+    const baseBuffer = editMode ? 120 : 0;
+    const navBuffer = settings.windowsNavBar ? (50 + (parseInt(settings.navBarPaddingBottom, 10) || 0)) : 0;
+    gridEl.style.height = `${Math.max(getGridHeight(), maxSimulatedY + baseBuffer + navBuffer)}px`;
+  }
+
+  function renderFolderExpanded(folder, wasExpanded) {
+    if (!wasExpanded) {
+      gridEl.classList.add('folder-animating');
+      setTimeout(() => { if (gridEl) gridEl.classList.remove('folder-animating'); }, 150);
+    }
     // Remove any existing expanded container
     const existing = gridEl.querySelector('.folder-expanded-container');
     if (existing) existing.remove();
@@ -1023,11 +1119,28 @@ const App = (() => {
 
     const folderPx = tilePx(folder);
     const folderBottomPx = folderPx.y + folderPx.h + GRID_GAP;
-    const folderBottomRow = folder.row + TILE_SIZES.medium.rows;
 
     // Create expansion container
     const container = document.createElement('div');
     container.className = 'folder-expanded-container';
+    
+    const bg = document.createElement('div');
+    bg.className = 'folder-expanded-bg';
+    container.appendChild(bg);
+
+    if (wasExpanded) {
+      container.classList.add('no-animation');
+      container.style.transition = 'none';
+      container.classList.add('ready');
+      setTimeout(() => {
+        if (container) container.style.transition = '';
+      }, 50);
+    } else {
+      // Add ready class after height animation completes (150ms)
+      setTimeout(() => {
+        if (container) container.classList.add('ready');
+      }, 150);
+    }
     container.style.top = `${folderBottomPx}px`;
 
     const inner = document.createElement('div');
@@ -1100,6 +1213,11 @@ const App = (() => {
       el.dataset.id = child.id;
       el.dataset.size = child.size || 'medium';
       el.dataset.folderId = folder.id;
+      
+      if ((isSpotifyTile(child) && child.spotifyCoverArt) || (isWeatherTile(child) && child.weatherCoverArt !== false)) {
+        el.classList.add('needs-mask');
+      }
+
       const childColor = useGlobalColor ? settings.globalColor : child.color;
       el.style.background = hexToRgba(childColor, tileOp);
       if (r > 0) el.style.borderRadius = `${r}px`;
@@ -1115,7 +1233,7 @@ const App = (() => {
       });
 
       // Add edit mode wiggle + badge if folder edit mode is active
-      if (folderEditMode) {
+      if (editMode) {
         el.style.animation = `tile-wobble 0.35s ease-in-out infinite alternate`;
         el.style.animationDelay = `${Math.random() * -0.35}s`;
         const badge = document.createElement('div');
@@ -1138,51 +1256,76 @@ const App = (() => {
 
       // Tap handler for child tiles
       let childDidLongPress = false;
+      let childStartPoint = { x: 0, y: 0 };
+      
       el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (childDidLongPress) { childDidLongPress = false; return; }
-        if (folderEditMode) {
-          // In folder edit mode, tap shows context menu
+        if (childDidLongPress) return;
+        if (dragState.isDragging || Math.hypot(e.clientX - childStartPoint.x, e.clientY - childStartPoint.y) > 10) return;
+        if (editMode && !e.target.closest('.edit-badge')) return; // ignore clicks if edit mode and not on badge
+        
+        if (editMode && e.target.closest('.edit-badge')) {
+          e.stopPropagation();
           showChildContextMenu(child.id, folder.id, e.clientX, e.clientY);
-          return;
-        }
-        if (child.url) {
-          playLaunchAnimation(child, (t) => {
-            if (t.forceSafari) window.open(t.url, '_blank');
-            else window.location.href = t.url;
-          });
         } else {
-          showToast('No URL scheme set');
+          // Launch logic
+          const t = child;
+          if (t.type === 'uwp') {
+            window.launchApp(t.aumid);
+          } else if (t.type === 'win32') {
+            window.launchApp(t.path);
+          }
+          const appFrame = document.querySelector('.app-frame');
+          if (appFrame) {
+            appFrame.classList.add('app-launching');
+            setTimeout(() => {
+              appFrame.classList.remove('app-launching');
+            }, 600);
+          }
         }
       });
 
-      // Long-press on child = enter folder edit mode (wiggle), not direct context menu
+      // Long-press on child = enter folder edit mode (wiggle) and start drag
       let childLongPress = null;
-      function startChildLongPress() {
+      function startChildLongPress(e) {
+        const p = getXY(e);
         clearTimeout(childLongPress);
         childDidLongPress = false;
         childLongPress = setTimeout(() => {
           childDidLongPress = true;
-          if (!folderEditMode) {
-            folderEditMode = true;
-            // Re-render the expanded folder with wobble+badges
-            renderFolderExpanded(folder);
+          if (!editMode) {
+            toggleEditMode(false, true);
+            activateFolderEditMode();
           }
+          initDrag(child.id, p.x, p.y, false);
         }, LONG_PRESS_MS);
       }
       function cancelChildLongPress() { clearTimeout(childLongPress); }
 
       // Touch events
       el.addEventListener('touchstart', (e) => {
-        startChildLongPress();
-      }, { passive: true });
+        childStartPoint = getXY(e);
+        if (editMode && !e.target.closest('.edit-badge')) {
+          e.preventDefault();
+          const p = getXY(e);
+          initDrag(child.id, p.x, p.y, false);
+          return;
+        }
+        startChildLongPress(e);
+      }, { passive: false });
       el.addEventListener('touchend', cancelChildLongPress);
       el.addEventListener('touchmove', cancelChildLongPress);
 
       // Mouse events
       el.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
-        startChildLongPress();
+        childStartPoint = getXY(e);
+        if (editMode && !e.target.closest('.edit-badge')) {
+          e.preventDefault();
+          const p = getXY(e);
+          initDrag(child.id, p.x, p.y, false);
+          return;
+        }
+        startChildLongPress(e);
       });
       el.addEventListener('mouseup', cancelChildLongPress);
       el.addEventListener('mouseleave', cancelChildLongPress);
@@ -1190,6 +1333,7 @@ const App = (() => {
       // Right-click — direct context menu (standard right-click behavior)
       el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         cancelChildLongPress();
         showChildContextMenu(child.id, folder.id, e.clientX, e.clientY);
       });
@@ -1202,9 +1346,8 @@ const App = (() => {
     container.style.pointerEvents = 'auto';
     container.addEventListener('click', (e) => {
       if (e.target === container || e.target === inner) {
-        if (folderEditMode) {
-          folderEditMode = false;
-          renderFolderExpanded(folder);
+        if (editMode) {
+          toggleEditMode();
         }
       }
     });
@@ -1215,37 +1358,23 @@ const App = (() => {
     // Push all tiles whose area intersects the expansion zone
     const expandHeight = container.offsetHeight;
     
-    // Animate container opening
-    container.style.height = '0px';
-    container.style.paddingTop = '0px';
-    container.style.paddingBottom = '0px';
-    container.style.opacity = '0';
-    container.style.overflow = 'hidden';
-    
-    void container.offsetHeight; // force reflow
+    if (!wasExpanded) {
+      // Animate container opening
+      container.style.height = '0px';
+      container.style.paddingTop = '0px';
+      container.style.paddingBottom = '0px';
+      container.style.opacity = '0';
+      container.style.overflow = 'hidden';
+      
+      void container.offsetHeight; // force reflow
+    }
 
     container.style.height = `${expandHeight}px`;
     container.style.paddingTop = '18px';
     container.style.paddingBottom = '18px';
     container.style.opacity = '1';
 
-    tiles.forEach(t => {
-      if (t.id === folder.id) return;
-      if (t.visibility === 'search') return;
-      const tileEndRow = t.row + TILE_SIZES[t.size].rows;
-      // Push if any part of the tile is at or below the folder's bottom row
-      if (tileEndRow > folderBottomRow) {
-        const tEl = gridEl.querySelector(`[data-id="${t.id}"]`);
-        if (tEl) {
-          tEl.classList.add('tile-pushed-by-folder');
-          const origPx = tilePx(t);
-          tEl.style.translate = `${origPx.x}px ${origPx.y + expandHeight + GRID_GAP}px`;
-        }
-      }
-    });
-
-    // Update grid height to accommodate expansion
-    gridEl.style.height = `${getGridHeight()}px`;
+    applyExpandedFolderGridPush(folder, expandHeight, wasExpanded);
   }
 
   function showFolderCreatePrompt(callback) {
@@ -1258,7 +1387,7 @@ const App = (() => {
       `<input type="text" class="metro-input" id="folder-name-input" placeholder="Folder name" value="New Folder" autofocus>` +
       `<div class="confirm-actions">` +
       `<button class="confirm-cancel">Cancel</button>` +
-      `<button class="confirm-danger" style="color:#fff; border-color:var(--accent, #0078d4);">OK</button>` +
+      `<button class="confirm-danger" style="color:#fff; border-color:var(--accent, #0078d4); --btn-color:var(--accent, #0078d4);">OK</button>` +
       `</div>` +
       `</div>`;
     document.body.appendChild(overlay);
@@ -1341,6 +1470,117 @@ const App = (() => {
     });
   }
 
+  function updateFolderTilePositions(folder, excludeId) {
+    const inner = gridEl.querySelector('.folder-expanded-inner');
+    if (!inner) return;
+    
+    const children = (folder.children || []).filter(child => child.visibility !== 'search');
+    const childPositions = [];
+    const occupied = [];
+
+    function childOverlaps(col, row, size) {
+      const s = TILE_SIZES[size];
+      for (const o of occupied) {
+        const os = TILE_SIZES[o.size];
+        if (!(col + s.cols <= o.col || o.col + os.cols <= col ||
+              row + s.rows <= o.row || o.row + os.rows <= row)) return true;
+      }
+      return false;
+    }
+
+    children.forEach(child => {
+      const s = TILE_SIZES[child.size || 'medium'];
+      let placed = false;
+      for (let row = 0; row < 200 && !placed; row++) {
+        for (let col = 0; col <= GRID_COLS - s.cols && !placed; col++) {
+          if (!childOverlaps(col, row, child.size || 'medium')) {
+            childPositions.push({ child, col, row });
+            occupied.push({ col, row, size: child.size || 'medium' });
+            placed = true;
+          }
+        }
+      }
+    });
+
+    let maxChildBottom = 0;
+    childPositions.forEach(({ child, col, row }) => {
+      const s = TILE_SIZES[child.size || 'medium'];
+      const bottom = (row + s.rows) * (cellSize + GRID_GAP) - GRID_GAP;
+      if (bottom > maxChildBottom) maxChildBottom = bottom;
+      
+      if (child.id !== excludeId) {
+        const cx = col * (cellSize + GRID_GAP);
+        const cy = row * (cellSize + GRID_GAP);
+        const el = inner.querySelector(`[data-id="${child.id}"]`);
+        if (el) {
+          el.style.translate = `${cx}px ${cy}px`;
+        }
+      }
+    });
+    
+    const newInnerHeight = children.length === 0 ? 100 : maxChildBottom;
+    inner.style.height = `${newInnerHeight}px`;
+    
+    if (expandedFolderId === folder.id) {
+      const container = gridEl.querySelector('.folder-expanded-container');
+      if (container) {
+        const newExpandHeight = newInnerHeight + 36; // 18px top/bottom padding
+        container.style.height = `${newExpandHeight}px`;
+        applyExpandedFolderGridPush(folder, newExpandHeight);
+      }
+    }
+  }
+
+  function getBestFolderInsertionIndex(folder, dragTile, dragCenterX, dragCenterY) {
+    const otherChildren = (folder.children || []).filter(c => c.id !== dragTile.id);
+    let bestIdx = -1;
+    let minDistance = Infinity;
+
+    for (let i = 0; i <= otherChildren.length; i++) {
+      const testArray = [...otherChildren];
+      testArray.splice(i, 0, dragTile);
+      
+      const occupied = [];
+      function overlaps(col, row, size) {
+        const s = TILE_SIZES[size];
+        for (const o of occupied) {
+          const os = TILE_SIZES[o.size];
+          if (!(col + s.cols <= o.col || o.col + os.cols <= col ||
+                row + s.rows <= o.row || o.row + os.rows <= row)) return true;
+        }
+        return false;
+      }
+
+      let targetCX = 0;
+      let targetCY = 0;
+
+      testArray.forEach(child => {
+        const s = TILE_SIZES[child.size || 'medium'];
+        let placed = false;
+        for (let row = 0; row < 200 && !placed; row++) {
+          for (let col = 0; col <= GRID_COLS - s.cols && !placed; col++) {
+            if (!overlaps(col, row, child.size || 'medium')) {
+              occupied.push({ col, row, size: child.size || 'medium' });
+              if (child.id === dragTile.id) {
+                const targetW = s.cols * cellSize + (s.cols - 1) * GRID_GAP;
+                const targetH = s.rows * cellSize + (s.rows - 1) * GRID_GAP;
+                targetCX = col * (cellSize + GRID_GAP) + targetW / 2;
+                targetCY = row * (cellSize + GRID_GAP) + targetH / 2;
+              }
+              placed = true;
+            }
+          }
+        }
+      });
+
+      const distance = Math.hypot(targetCX - dragCenterX, targetCY - dragCenterY);
+      if (distance < minDistance) {
+        minDistance = distance;
+        bestIdx = i;
+      }
+    }
+    return bestIdx;
+  }
 
   function showChildContextMenu(childId, folderId, x, y) {
     const folder = tiles.find(t => t.id === folderId);
@@ -1376,6 +1616,7 @@ const App = (() => {
           // Re-render the expanded folder
           collapseFolderExpand();
           expandedFolderId = folderId;
+          renderedExpandedFolderId = folderId;
           render();
         }
       }
@@ -1478,7 +1719,7 @@ const App = (() => {
     toggleEditMode();
   };
 
-  function toggleEditMode(isDiscarding = false) {
+  function toggleEditMode(isDiscarding = false, noRender = false) {
     if (typeof isDiscarding !== 'boolean') isDiscarding = false;
     if (!editMode && !isDiscarding) {
       preEditPositions = {};
@@ -1490,7 +1731,45 @@ const App = (() => {
       editMode = false;
       preEditPositions = {};
     }
-    render();
+    
+    if (!noRender) {
+      render();
+    } else {
+      gridEl.classList.toggle('edit-mode', editMode);
+      if (editMode) {
+        gridEl.querySelectorAll(':scope > .tile').forEach(tileEl => {
+          const tileId = tileEl.dataset.id;
+          const t = tiles.find(x => x.id === tileId);
+          if (!t) return;
+          if (!tileEl.querySelector('.edit-badge')) {
+            const badge = document.createElement('div');
+            badge.className = 'edit-badge';
+            badge.innerHTML = UI_SVG.x;
+            const badgeClick = (e) => { 
+              e.stopPropagation(); 
+              e.preventDefault(); 
+              const isF = isFolder(t);
+              metroConfirm(isF ? 'Delete Folder' : 'Delete Tile', isF ? 'Do you really want to delete this folder? Apps inside will be moved back to the grid.' : 'Do you really want to delete this tile as you cannot undo this...', 'Delete', () => {
+                deleteTile(t.id);
+              }, '#ff6b6b', true);
+            };
+            badge.addEventListener('click', badgeClick);
+            badge.addEventListener('touchend', badgeClick);
+            const r = parseFloat(tileEl.style.borderRadius) || 0;
+            if (r > 0) badge.style.borderRadius = `${r}px`;
+            tileEl.appendChild(badge);
+          }
+          if (!isFolder(t) && !tileEl.querySelector('.resize-handle')) {
+            const handle = document.createElement('div');
+            handle.className = 'resize-handle';
+            const r = parseFloat(tileEl.style.borderRadius) || 0;
+            if (r > 0) handle.style.borderRadius = `${r}px`;
+            tileEl.appendChild(handle);
+          }
+        });
+      }
+    }
+    
     document.querySelectorAll('.header-btn.edit-btn').forEach(b => {
       b.classList.toggle('active', editMode);
     });
@@ -1502,20 +1781,50 @@ const App = (() => {
 
   // DRAG AND DROP
   function initDrag(tileId, startX, startY, isResize) {
-    const tile = tiles.find(t => t.id === tileId);
+    let tile = tiles.find(t => t.id === tileId);
+    let inFolderDrag = false;
+    let dragFolderId = null;
+
+    if (!tile && expandedFolderId) {
+      const folder = tiles.find(t => t.id === expandedFolderId);
+      if (folder && folder.children) {
+        tile = folder.children.find(c => c.id === tileId);
+        if (tile) {
+          inFolderDrag = true;
+          dragFolderId = folder.id;
+        }
+      }
+    }
+    
     if (!tile) return;
     // Don't allow dragging folders in resize mode
     if (isFolder(tile) && isResize) return;
     const el = gridEl.querySelector(`[data-id="${tileId}"]`);
     if (!el) return;
 
-    // Collapse any expanded folder when starting a drag
-    if (expandedFolderId) { collapseFolderExpand(); render(); }
+    // Collapse any expanded folder when starting a drag, UNLESS we are dragging a tile out of it
+    if (expandedFolderId && !inFolderDrag) { collapseFolderExpand(); render(); }
 
-    const px = tilePx(tile);
     const rect = gridEl.getBoundingClientRect();
+    let px;
+    
+    if (inFolderDrag) {
+      const elRect = el.getBoundingClientRect();
+      px = {
+        x: elRect.left - rect.left,
+        y: elRect.top - rect.top,
+        w: elRect.width,
+        h: elRect.height
+      };
+      el.style.transition = 'none';
+      gridEl.appendChild(el);
+      el.style.translate = `${px.x}px ${px.y}px`;
+    } else {
+      px = tilePx(tile);
+    }
 
-    const snapshot = tiles.map(t => ({ id: t.id, col: t.col, row: t.row }));
+    const snapshot = inFolderDrag ? [] : tiles.map(t => ({ id: t.id, col: t.col, row: t.row }));
+
     dragState = {
       tileId, startX, startY,
       origCol: tile.col, origRow: tile.row, origSize: tile.size,
@@ -1523,6 +1832,8 @@ const App = (() => {
       offsetY: startY - rect.top - px.y,
       isResize, moved: false,
       snapshot,
+      // Folder dragging logic
+      inFolderDrag, dragFolderId, pullingOut: false,
       // Folder hover tracking
       folderHoverTarget: null,
       folderHoverTimer: null,
@@ -1530,7 +1841,7 @@ const App = (() => {
     };
 
     if (!isResize) el.classList.add('dragging');
-    scrollEl.classList.add('dragging-active');
+    if (!inFolderDrag) scrollEl.classList.add('dragging-active');
 
     let ph = gridEl.querySelector('.drop-placeholder');
     if (!ph) { ph = document.createElement('div'); ph.className = 'drop-placeholder'; gridEl.appendChild(ph); }
@@ -1540,7 +1851,15 @@ const App = (() => {
   function moveDrag(clientX, clientY) {
     if (!dragState) return;
     dragState.moved = true;
-    const tile = tiles.find(t => t.id === dragState.tileId);
+
+    let tile = tiles.find(t => t.id === dragState.tileId);
+    if (!tile && dragState.inFolderDrag && expandedFolderId) {
+      const folder = tiles.find(t => t.id === expandedFolderId);
+      if (folder && folder.children) {
+        tile = folder.children.find(t => t.id === dragState.tileId);
+      }
+    }
+    
     if (!tile) return;
     const el = gridEl.querySelector(`[data-id="${dragState.tileId}"]`);
     if (!el) return;
@@ -1549,6 +1868,7 @@ const App = (() => {
     if (dragState.isResize) {
       const relX = clientX - rect.left;
       const relY = clientY - rect.top;
+      
       const originX = tile.col * (cellSize + GRID_GAP);
       const originY = tile.row * (cellSize + GRID_GAP);
       const spanC = Math.max(1, Math.round((relX - originX) / (cellSize + GRID_GAP)));
@@ -1583,6 +1903,45 @@ const App = (() => {
 
     el.style.translate = `${newX}px ${newY}px`;
     el.style.transition = 'none';
+
+    if (dragState.inFolderDrag) {
+      const innerRect = folderExpandedContainerEl.querySelector('.folder-expanded-inner').getBoundingClientRect();
+      const tileAbsX = newX + rect.left;
+      const tileAbsY = newY + rect.top;
+      const tileFolderX = tileAbsX - innerRect.left;
+      const tileFolderY = tileAbsY - innerRect.top;
+      
+      const dragCenterX = tileFolderX + TILE_SIZES[tile.size].cols * cellSize / 2;
+      const dragCenterY = tileFolderY + TILE_SIZES[tile.size].rows * cellSize / 2;
+
+      // Check if pulling out of the folder box
+      const globalX = clientX;
+      const globalY = clientY;
+      const margin = 40;
+      
+      if (globalX < innerRect.left - margin || globalX > innerRect.right + margin ||
+          globalY < innerRect.top - margin || globalY > innerRect.bottom + margin) {
+        dragState.pullingOut = true;
+        el.style.opacity = '0.5';
+      } else {
+        dragState.pullingOut = false;
+        el.style.opacity = '1';
+        
+        const folder = tiles.find(t => t.id === dragState.dragFolderId);
+        if (folder) {
+          const closestIdx = getBestFolderInsertionIndex(folder, tile, dragCenterX, dragCenterY);
+          const currentIdx = folder.children.findIndex(c => c.id === tile.id);
+          if (closestIdx !== -1 && closestIdx !== currentIdx) {
+            folder.children.splice(currentIdx, 1);
+            folder.children.splice(closestIdx, 0, tile);
+            
+            // Only update DOM positions, do not destroy and re-render
+            updateFolderTilePositions(folder, tile.id);
+          }
+        }
+      }
+      return;
+    }
 
     const snapCol = clamp(Math.round(newX / (cellSize + GRID_GAP)), 0, GRID_COLS - TILE_SIZES[tile.size].cols);
     const snapRow = Math.max(0, Math.round(newY / (cellSize + GRID_GAP)));
@@ -1621,6 +1980,22 @@ const App = (() => {
     
     const prevHover = dragState.folderHoverTarget;
     dragState.folderHoverTarget = hoverTarget ? hoverTarget.id : null;
+
+    if (dragState.folderHoverTarget !== prevHover) {
+      if (dragState.folderHoverTimer) {
+        clearTimeout(dragState.folderHoverTimer);
+        dragState.folderHoverTimer = null;
+      }
+      dragState.folderHoverReady = false;
+      if (el) el.classList.remove('folder-drop-ready');
+      
+      if (dragState.folderHoverTarget) {
+        dragState.folderHoverTimer = setTimeout(() => {
+          dragState.folderHoverReady = true;
+          if (el) el.classList.add('folder-drop-ready');
+        }, 1500);
+      }
+    }
     // ---- End folder hover detection ----
 
     if (dragState.folderHoverTarget !== prevHover || snapCol !== dragState._snapCol || snapRow !== dragState._snapRow) {
@@ -1665,14 +2040,72 @@ const App = (() => {
 
   function endDrag() {
     if (!dragState) return;
-    const tile = tiles.find(t => t.id === dragState.tileId);
+
+    let tile = tiles.find(t => t.id === dragState.tileId);
+    let folder = null;
+    if (!tile && dragState.inFolderDrag && expandedFolderId) {
+      folder = tiles.find(t => t.id === expandedFolderId);
+      if (folder && folder.children) {
+        tile = folder.children.find(t => t.id === dragState.tileId);
+      }
+    }
+    
+    if (!tile) return;
     const el = gridEl.querySelector(`[data-id="${dragState.tileId}"]`);
 
     // Clean up folder hover state
     const hoverTargetId = dragState.folderHoverTarget;
+    const hoverReady = dragState.folderHoverReady;
+    
+    if (dragState.folderHoverTimer) {
+      clearTimeout(dragState.folderHoverTimer);
+    }
+    if (el) el.classList.remove('folder-drop-ready');
+
+    // Handle inFolderDrag Drop
+    if (dragState.inFolderDrag) {
+      if (el) { el.classList.remove('dragging'); el.style.transition = ''; }
+      const ph = gridEl.querySelector('.drop-placeholder');
+      if (ph) ph.remove();
+
+      if (dragState.pullingOut && folder) {
+        // Remove from folder
+        folder.children = folder.children.filter(c => c.id !== tile.id);
+        
+        // Calculate main grid coordinates from screen space
+        const rect = gridEl.getBoundingClientRect();
+        const dropX = el.getBoundingClientRect().left - rect.left;
+        const dropY = el.getBoundingClientRect().top - rect.top;
+        tile.col = clamp(Math.round(dropX / (cellSize + GRID_GAP)), 0, GRID_COLS - TILE_SIZES[tile.size].cols);
+        tile.row = Math.max(0, Math.round(dropY / (cellSize + GRID_GAP)));
+        
+        tiles.push(tile);
+        pushTilesAway(tile.id);
+        compactGrid();
+        
+        if (folder.children.length === 0) {
+          // Folder is empty, collapse it (editMode remains active)
+          collapseFolderExpand();
+          render();
+        }
+        
+        dragState = null;
+        save();
+        render();
+      } else if (folder) {
+        const inner = gridEl.querySelector('.folder-expanded-inner');
+        if (inner && el) inner.appendChild(el);
+        
+        updateFolderTilePositions(folder, null);
+        dragState = null;
+        save();
+      }
+      
+      return;
+    }
 
     // Check if we should drop into an existing folder
-    if (tile && hoverTargetId && dragState.moved && !dragState.isResize) {
+    if (hoverTargetId && hoverReady && dragState.moved && !dragState.isResize) {
       const targetTile = tiles.find(t => t.id === hoverTargetId);
       if (targetTile && isFolder(targetTile)) {
         // Clean up drag visuals first
@@ -1682,15 +2115,13 @@ const App = (() => {
         if (ph) ph.remove();
         dragState = null;
 
-        if (isFolder(targetTile)) {
-          // Add to existing folder
-          addTileToFolder(tile.id, targetTile.id);
-        }
+        // Add to existing folder
+        addTileToFolder(tile.id, targetTile.id);
         return;
       }
     }
 
-    if (tile && dragState && dragState.moved && !dragState.isResize && dragState._snapCol != null) {
+    if (dragState && dragState.moved && !dragState.isResize && dragState._snapCol != null) {
       tile.col = dragState._snapCol;
       tile.row = dragState._snapRow;
       pushTilesAway(tile.id);
@@ -1722,9 +2153,14 @@ const App = (() => {
     function tileFrom(e) {
       const el = e.target.closest('.tile');
       if (!el) return null;
-      // Skip tiles inside expanded folder container (they have their own handlers)
-      if (el.closest('.folder-expanded-container')) return null;
-      return tiles.find(t => t.id === el.dataset.id) || null;
+      let tile = tiles.find(t => t.id === el.dataset.id);
+      if (!tile && expandedFolderId) {
+        const folder = tiles.find(t => t.id === expandedFolderId);
+        if (folder && folder.children) {
+          tile = folder.children.find(c => c.id === el.dataset.id);
+        }
+      }
+      return tile || null;
     }
     function xy(e) {
       return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
@@ -1923,6 +2359,15 @@ const App = (() => {
     const isN = tileId === NEWS_TILE_ID;
     const isS = tileId === SPOTIFY_TILE_ID;
     const tileObj = tiles.find(t => t.id === tileId);
+    
+    // If tile not in global array, check if it's in the expanded folder
+    if (!tileObj && expandedFolderId) {
+      const folder = tiles.find(t => t.id === expandedFolderId);
+      if (folder && folder.children && folder.children.some(c => c.id === tileId)) {
+        return showChildContextMenu(tileId, folder.id, x, y);
+      }
+    }
+    
     const isF = tileObj && isFolder(tileObj);
     const menu = document.getElementById('context-menu');
 
@@ -1974,7 +2419,7 @@ const App = (() => {
       }
       else if (action === 'delete') {
         if (isF) {
-          metroConfirm('Remove Folder', 'This will remove the folder and return all apps inside it to the grid.', 'Remove', () => {
+          metroConfirm('Remove Folder', 'This will remove the folder and return all apps inside it to the grid...', 'Remove', () => {
             deleteTile(tileId);
           }, '#ff6b6b', true);
         } else {
@@ -2091,11 +2536,11 @@ const App = (() => {
     
     let btnHtml = '';
     if (reverseBtns) {
-      btnHtml = `<button class="confirm-danger" style="color:${color}; border-color:${color};">${dangerLabel}</button>` +
+      btnHtml = `<button class="confirm-danger" style="color:${color}; border-color:${color}; --btn-color:${color};">${dangerLabel}</button>` +
                 `<button class="confirm-cancel">Cancel</button>`;
     } else {
       btnHtml = `<button class="confirm-cancel">Cancel</button>` +
-                `<button class="confirm-danger" style="color:${color}; border-color:${color};">${dangerLabel}</button>`;
+                `<button class="confirm-danger" style="color:${color}; border-color:${color}; --btn-color:${color};">${dangerLabel}</button>`;
     }
 
     overlay.innerHTML =
@@ -2117,7 +2562,7 @@ const App = (() => {
     const overlay = document.createElement('div');
     overlay.className = 'confirm-overlay';
 
-    let actionsHtml = `<button class="confirm-danger" style="color:#fff; background:#0078d4; border-color:#0078d4; flex:1;">${okLabel}</button>`;
+    let actionsHtml = `<button class="confirm-danger" style="color:#fff; background:#0078d4; border-color:#0078d4; --btn-color:#0078d4; flex:1;">${okLabel}</button>`;
     if (secondaryLabel) {
       actionsHtml = `<button class="confirm-cancel" style="flex:1;">${secondaryLabel}</button>` + actionsHtml;
     }
@@ -2727,44 +3172,48 @@ const App = (() => {
       <h2>News Tile</h2>
       <p style="font-size: 13px; opacity: 0.7; margin-top: -10px; margin-bottom: 20px; line-height: 1.4;">To disable 'ugly character' removal, head to advanced settings...</p>
       <div class="form-group">
-        <label>Tile Size</label>
-        <select id="news-size">
-          <option value="medium"${tile.size === 'medium' ? ' selected' : ''}>Medium (2x2)</option>
-          <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
-        </select>
-      </div>
-      <div class="form-group">
         <label>News Provider</label>
         <select id="news-provider">
-          <option value="hn"${!tile.newsProvider || tile.newsProvider === 'hn' ? ' selected' : ''}>app default - hacker news 🌎</option>
-          <option value="cnn"${tile.newsProvider === 'cnn' ? ' selected' : ''}>CNN 🇺🇸</option>
-          <option value="nbc"${tile.newsProvider === 'nbc' ? ' selected' : ''}>NBC 🇺🇸</option>
-          <option value="abc"${tile.newsProvider === 'abc' ? ' selected' : ''}>ABC 🇺🇸</option>
-          <option value="cbs"${tile.newsProvider === 'cbs' ? ' selected' : ''}>CBS 🇺🇸</option>
-          <option value="cbc"${tile.newsProvider === 'cbc' ? ' selected' : ''}>CBC 🇨🇦</option>
-          <option value="bbc"${tile.newsProvider === 'bbc' ? ' selected' : ''}>BBC 🇬🇧</option>
-          <option value="npr"${tile.newsProvider === 'npr' ? ' selected' : ''}>NPR 🇺🇸</option>
-          <option value="fox"${tile.newsProvider === 'fox' ? ' selected' : ''}>FOX 🇺🇸</option>
+          <option value="hn"${!tile.newsProvider || tile.newsProvider === 'hn' ? ' selected' : ''}>default - hacker news - 🌎</option>
+          <option value="cnn"${tile.newsProvider === 'cnn' ? ' selected' : ''}>CNN - 🇺🇸</option>
+          <option value="nbc"${tile.newsProvider === 'nbc' ? ' selected' : ''}>NBC - 🇺🇸</option>
+          <option value="abc"${tile.newsProvider === 'abc' ? ' selected' : ''}>ABC - 🇺🇸</option>
+          <option value="cbs"${tile.newsProvider === 'cbs' ? ' selected' : ''}>CBS - 🇺🇸</option>
+          <option value="cbc"${tile.newsProvider === 'cbc' ? ' selected' : ''}>CBC - 🇨🇦</option>
+          <option value="bbc"${tile.newsProvider === 'bbc' ? ' selected' : ''}>BBC - 🇬🇧</option>
+          <option value="npr"${tile.newsProvider === 'npr' ? ' selected' : ''}>NPR - 🇺🇸</option>
+          <option value="fox"${tile.newsProvider === 'fox' ? ' selected' : ''}>FOX - 🇺🇸</option>
         </select>
       </div>
       <div class="form-group" style="margin-bottom: 24px;">
         <label>Custom RSS Feed</label>
         <input type="text" class="metro-input" id="news-custom-rss" style="margin-bottom: 0;" placeholder="e.g. https://example.com/rss.xml" value="${tile.customRssUrl || ''}">
       </div>
-      <div class="form-group" id="news-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
-        <label>Color</label>
-        <input type="hidden" id="news-color" value="${tile.color}">
-        <div class="color-picker-row" id="color-picker-news">${colorSwatchesHtml(tile.color, 'color-picker-news')}</div>
-      </div>
       <div class="toggle-row" style="margin-top: 12px; margin-bottom: 4px;">
         <span class="toggle-label">Remove job promotion stories</span>
         <div class="toggle-switch${tile.removeJobs !== false ? ' on' : ''}" id="news-remove-jobs-toggle"></div>
       </div>
       <div style="font-size: 13px; opacity: 0.7; margin-bottom: 24px; line-height: 1.4;">The launcher default news provider is community sourced and sometimes has many 'is hiring' stories so this removes them</div>
-      <div class="form-group" style="margin-bottom: 24px;">
+      <div class="toggle-row" style="margin-top: 12px; margin-bottom: 4px;">
+        <span class="toggle-label">Enable advanced story filtering</span>
+        <div class="toggle-switch${tile.enableStoryControl ? ' on' : ''}" id="news-enable-story-toggle"></div>
+      </div>
+      <div class="form-group" style="margin-bottom: 24px; transition: opacity 0.2s; opacity: ${tile.enableStoryControl ? '1' : '0.5'}; pointer-events: ${tile.enableStoryControl ? 'auto' : 'none'};" id="news-story-control-group">
         <label>User story control</label>
         <input type="text" class="metro-input" id="news-story-control" style="margin-bottom: 0;" placeholder="Tired of those stories anyways..." value="${tile.storyControl || ''}">
         <div style="font-size: 13px; opacity: 0.7; margin-top: 4px;">Enter space separated words, case insensitive, and stories with them will not be shown</div>
+      </div>
+      <div class="form-group">
+        <label>Tile Size</label>
+        <select id="news-size">
+          <option value="medium"${tile.size === 'medium' ? ' selected' : ''}>Medium (2x2)</option>
+          <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
+        </select>
+      </div>
+      <div class="form-group" id="news-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
+        <label>Color</label>
+        <input type="hidden" id="news-color" value="${tile.color}">
+        <div class="color-picker-row" id="color-picker-news">${colorSwatchesHtml(tile.color, 'color-picker-news')}</div>
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" id="news-cancel">Cancel</button>
@@ -2809,12 +3258,23 @@ const App = (() => {
 
     jobsToggle.onclick = () => jobsToggle.classList.toggle('on');
 
+    let storyControlEnabled = !!tile.enableStoryControl;
+    const storyControlToggle = document.getElementById('news-enable-story-toggle');
+    const storyControlGroup = document.getElementById('news-story-control-group');
+    storyControlToggle.onclick = () => {
+      storyControlEnabled = !storyControlEnabled;
+      storyControlToggle.classList.toggle('on', storyControlEnabled);
+      storyControlGroup.style.opacity = storyControlEnabled ? '1' : '0.5';
+      storyControlGroup.style.pointerEvents = storyControlEnabled ? 'auto' : 'none';
+    };
+
     document.getElementById('news-cancel').onclick = hideModal;
     document.getElementById('news-save').onclick = () => {
       const isJobsOn = jobsToggle.classList.contains('on');
       const newStoryControl = document.getElementById('news-story-control').value;
+      const isStoryControlOn = storyControlToggle.classList.contains('on');
       const changedJobs = tile.removeJobs !== false !== isJobsOn;
-      const changedStoryControl = (tile.storyControl || '') !== newStoryControl;
+      const changedStoryControl = (tile.storyControl || '') !== newStoryControl || !!tile.enableStoryControl !== isStoryControlOn;
       
       const newProvider = document.getElementById('news-provider').value;
       const newCustomRss = document.getElementById('news-custom-rss').value.trim();
@@ -2824,6 +3284,7 @@ const App = (() => {
         size: document.getElementById('news-size').value,
         color: document.getElementById('news-color').value,
         removeJobs: isJobsOn,
+        enableStoryControl: isStoryControlOn,
         storyControl: newStoryControl,
         newsProvider: newProvider,
         customRssUrl: newCustomRss
