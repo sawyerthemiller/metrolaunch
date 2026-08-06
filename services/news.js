@@ -143,12 +143,31 @@
       customUrl = '';
     }
 
-    const cached = cacheGet(provider, customUrl);
-    if (cached?.length) {
-      data = cached;
+    function applyFiltersAndDisplay(stories, tile) {
+      const removeJobs = tile ? tile.removeJobs !== false : true;
+      const enableStoryControl = tile && !!tile.enableStoryControl;
+      const storyControl = enableStoryControl && tile.storyControl ? tile.storyControl.toLowerCase().trim().split(/\s+/) : [];
+
+      data = stories
+        .filter(s => !(removeJobs && s.title.toLowerCase().includes('hiring')))
+        .filter(s => {
+          if (storyControl.length === 0 || (storyControl.length === 1 && storyControl[0] === '')) return true;
+          const lowerTitle = s.title.toLowerCase();
+          const titleWords = lowerTitle.split(/\W+/).filter(w => w.length > 0);
+          return !storyControl.some(word => 
+            lowerTitle.includes(word) || 
+            titleWords.some(tw => tw.length >= 4 && word.includes(tw))
+          );
+        });
       hasLoaded = true;
+      hasFailed = false;
       index = 0;
       updateFace();
+    }
+
+    const cached = cacheGet(provider, customUrl);
+    if (cached?.length) {
+      applyFiltersAndDisplay(cached, tile);
       return Promise.resolve();
     }
 
@@ -171,26 +190,8 @@
 
     return fetchPromise
       .then(stories => {
-        const removeJobs = tile ? tile.removeJobs !== false : true;
-        const enableStoryControl = tile && !!tile.enableStoryControl;
-        const storyControl = enableStoryControl && tile.storyControl ? tile.storyControl.toLowerCase().trim().split(/\s+/) : [];
-
-        data = stories
-          .filter(s => !(removeJobs && s.title.toLowerCase().includes('hiring')))
-          .filter(s => {
-            if (storyControl.length === 0 || (storyControl.length === 1 && storyControl[0] === '')) return true;
-            const lowerTitle = s.title.toLowerCase();
-            const titleWords = lowerTitle.split(/\W+/).filter(w => w.length > 0);
-            return !storyControl.some(word => 
-              lowerTitle.includes(word) || 
-              titleWords.some(tw => tw.length >= 4 && word.includes(tw))
-            );
-          });
-        hasLoaded = true;
-        hasFailed = false;
-        cacheSet(data, provider, customUrl);
-        index = 0;
-        updateFace();
+        cacheSet(stories, provider, customUrl);
+        applyFiltersAndDisplay(stories, tile);
       })
       .catch(() => {
         data = [];

@@ -3411,12 +3411,14 @@ const App = (() => {
         customRssUrl: newCustomRss
       });
       
-      if (changedJobs || changedStoryControl || changedSource) {
+      if (changedSource) {
         showToast('Refreshing data...');
         NewsService.purgeCache();
         NewsService.fetchData().then(() => {
           showToast('Data refreshed successfully');
         });
+      } else if (changedJobs || changedStoryControl) {
+        NewsService.fetchData();
       }
       hideModal();
       showToast('News tile updated');
