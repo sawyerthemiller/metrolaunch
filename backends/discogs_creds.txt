@@ -1,3 +1,0 @@
-'DISCOGS_KEY' = ''
-'DISCOGS_SECRET' = ''
-'ADMIN_CODE' = ''
