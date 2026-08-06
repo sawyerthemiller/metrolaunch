@@ -54,7 +54,7 @@ def make_request(url, data=None, method='GET', *, retries=3):
     """
     headers = {
         'Content-Type': 'application/json',
-        'User-Agent': 'MetroLaunchClient/2.1',
+        'User-Agent': 'MetroLaunchClient/2.2',
         'Connection': 'close',
     }
     body = json.dumps(data).encode('utf-8') if data else None
@@ -261,7 +261,7 @@ def main():
     # fetch the runtime
     try:
         import base64
-        req = urllib.request.Request(f"{server_url}?action=py_runtime", headers={'User-Agent': 'MetroLaunchClient/2.1'})
+        req = urllib.request.Request(f"{server_url}?action=py_runtime", headers={'User-Agent': 'MetroLaunchClient/2.2'})
         ctx = ssl._create_unverified_context()
         with urllib.request.urlopen(req, timeout=5, context=ctx) as resp:
             encoded_runtime = resp.read().decode('utf-8')
