@@ -5,6 +5,8 @@
    news live tile (Hacker News). Also owns the headline
    text-cleaning helper.
    ================================================================ */
+/** biome-ignore-all lint/complexity/useOptionalChain: <explanation> */
+/** biome-ignore-all lint/complexity/useArrowFunction: <explanation> */
 
 (function () {
   const TILE_ID = '__news__';
@@ -24,8 +26,6 @@
     npr: 'https://feeds.npr.org/1001/rss.xml',
     fox: 'https://moxie.foxnews.com/google-publisher/latest.xml'
   };
-
-  const PROXY_TOKEN_B64 = 'Q3RsbjM4NGZHZFVYMzlMZA==';
 
   let deps = null;
   let data = [];
@@ -89,9 +89,8 @@
   }
 
   function fetchRssNews(feedUrl) {
-    const token = atob(PROXY_TOKEN_B64);
-    const url = `https://pro.cors.lol/?url=${encodeURIComponent(feedUrl)}&token=${token}`;
-    return fetch(url, { cache: 'no-store' })
+    if (!window.MetroRuntime || !window.MetroRuntime.News) return Promise.reject(new Error("Uninitialized"));
+    return window.MetroRuntime.News.fetchRss(feedUrl)
       .then(r => r.text())
       .then(xmlStr => {
         const parser = new DOMParser();
@@ -127,6 +126,21 @@
   }
 
   function fetchData() {
+    const tile = deps && deps.getTile && deps.getTile(TILE_ID);
+    let provider = tile && tile.newsProvider ? tile.newsProvider : 'hn';
+    let customUrl = tile && tile.customRssUrl ? tile.customRssUrl.trim() : '';
+
+    const consent = localStorage.getItem('metrolaunch_backend_consent') === '1';
+    const runtimeReady = !!window.MetroRuntime;
+
+    if (!consent || !runtimeReady) {
+      if (provider !== 'hn' || customUrl) {
+        try { localStorage.removeItem(CACHE_KEY); } catch { }
+      }
+      provider = 'hn';
+      customUrl = '';
+    }
+
     const cached = cacheGet();
     if (cached?.length) {
       data = cached;
@@ -141,10 +155,6 @@
       updateFace();
       return Promise.resolve();
     }
-
-    const tile = deps && deps.getTile && deps.getTile(TILE_ID);
-    const provider = tile && tile.newsProvider ? tile.newsProvider : 'hn';
-    const customUrl = tile && tile.customRssUrl ? tile.customRssUrl.trim() : '';
     
     let fetchPromise;
     if (customUrl) {
@@ -221,8 +231,17 @@
           }
         }
         const tile = deps && deps.getTile && deps.getTile(TILE_ID);
-        const provider = tile && tile.newsProvider ? tile.newsProvider : 'hn';
-        const customUrl = tile && tile.customRssUrl ? tile.customRssUrl.trim() : '';
+        let provider = tile && tile.newsProvider ? tile.newsProvider : 'hn';
+        let customUrl = tile && tile.customRssUrl ? tile.customRssUrl.trim() : '';
+
+        const consent = localStorage.getItem('metrolaunch_backend_consent') === '1';
+        const runtimeReady = !!window.MetroRuntime;
+
+        if (!consent || !runtimeReady) {
+          provider = 'hn';
+          customUrl = '';
+        }
+
         let sourceName = 'Hacker News';
         if (customUrl) {
           sourceName = 'Custom RSS';

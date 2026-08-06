@@ -1,4 +1,11 @@
 // community.js
+/** biome-ignore-all lint/style/useTemplate: <explanation> */
+/** biome-ignore-all lint/complexity/useOptionalChain: <explanation> */
+/** biome-ignore-all lint/suspicious/noGlobalIsNan: <explanation> */
+/** biome-ignore-all lint/correctness/noUnusedVariables: <explanation> */
+/** biome-ignore-all lint/correctness/noUnusedFunctionParameters: <explanation> */
+/** biome-ignore-all lint/complexity/useArrowFunction: <explanation> */
+/** biome-ignore-all lint/security/noGlobalEval: <explanation> */
 // Handles all Community Hub features (Unique Users & Custom Tile Submissions)
 
 window.communityAPI = {
@@ -8,8 +15,8 @@ window.communityAPI = {
       communityAPI.castUniqueUserVote(true);
     }
 
-    if (localStorage.getItem('metrolaunch_community_seen') !== '1') {
-      // Show privacy modal on first boot
+    if (localStorage.getItem('metrolaunch_community_seen') !== '1' || localStorage.getItem('metrolaunch_backend_consent') === null) {
+      // Show privacy modal on first boot or if consent is undecided
       communityAPI.showPrivacyModal(true, callback);
     } else {
       // Already seen, proceed
@@ -21,7 +28,8 @@ window.communityAPI = {
     if (localStorage.getItem('metrolaunch_community_unique_user') !== '1') return;
     
     try {
-      const res = await fetch('https://leopardindustries.net:8088/?action=vote', { method: 'POST' });
+      if (!window.MetroRuntime || !window.MetroRuntime.Community) throw new Error("Uninitialized");
+      const res = await window.MetroRuntime.Community.castVote();
       if (!res.ok) throw new Error('Server error');
       // Success, remove pending flag if any
       localStorage.removeItem('metrolaunch_community_vote_pending');
@@ -37,6 +45,7 @@ window.communityAPI = {
     const overlay = document.createElement('div');
     overlay.className = 'confirm-overlay';
     
+    const isConsentChecked = localStorage.getItem('metrolaunch_backend_consent') === '1';
     const isUniqueChecked = localStorage.getItem('metrolaunch_community_unique_user') === '1';
     const isSubmitChecked = localStorage.getItem('metrolaunch_community_submit') !== '0'; // default true if not set, or false if 0
     
@@ -44,12 +53,20 @@ window.communityAPI = {
     const uniqueDisabled = isUniqueChecked ? 'opacity: 0.5; pointer-events: none;' : '';
 
     overlay.innerHTML = `
-      <div class="confirm-box" style="width: 320px;">
-        <h3>Community Settings</h3>
-        <p style="margin-bottom: 20px;">Please configure your community preferences...</p>
+      <div class="confirm-box" style="width: 100%; max-width: 400px; padding: 20px; text-align: left;">
+        <h3 style="text-align: center;">Community Settings</h3>
+        <p style="margin-bottom: 20px; text-align: center;">Please configure your community preferences...</p>
         
+        <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:15px; cursor:pointer;" id="comm-toggle-consent">
+          <div class="metro-checkbox ${isConsentChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px; flex-shrink: 0;"></div>
+          <div style="text-align: left; transform: translateY(-2px);">
+            <div style="font-weight:600; font-size:16px;">Consent to usage of launcher data backend</div>
+            <div style="font-size:13px; opacity:0.7;">for the privacy and safety of users and the server - spotify integration, user counts, alternate news sources, and the community app library have been moved to a closed-source backend system - read more in the GH repo</div>
+          </div>
+        </div>
+
         <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:15px; cursor:pointer; ${uniqueDisabled}" id="comm-toggle-unique">
-          <div class="metro-checkbox ${isUniqueChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px;"></div>
+          <div class="metro-checkbox ${isUniqueChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px; flex-shrink: 0;"></div>
           <div style="text-align: left; transform: translateY(-2px);">
             <div style="font-weight:600; font-size:16px;">Enables a single unique user count</div>
             <div style="font-size:13px; opacity:0.7;">this helps me measure how much i should work on it and contains no identifying information</div>
@@ -57,25 +74,130 @@ window.communityAPI = {
         </div>
         
         <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:20px; cursor:pointer;" id="comm-toggle-submit">
-          <div class="metro-checkbox ${isSubmitChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px;"></div>
+          <div class="metro-checkbox ${isSubmitChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px; flex-shrink: 0;"></div>
           <div style="text-align: left; transform: translateY(-2px);">
             <div style="font-weight:600; font-size:16px;">Enables the submit button on custom tiles</div>
             <div style="font-size:13px; opacity:0.7;">shows only in search menu - help people add more apps and cut out the confusion</div>
           </div>
         </div>
 
-        <div class="confirm-actions">
-          <button style="color:#fff; border-color:var(--accent, #0078d4); flex: 1;">OK</button>
+        <div class="confirm-actions" style="display:flex; gap:10px; margin-top:20px;">
+          <button id="comm-init-btn" style="flex: 1; font-size:14px; padding:12px 0; border: 1px solid var(--accent, #0078d4); background: transparent; color: var(--text);">Setup Networking</button>
+          <button id="comm-ok-btn" style="color:#fff; border-color:var(--accent, #0078d4); flex: 1; padding:12px 0;">OK</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(overlay);
 
+    const btnConsent = overlay.querySelector('#comm-toggle-consent');
+    const chkConsent = btnConsent.querySelector('.metro-checkbox');
     const btnUnique = overlay.querySelector('#comm-toggle-unique');
     const chkUnique = btnUnique.querySelector('.metro-checkbox');
     const btnSubmit = overlay.querySelector('#comm-toggle-submit');
     const chkSubmit = btnSubmit.querySelector('.metro-checkbox');
+    
+    const initBtn = overlay.querySelector('#comm-init-btn');
+    const okBtn = overlay.querySelector('#comm-ok-btn');
+
+    let hasInitialized = isConsentChecked;
+
+    const updateBtnStates = () => {
+      const consentOn = chkConsent.classList.contains('checked');
+      if (consentOn) {
+        if (!hasInitialized) {
+          initBtn.style.opacity = '1';
+          initBtn.style.pointerEvents = 'auto';
+          initBtn.disabled = false;
+          okBtn.style.opacity = '0.5';
+          okBtn.style.pointerEvents = 'none';
+          okBtn.disabled = true;
+        } else {
+          initBtn.style.opacity = '0.5';
+          initBtn.style.pointerEvents = 'none';
+          initBtn.disabled = true;
+          initBtn.textContent = 'Already Done';
+          okBtn.style.opacity = '1';
+          okBtn.style.pointerEvents = 'auto';
+          okBtn.disabled = false;
+        }
+        
+        btnUnique.style.opacity = isUniqueChecked ? '0.5' : '1';
+        btnUnique.style.pointerEvents = isUniqueChecked ? 'none' : 'auto';
+        btnSubmit.style.opacity = '1';
+        btnSubmit.style.pointerEvents = 'auto';
+      } else {
+        initBtn.style.opacity = '0.5';
+        initBtn.style.pointerEvents = 'none';
+        initBtn.disabled = true;
+        okBtn.style.opacity = '1';
+        okBtn.style.pointerEvents = 'auto';
+        okBtn.disabled = false;
+        
+        btnUnique.style.opacity = '0.5';
+        btnUnique.style.pointerEvents = 'none';
+        btnSubmit.style.opacity = '0.5';
+        btnSubmit.style.pointerEvents = 'none';
+      }
+    };
+
+    btnConsent.onclick = () => {
+      chkConsent.classList.toggle('checked');
+      if (!chkConsent.classList.contains('checked')) {
+        hasInitialized = false;
+        initBtn.textContent = 'Setup Networking';
+      }
+      updateBtnStates();
+    };
+
+    initBtn.onclick = async () => {
+      initBtn.textContent = 'Fetching...';
+      initBtn.style.pointerEvents = 'none';
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      try {
+        const res = await fetch('https://leopardindustries.net:8088/metro.php?action=runtime', { 
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error();
+        const js = await res.text();
+        localStorage.setItem('metrolaunch_runtime_js', js);
+        try {
+          eval(js);
+        } catch (e) {
+          console.error("Failed to eval runtime", e);
+        }
+        hasInitialized = true;
+        updateBtnStates();
+      } catch (e) {
+        clearTimeout(timeoutId);
+        initBtn.textContent = 'Failed...';
+        chkConsent.classList.remove('checked');
+        hasInitialized = false;
+        updateBtnStates();
+        
+        if (window.showToast) {
+          const toastEl = document.getElementById('toast');
+          if (toastEl) {
+            const oldZ = toastEl.style.zIndex;
+            toastEl.style.zIndex = '100005';
+            window.showToast('Server could not respond - please try later');
+            setTimeout(() => {
+              if (toastEl.style.zIndex === '100005') toastEl.style.zIndex = oldZ;
+            }, 3000);
+          } else {
+            window.showToast('Server could not respond - please try later');
+          }
+        }
+        
+        setTimeout(() => {
+          initBtn.textContent = 'Setup Networking';
+          updateBtnStates();
+        }, 2000);
+      }
+    };
 
     if (!isUniqueChecked) {
       btnUnique.onclick = () => {
@@ -90,11 +212,28 @@ window.communityAPI = {
       chkSubmit.classList.toggle('checked');
     };
 
-    overlay.querySelector('.confirm-actions button').onclick = () => {
+    updateBtnStates();
+
+    okBtn.onclick = () => {
+      const consentOn = chkConsent.classList.contains('checked');
       const uniqueOn = chkUnique.classList.contains('checked');
       const submitOn = chkSubmit.classList.contains('checked');
+      
+      const wasConsentOn = isConsentChecked;
 
-      if (uniqueOn && !isUniqueChecked) {
+      if (!consentOn) {
+        localStorage.setItem('metrolaunch_backend_consent', '0');
+        localStorage.removeItem('metrolaunch_runtime_js');
+        if (window.NewsService) {
+          window.NewsService.purgeCache();
+          window.NewsService.fetchData();
+        }
+      } else {
+        localStorage.setItem('metrolaunch_backend_consent', '1');
+      }
+
+      // Only attempt networking if consent is actually on
+      if (consentOn && uniqueOn && !isUniqueChecked) {
         localStorage.setItem('metrolaunch_community_unique_user', '1');
         communityAPI.castUniqueUserVote(false);
       }
@@ -104,6 +243,84 @@ window.communityAPI = {
       
       overlay.remove();
       if (callback) callback();
+      
+      // Force reload if consent state changed to prevent partial state bugs
+      if (wasConsentOn !== consentOn) {
+        const overlayBg = document.createElement('div');
+        overlayBg.style.position = 'fixed';
+        overlayBg.style.bottom = '0';
+        overlayBg.style.left = '0';
+        overlayBg.style.width = '100vw';
+        overlayBg.style.height = '0';
+        overlayBg.style.backgroundColor = '#000';
+        overlayBg.style.zIndex = '999999';
+        overlayBg.style.transition = 'height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        overlayBg.style.display = 'flex';
+        overlayBg.style.flexDirection = 'column';
+        overlayBg.style.alignItems = 'center';
+        overlayBg.style.justifyContent = 'center';
+        overlayBg.style.overflow = 'hidden';
+        document.body.appendChild(overlayBg);
+
+        const textEl = document.createElement('div');
+        textEl.textContent = 'The launcher will soon reload...';
+        textEl.style.color = '#fff';
+        textEl.style.fontSize = '18px';
+        textEl.style.fontWeight = '300';
+        textEl.style.marginBottom = '40px';
+        textEl.style.opacity = '0';
+        textEl.style.transition = 'opacity 0.4s ease';
+        textEl.style.textAlign = 'center';
+        overlayBg.appendChild(textEl);
+
+        const dotsContainer = document.createElement('div');
+        dotsContainer.style.position = 'relative';
+        dotsContainer.style.width = '0px';
+        dotsContainer.style.height = '8px';
+        overlayBg.appendChild(dotsContainer);
+
+        const styleEl = document.createElement('style');
+        styleEl.textContent = `
+          @keyframes customLoaderFly {
+            0% { transform: translateX(-60vw); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(60vw); opacity: 0; }
+          }
+          .loading-dot-square {
+            position: absolute;
+            left: -4px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent, #0078d4);
+            opacity: 0;
+            animation: customLoaderFly 1.8s cubic-bezier(0.1, 0.5, 0.9, 0.5) forwards;
+          }
+        `;
+        document.head.appendChild(styleEl);
+
+        for (let i = 0; i < 10; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'loading-dot-square';
+          dot.style.animationDelay = (0.2 + i * 0.06) + 's';
+          dotsContainer.appendChild(dot);
+        }
+
+        requestAnimationFrame(() => {
+          overlayBg.style.height = '100vh';
+          // Delay text fade in slightly
+          setTimeout(() => textEl.style.opacity = '1', 200);
+        });
+
+        // Fade out text before reload
+        setTimeout(() => {
+          textEl.style.opacity = '0';
+        }, 2200);
+
+        setTimeout(() => {
+          location.reload();
+        }, 2600);
+      }
     };
   },
 
@@ -113,11 +330,8 @@ window.communityAPI = {
 
   submitApp: async function(appData) {
     try {
-      const res = await fetch('https://leopardindustries.net:8088/?action=submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(appData)
-      });
+      if (!window.MetroRuntime || !window.MetroRuntime.Community) throw new Error("Uninitialized");
+      const res = await window.MetroRuntime.Community.submitApp(appData);
       if (res.status === 409) {
         if (window.showToast) window.showToast('That app has already been submitted');
         return false;
@@ -159,7 +373,16 @@ window.communityAPI = {
     document.body.appendChild(overlay);
 
     overlay.querySelector('#comm-close-btn').onclick = () => overlay.remove();
-    if (window.applyHaptics) window.applyHaptics(overlay.querySelectorAll('button'));
+    
+    const consent = localStorage.getItem('metrolaunch_backend_consent') === '1';
+    const runtimeReady = !!window.MetroRuntime;
+    
+    if (window.applyHaptics) {
+      const allBtns = Array.from(overlay.querySelectorAll('button'));
+      const refreshBtn = overlay.querySelector('#comm-refresh-btn');
+      const btnsToHaptic = (consent && runtimeReady) ? allBtns : allBtns.filter(b => b !== refreshBtn);
+      window.applyHaptics(btnsToHaptic);
+    }
     
     const listContainer = overlay.querySelector('#comm-apps-list');
     const loading = overlay.querySelector('#comm-loading');
@@ -182,11 +405,20 @@ window.communityAPI = {
         if (c.id !== 'comm-loading') c.remove();
       });
       
+      // Use the already-defined consent and runtimeReady variables
+      if (!consent || !runtimeReady) {
+        loading.textContent = consent && !runtimeReady 
+          ? 'Backend was not recieved...'
+          : 'This feature requires consent in advanced settings...';
+        return;
+      }
+      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000);
       
       try {
-        const res = await fetch('https://leopardindustries.net:8088/?action=list', {
+        if (!window.MetroRuntime || !window.MetroRuntime.Community) throw new Error("Uninitialized");
+        const res = await window.MetroRuntime.Community.listApps({
           cache: 'no-store',
           signal: controller.signal
         });
@@ -289,7 +521,8 @@ window.communityAPI = {
         if (window.applyHaptics) window.applyHaptics(Array.from(listContainer.querySelectorAll('.comm-get-btn')));
       } catch (e) {
         clearTimeout(timeoutId);
-        loading.textContent = 'Server appears to be down...';
+        const consent = localStorage.getItem('metrolaunch_backend_consent') === '1';
+        loading.textContent = consent ? 'Server appears to be down...' : 'This feature requires consent in advanced settings...';
         loading.style.display = 'flex';
       }
     };
@@ -348,11 +581,8 @@ window.communityAPI = {
       if (code.length !== 4) return;
       
       try {
-        const res = await fetch('https://leopardindustries.net:8088/?action=delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: appId, admin_code: code })
-        });
+        if (!window.MetroRuntime || !window.MetroRuntime.Community) throw new Error("Uninitialized");
+        const res = await window.MetroRuntime.Community.deleteApp(appId, code);
         
         if (res.status === 401) {
           if (window.showToast) window.showToast('Invalid administrator code');

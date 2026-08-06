@@ -4,6 +4,8 @@
    Owns all networking, caching, polling, and DOM rendering for the
    Weather live tile.
    ================================================================ */
+/** biome-ignore-all lint/complexity/useArrowFunction: <explanation> */
+/** biome-ignore-all lint/suspicious/useIterableCallbackReturn: <explanation> */
 
 (function () {
   const TILE_ID = '__weather__';

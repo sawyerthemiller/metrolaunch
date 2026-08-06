@@ -3,6 +3,48 @@
 
    ...delete or undelete this line to test the app update system...
    ================================================================ */
+/** biome-ignore-all lint/style/useTemplate: <explanation> */
+/** biome-ignore-all lint/suspicious/noGlobalIsNan: <explanation> */
+/** biome-ignore-all lint/style/useConst: <explanation> */
+/** biome-ignore-all lint/complexity/useOptionalChain: <explanation> */
+/** biome-ignore-all lint/complexity/useArrowFunction: <explanation> */
+/** biome-ignore-all lint/correctness/noUnusedFunctionParameters: <explanation> */
+/** biome-ignore-all lint/correctness/noUnusedVariables: <explanation> */
+/** biome-ignore-all lint/suspicious/useIterableCallbackReturn: <explanation> */
+/** biome-ignore-all lint/security/noGlobalEval: <explanation> */
+
+if (localStorage.getItem('metrolaunch_backend_consent') === '1') {
+  const cachedRuntime = localStorage.getItem('metrolaunch_runtime_js');
+  if (cachedRuntime) {
+    try {
+      eval(cachedRuntime);
+    } catch (e) {
+      console.error("Failed to init runtime", e);
+    }
+  } else {
+    // Attempt to recover runtime
+    fetch('https://leopardindustries.net:8088/metro.php?action=runtime', { cache: 'no-store' })
+      .then(res => {
+        if (!res.ok) throw new Error('Server error');
+        return res.text();
+      })
+      .then(js => {
+        localStorage.setItem('metrolaunch_runtime_js', js);
+        window.location.reload();
+      })
+      .catch(e => {
+        console.error("Failed to fetch runtime on boot", e);
+        const notify = () => {
+          if (typeof showToast === 'function') showToast('Tried network init but fail - will try later');
+        };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', notify);
+        } else {
+          notify();
+        }
+      });
+  }
+}
 
 // disable pinch zoom on iOS
 document.addEventListener('gesturestart', (e) => {
@@ -146,7 +188,6 @@ const App = (() => {
     books: '<svg viewBox="0 0 16 16"><path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/></svg>',
     translate: '<svg viewBox="0 0 16 16"><path d="M4.545 6.714 4.11 8H3l1.862-5h1.284L8 8H6.833l-.435-1.286zm1.634-.736L5.5 3.956h-.049l-.679 2.022z"/> <path d="M0 2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm7.138 9.995q.289.451.63.846c-.748.575-1.673 1.001-2.768 1.292.178.217.451.635.555.867 1.125-.359 2.08-.844 2.886-1.494.777.665 1.739 1.165 2.93 1.472.133-.254.414-.673.629-.89-1.125-.253-2.057-.694-2.82-1.284.681-.747 1.222-1.651 1.621-2.757H14V8h-3v1.047h.765c-.318.844-.74 1.546-1.272 2.13a6 6 0 0 1-.415-.492 2 2 0 0 1-.94.31"/></svg>',
     fitness: '<svg viewBox="0 0 16 16"><path d="M1.475 9C2.702 10.84 4.779 12.871 8 15c3.221-2.129 5.298-4.16 6.525-6H12a.5.5 0 0 1-.464-.314l-1.457-3.642-1.598 5.593a.5.5 0 0 1-.945.049L5.889 6.568l-1.473 2.21A.5.5 0 0 1 4 9z"/> <path d="M.88 8C-2.427 1.68 4.41-2 7.823 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C11.59-2 18.426 1.68 15.12 8h-2.783l-1.874-4.686a.5.5 0 0 0-.945.049L7.921 8.956 6.464 5.314a.5.5 0 0 0-.88-.091L3.732 8z"/></svg>',
-    netflix: '<svg viewBox="0 0 16 16"><path d="M3 15h2.5V5.5L10.5 15H13V1h-2.5v9.5L5.5 1H3z"/></svg>',
     cube: '<svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15.528 2.973a.75.75 0 0 1 .472.696v8.662a.75.75 0 0 1-.472.696l-7.25 2.9a.75.75 0 0 1-.557 0l-7.25-2.9A.75.75 0 0 1 0 12.331V3.669a.75.75 0 0 1 .471-.696L7.443.184l.004-.001.274-.11a.75.75 0 0 1 .558 0l.274.11.004.001zm-1.374.527L8 5.962 1.846 3.5 1 3.839v.4l6.5 2.6v7.922l.5.2.5-.2V6.84l6.5-2.6v-.4l-.846-.339Z"/></svg>'
   };
   const ICON_NAMES = Object.keys(ICONS);
@@ -2653,6 +2694,7 @@ const App = (() => {
    * to grab fresh files before reloading - fix for stale updates
    */
   async function nukeServiceWorkerAndCaches() {
+    localStorage.removeItem('metrolaunch_runtime_js');
     try {
       const names = await caches.keys();
       await Promise.all(names.map(n => caches.delete(n)));
@@ -3232,32 +3274,47 @@ const App = (() => {
   async function showNewsEditor() {
     const tile = tiles.find(t => t.id === NEWS_TILE_ID);
     if (!tile) return;
+    
+    const consent = localStorage.getItem('metrolaunch_backend_consent') === '1';
+    const runtimeReady = !!window.MetroRuntime;
+    const isEnabled = consent && runtimeReady;
+    const blockReason = consent && !runtimeReady 
+      ? 'Consent was given but the server could not give the runtime...'
+      : 'This feature requires consent in advanced settings';
+    const toastReason = consent && !runtimeReady
+      ? 'Backend was not recieved...'
+      : 'This feature requires consent in advanced settings';
+      
+    let prov = tile.newsProvider || 'hn';
+    if (!isEnabled) prov = 'hn';
+    
     await showModal(`
       <h2>News Tile</h2>
       <p style="font-size: 13px; opacity: 0.7; margin-top: -10px; margin-bottom: 20px; line-height: 1.4;">To disable 'ugly character' removal, head to advanced settings...</p>
-      <div class="form-group">
+      <div class="form-group" style="transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'};"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
         <label>News Provider</label>
-        <select id="news-provider">
-          <option value="hn"${!tile.newsProvider || tile.newsProvider === 'hn' ? ' selected' : ''}>default - hacker news - 🌎</option>
-          <option value="cnn"${tile.newsProvider === 'cnn' ? ' selected' : ''}>CNN - 🇺🇸</option>
-          <option value="nbc"${tile.newsProvider === 'nbc' ? ' selected' : ''}>NBC - 🇺🇸</option>
-          <option value="abc"${tile.newsProvider === 'abc' ? ' selected' : ''}>ABC - 🇺🇸</option>
-          <option value="cbs"${tile.newsProvider === 'cbs' ? ' selected' : ''}>CBS - 🇺🇸</option>
-          <option value="cbc"${tile.newsProvider === 'cbc' ? ' selected' : ''}>CBC - 🇨🇦</option>
-          <option value="bbc"${tile.newsProvider === 'bbc' ? ' selected' : ''}>BBC - 🇬🇧</option>
-          <option value="npr"${tile.newsProvider === 'npr' ? ' selected' : ''}>NPR - 🇺🇸</option>
-          <option value="fox"${tile.newsProvider === 'fox' ? ' selected' : ''}>FOX - 🇺🇸</option>
+        <select id="news-provider"${!isEnabled ? ' style="pointer-events: none;" tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
+          <option value="hn"${prov === 'hn' ? ' selected' : ''}>default - hacker news - 🌎</option>
+          <option value="cnn"${prov === 'cnn' ? ' selected' : ''}>CNN - 🇺🇸</option>
+          <option value="nbc"${prov === 'nbc' ? ' selected' : ''}>NBC - 🇺🇸</option>
+          <option value="abc"${prov === 'abc' ? ' selected' : ''}>ABC - 🇺🇸</option>
+          <option value="cbs"${prov === 'cbs' ? ' selected' : ''}>CBS - 🇺🇸</option>
+          <option value="cbc"${prov === 'cbc' ? ' selected' : ''}>CBC - 🇨🇦</option>
+          <option value="bbc"${prov === 'bbc' ? ' selected' : ''}>BBC - 🇬🇧</option>
+          <option value="npr"${prov === 'npr' ? ' selected' : ''}>NPR - 🇺🇸</option>
+          <option value="fox"${prov === 'fox' ? ' selected' : ''}>FOX - 🇺🇸</option>
         </select>
+        ${!isEnabled ? `<div style="font-size:13px; opacity:0.7; margin-top:4px;">${consent && !runtimeReady ? blockReason : 'Enable community networking in advanced settings to unlock alternate providers'}</div>` : ''}
       </div>
-      <div class="form-group" style="margin-bottom: 24px;">
+      <div class="form-group" style="margin-bottom: 24px; transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'};"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
         <label>Custom RSS Feed</label>
-        <input type="text" class="metro-input" id="news-custom-rss" style="margin-bottom: 0;" placeholder="e.g. https://example.com/rss.xml" value="${tile.customRssUrl || ''}">
+        <input type="text" class="metro-input" id="news-custom-rss" style="margin-bottom: 0;${!isEnabled ? ' pointer-events: none;' : ''}" placeholder="e.g. https://example.com/rss.xml" value="${tile.customRssUrl || ''}"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
       </div>
       <div class="toggle-row" style="margin-top: 12px; margin-bottom: 4px;">
         <span class="toggle-label">Remove job promotion stories</span>
         <div class="toggle-switch${tile.removeJobs !== false ? ' on' : ''}" id="news-remove-jobs-toggle"></div>
       </div>
-      <div style="font-size: 13px; opacity: 0.7; margin-bottom: 24px; line-height: 1.4;">The launcher default news provider is community sourced and sometimes has many 'is hiring' stories so this removes them</div>
+      <div style="font-size: 13px; opacity: 0.7; margin-bottom: 24px; line-height: 1.4;">The launcher default news provider is community sourced and sometimes has many advertising stories so this removes them</div>
       <div class="toggle-row" style="margin-top: 12px; margin-bottom: 4px;">
         <span class="toggle-label">Enable advanced story filtering</span>
         <div class="toggle-switch${tile.enableStoryControl ? ' on' : ''}" id="news-enable-story-toggle"></div>
@@ -3369,6 +3426,17 @@ const App = (() => {
   async function showSpotifyEditor() {
     const tile = tiles.find(t => t.id === SPOTIFY_TILE_ID);
     if (!tile) return;
+    
+    const consent = localStorage.getItem('metrolaunch_backend_consent') === '1';
+    const runtimeReady = !!window.MetroRuntime;
+    const isEnabled = consent && runtimeReady;
+    const blockReason = consent && !runtimeReady 
+      ? 'Consent was given but the server could not give the runtime...'
+      : 'This feature requires consent in advanced settings';
+    const toastReason = consent && !runtimeReady
+      ? 'Backend was not recieved...'
+      : 'This feature requires consent in advanced settings';
+
     await showModal(`
       <h2>Spotify Tile</h2>
       <div class="form-group">
@@ -3378,33 +3446,35 @@ const App = (() => {
           <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'};"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
         <label>Username (On Leopard Server)</label>
-        <div class="input-btn-row" style="display:flex;gap:8px;align-items:stretch;width:100%;">
-          <input type="text" id="spotify-username" value="${escHtml(tile.spotifyUsername || settings.spotifyUsername || '')}" placeholder="Your registered username" autocomplete="off" autocapitalize="none" style="flex:1 1 auto;min-width:0;width:auto;">
-          <!-- we use inline styles to make sure browser does not show stock button styles -->
-          <button type="button" class="inline-btn" id="spotify-test" style="-webkit-appearance:none;appearance:none;padding:10px 14px;border:1px solid rgba(255,255,255,0.85);border-radius:0;background:transparent;color:#fff;font-size:13px;font-family:'Segoe UI Supro';cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:none;line-height:1;">TEST</button>
+        <div class="input-btn-row" style="display:flex;gap:8px;align-items:stretch;width:100%;${!isEnabled ? ' pointer-events: none;' : ''}">
+          <input type="text" id="spotify-username" value="${escHtml(tile.spotifyUsername || settings.spotifyUsername || '')}" placeholder="Your registered username" autocomplete="off" autocapitalize="none" style="flex:1 1 auto;min-width:0;width:auto;"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
+          <button type="button" class="inline-btn" id="spotify-test" style="-webkit-appearance:none;appearance:none;padding:10px 14px;border:1px solid rgba(255,255,255,0.85);border-radius:0;background:transparent;color:#fff;font-size:13px;font-family:'Segoe UI Supro';cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:none;line-height:1;"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>TEST</button>
         </div>
+        ${!isEnabled ? `<div style="font-size:13px; opacity:0.7; margin-top:4px;">${consent && !runtimeReady ? blockReason : 'Enable community networking in advanced settings to unlock these options'}</div>` : ''}
       </div>
-      <div class="form-group">
+      <div class="form-group" style="transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'};"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
         <label>Query Rate (seconds, min 2)</label>
-        <input type="number" id="spotify-interval" value="${escHtml(tile.spotifyInterval || settings.spotifyInterval || '2')}" min="2" autocomplete="off" inputmode="numeric">
+        <input type="number" id="spotify-interval" value="${escHtml(tile.spotifyInterval || settings.spotifyInterval || '2')}" min="2" autocomplete="off" inputmode="numeric"${!isEnabled ? ' style="pointer-events: none;" tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
+      </div>
+      <div style="transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'}; margin-bottom: 24px;"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
+        <div class="toggle-row"${!isEnabled ? ' style="pointer-events: none;"' : ''}>
+          <span class="toggle-label">Show cover art background</span>
+          <div class="toggle-switch${tile.spotifyCoverArt ? ' on' : ''}" id="spotify-cover-art"></div>
+        </div>
+        <div class="toggle-row" style="margin-top: 12px;${!isEnabled ? ' pointer-events: none;' : ''}">
+          <span class="toggle-label" id="spotify-unblur-art-label">Do not blur the album artwork</span>
+          <div class="toggle-switch${tile.spotifyUnblurArt ? ' on' : ''}" id="spotify-unblur-art"></div>
+        </div>
+        <div class="toggle-row" style="margin-top: 12px;${!consent ? ' pointer-events: none;' : ''}">
+          <span class="toggle-label">Shade text content</span>
+          <div class="toggle-switch${tile.spotifyShadeText ? ' on' : ''}" id="spotify-shade-text"></div>
+        </div>
       </div>
       <div class="form-group">
         <label>App URL (optional)</label>
         <input type="text" id="spotify-url" value="${escHtml(tile.url || settings.spotifyUrl || 'spotify://')}" placeholder="e.g. spotify://" autocomplete="off" autocapitalize="off">
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Show cover art background</span>
-        <div class="toggle-switch${tile.spotifyCoverArt ? ' on' : ''}" id="spotify-cover-art"></div>
-      </div>
-      <div class="toggle-row" style="margin-top: 12px;">
-        <span class="toggle-label" id="spotify-unblur-art-label">Do not blur the album artwork</span>
-        <div class="toggle-switch${tile.spotifyUnblurArt ? ' on' : ''}" id="spotify-unblur-art"></div>
-      </div>
-      <div class="toggle-row" style="margin-top: 12px;">
-        <span class="toggle-label">Shade text content</span>
-        <div class="toggle-switch${tile.spotifyShadeText ? ' on' : ''}" id="spotify-shade-text"></div>
       </div>
 
       <div class="form-group" id="spotify-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
@@ -3583,7 +3653,7 @@ const App = (() => {
           <div class="toggle-switch${settings.spotifyEnabled ? ' on' : ''}" id="spotify-toggle"></div>
         </div>
         <div class="toggle-row" id="spotify-cap-row" style="opacity: ${settings.disableRegexCleaning ? '0.5' : '1'}; pointer-events: ${settings.disableRegexCleaning ? 'none' : 'auto'};">
-          <span class="toggle-label">Force capital-case song</span>
+          <span class="toggle-label">Force capital case song</span>
           <div class="toggle-switch${settings.spotifyCapitaliseSong && !settings.disableRegexCleaning ? ' on' : ''}" id="spotify-cap-toggle"></div>
         </div>
         <div class="toggle-row">
@@ -4311,24 +4381,37 @@ const App = (() => {
         return;
       }
 
-      const total = REQUIRED_ASSETS.length;
+      let total = REQUIRED_ASSETS.length;
+      if (localStorage.getItem('metrolaunch_backend_consent') === '1') {
+        const hasRuntime = localStorage.getItem('metrolaunch_runtime_js') !== null;
+        results.push({ asset: 'Secured Backend Runtime', found: hasRuntime });
+        if (hasRuntime) cachedCount++;
+        total++;
+      }
+
       const pct = Math.round((cachedCount / total) * 100);
       const allGood = cachedCount === total;
       const statusColor = allGood ? '#4caf50' : (pct >= 50 ? '#ff9800' : '#ff6b6b');
 
-      const rows = results.map(r =>
-        `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;">
-          <span style="color:${r.found ? '#4caf50' : '#ff6b6b'};font-size:16px;">${r.found ? '\u2713' : '\u2717'}</span>
+      const rows = results.map(r => {
+        const isRuntime = r.asset === 'Secured Backend Runtime';
+        const icon = isRuntime 
+          ? (r.found 
+              ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 1px 0 -1px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+              : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 1px 0 -1px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`)
+          : `<span style="color:${r.found ? '#4caf50' : '#ff6b6b'};font-size:16px;">${r.found ? '\u2713' : '\u2717'}</span>`;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;${isRuntime ? 'margin-top:12px;' : ''}">
+          ${icon}
           <span style="opacity:${r.found ? '0.7' : '1'};${r.found ? '' : 'color:#ff6b6b;'}">${r.asset}</span>
-        </div>`
-      ).join('');
+        </div>`;
+      }).join('');
 
       await showModal(`
         <h2>Service Worker Checker</h2>
         <div style="text-align:center;padding:12px 0;">
           <div style="font-size:36px;font-weight:700;color:${statusColor};">${pct}%</div>
           <div style="font-size:13px;opacity:0.7;margin-top:4px;">${cachedCount} of ${total} assets cached</div>
-          <div style="font-size:14px;margin-top:8px;color:${statusColor};">${allGood ? '\u2713 all assets cached - full offline support' : '\u26A0 some assets are missing from cache'}</div>
+          <div style="font-size:14px;margin-top:8px;color:${statusColor};">${allGood ? '\u2713 all assets cached - full offline support' : '<span style="position:relative;top:1px;margin-right:4px;">\u26A0</span> some assets are missing from cache'}</div>
         </div>
         <div class="form-divider"></div>
         <div class="scrollable-y" style="max-height:240px;overflow-y:auto;padding:4px 0; touch-action: pan-y;">

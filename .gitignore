@@ -1,1 +1,8 @@
+# Macos generated files
 .DS_Store
+
+# Closed source backends
+backends/
+
+# Garbage from changes
+__pycache__/
