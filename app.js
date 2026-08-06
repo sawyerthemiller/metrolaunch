@@ -3506,7 +3506,7 @@ const App = (() => {
         unblurArtLabel.style.opacity = '0.5';
       } else {
         unblurArtToggle.style.opacity = '1';
-        unblurArtToggle.style.pointerEvents = 'auto';
+        unblurArtToggle.style.pointerEvents = '';
         unblurArtLabel.style.opacity = '1';
       }
     }
