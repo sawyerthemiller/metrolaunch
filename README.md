@@ -1,6 +1,8 @@
 > [!NOTE]  
 > MetroLaunch code is reusable but only with proper attribution... Do not steal code...
 >
+> MetroLaunch data backend may not be reverse engineered, tampered with to gain anauthorized access, or used in any other project besides MetroLaunch... Doing so is a violation of the terms / license outlined in this repository.
+>
 > Credits
 > - @sawyerthemiller (Leopard Industries) for MetroLaunch
 > - @anupamme for security fix in ver 1.7.8
