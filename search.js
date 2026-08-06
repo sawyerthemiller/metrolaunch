@@ -1,3 +1,8 @@
+/** biome-ignore-all lint/suspicious/useIterableCallbackReturn: <explanation> */
+/** biome-ignore-all lint/correctness/noUnusedFunctionParameters: <explanation> */
+/** biome-ignore-all lint/complexity/useArrowFunction: <explanation> */
+/** biome-ignore-all lint/correctness/noUnusedVariables: <explanation> */
+/** biome-ignore-all lint/complexity/useOptionalChain: <explanation> */
 document.addEventListener('DOMContentLoaded', () => {
   // Wait for App to be ready
   setTimeout(initSearch, 100);
@@ -399,6 +404,8 @@ function showSearchContextMenu(tileId, x, y) {
       const tileUrl = tile.url || tile.launchUrl || '';
       if (tileUrl.toLowerCase().startsWith('livecontainer://')) {
         if (window.showToast) window.showToast('Not allowed for community submission');
+      } else if (decodeURIComponent(tileUrl).toLowerCase().replace(/\s/g, '').startsWith('javascript:')) {
+        if (window.showToast) window.showToast('Nice try asshole...');
       } else if (window.communityAPI) {
         window.communityAPI.submitApp({
           name: tile.name,

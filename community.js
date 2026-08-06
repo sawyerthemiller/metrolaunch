@@ -151,7 +151,7 @@ window.communityAPI = {
     };
 
     initBtn.onclick = async () => {
-      initBtn.textContent = 'Fetching...';
+      initBtn.textContent = 'Working...';
       initBtn.style.pointerEvents = 'none';
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000);
@@ -345,6 +345,10 @@ window.communityAPI = {
       const res = await window.MetroRuntime.Community.submitApp(appData);
       if (res.status === 409) {
         if (window.showToast) window.showToast('That app has already been submitted');
+        return false;
+      }
+      if (res.status === 429) {
+        if (window.showToast) window.showToast('Server is in cooldown period');
         return false;
       }
       if (!res.ok) throw new Error('Server error');
@@ -594,6 +598,12 @@ window.communityAPI = {
       try {
         if (!window.MetroRuntime || !window.MetroRuntime.Community) throw new Error("Uninitialized");
         const res = await window.MetroRuntime.Community.deleteApp(appId, code);
+        
+        if (res.status === 429) {
+          if (window.showToast) window.showToast('Server is in cooldown period');
+          adminModal.remove();
+          return;
+        }
         
         if (res.status === 401) {
           if (window.showToast) window.showToast('Invalid administrator code');
