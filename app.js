@@ -4570,9 +4570,15 @@ const App = (() => {
   // TOAST
   function showToast(msg) {
     const el = document.getElementById('toast');
+    clearTimeout(showToast._t);
+    
+    if (!msg || String(msg).trim() === '') {
+      el.classList.remove('visible');
+      return;
+    }
+    
     el.textContent = msg;
     el.classList.add('visible');
-    clearTimeout(showToast._t);
     showToast._t = setTimeout(() => el.classList.remove('visible'), 2000);
   }
   window.showToast = showToast;
