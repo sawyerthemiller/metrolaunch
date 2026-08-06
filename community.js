@@ -281,7 +281,7 @@ window.communityAPI = {
 
         let dotColor = 'var(--accent, #0078d4)';
         try {
-          const rawSet = localStorage.getItem('metrolaunch_settings');
+          const rawSet = localStorage.getItem('metro_launcher_settings');
           if (rawSet) {
             const parsedSet = JSON.parse(rawSet);
             if (parsedSet.globalColorEnabled && parsedSet.globalColor) {
