@@ -550,7 +550,7 @@ window.communityAPI = {
         </div>
         <div class="confirm-actions">
           <button class="confirm-cancel">Cancel</button>
-          <button class="confirm-danger" id="admin-ok-btn" style="color:#fff; border-color:var(--accent, #0078d4);">OK</button>
+          <button class="confirm-ok" id="admin-ok-btn" style="color:#fff; border-color:var(--accent, #0078d4);">OK</button>
         </div>
       </div>
     `;
@@ -591,7 +591,7 @@ window.communityAPI = {
         }
         if (!res.ok) throw new Error('Server error');
         
-        if (window.showToast) window.showToast('App deleted from server.');
+        if (window.showToast) window.showToast('App deleted from server...');
         adminModal.remove();
         
         // Refresh the list
