@@ -1,7 +1,9 @@
 > [!NOTE]  
 > MetroLaunch code is reusable but only with proper attribution... Do not steal code...
 >
-> MetroLaunch data backend may not be reverse engineered, tampered with to gain anauthorized access, or used in any other project besides MetroLaunch... Doing so is a violation of the terms / license outlined in this repository.
+> MetroLaunch data backend may not be reverse engineered, tampered with to gain anauthorized access, or used in any other project besides MetroLaunch...
+>
+> Doing so is a violation of the terms / license outlined in this repository.
 >
 > Credits
 > - @sawyerthemiller (Leopard Industries) for MetroLaunch
@@ -33,7 +35,7 @@ Please fully read the readme before installing and using the launcher...
 **So why do we have to** 
 - Apple in their infinite wisdom has disallowed enumerating other apps on the device and opening them 'just because' and usually requires some sort of intent
 - Hence, a weather app may have a scheme like `weather-app-best://getforloc=milwaukee` - note that is a pretty crude example but the point is the same
-- Thanfully, opening an app with nothing in the url scheme usally works just fine. For example `netflix://` will just open the app `Netflix`
+- Thanfully, opening an app with nothing in the url scheme usally works just fine. For example `spotify://` will just open the app `Spotify`
 
 **How can I get them** 
 - Sometimes you get lucky and it is just the app name with a `://` after it, or it is just the Bundle ID
@@ -66,9 +68,8 @@ The code of this server is no longer in the backends directory due to abuse of t
 
 **Fair use warning** 
 
-- I am not a big company, and I cannot afford abuse of bandwidth. This is a very low bandwidth implementation, but I will ask people not to 'test the limits' of my poor server
+- I am not a big company, and I cannot afford abuse of bandwidth. This is a very low bandwidth implementation, but I will ask people not to 'test the limits' of my poor server, would be much appreciated, thanks :3
 - Use of the system is opt-in and collects no user data besides the one 'unique user count' which is also opt-in but use is also limited to terms listed in the `README`or anywhere else in the project
-- Would be much appreicated, thanks :3
 
 I am (probably) working on making a Linux server version...
 
@@ -77,7 +78,7 @@ I am (probably) working on making a Linux server version...
 - You will need an [OpenWeatherMap](https://openweathermap.org/) API key if you want the weather tile to work.
 - The app will tell you how to do it.
 
-To access the menu to add an app or go to the settings, press the vertical elipses menu in the status bar, and chose your option from there. To update the app, go the the settings cache section, then press update. Thanks for cheking this out everybody :)
+To access the menu to add an app or go to the settings, press the vertical elipses menu in the status bar, and chose your option from there. To update the app, if you are not automatically prompted go the the settings cache section, then press update. Thanks for cheking this out everybody :)
 
 ## Contributing to the project
 
