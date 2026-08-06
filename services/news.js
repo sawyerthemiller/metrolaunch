@@ -60,18 +60,19 @@
       .replace(/([^.])\.$/, '$1');
   }
 
-  function cacheGet() {
+  function cacheGet(currentProvider, currentCustomUrl) {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return null;
       const obj = JSON.parse(raw);
       if (Date.now() - obj.ts > TTL_MS) return null;
+      if (obj.provider !== currentProvider || obj.customUrl !== currentCustomUrl) return null;
       return obj.data;
     } catch { return null; }
   }
 
-  function cacheSet(v) {
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: v })); } catch { }
+  function cacheSet(v, currentProvider, currentCustomUrl) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: v, provider: currentProvider, customUrl: currentCustomUrl })); } catch { }
   }
 
   function init(injected) {
@@ -141,7 +142,7 @@
       customUrl = '';
     }
 
-    const cached = cacheGet();
+    const cached = cacheGet(provider, customUrl);
     if (cached?.length) {
       data = cached;
       hasLoaded = true;
@@ -186,7 +187,7 @@
           });
         hasLoaded = true;
         hasFailed = false;
-        cacheSet(data);
+        cacheSet(data, provider, customUrl);
         index = 0;
         updateFace();
       })
