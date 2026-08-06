@@ -67,21 +67,29 @@ function initSearch() {
       
       requestAnimationFrame(() => {
         const rect = btn.getBoundingClientRect();
+        
+        const width = btn.offsetWidth;
+        const height = btn.offsetHeight;
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const top = centerY - height / 2;
+        const left = centerX - width / 2;
+
         const rippleContainer = document.createElement('div');
         rippleContainer.className = 'nav-ripple-container';
         rippleContainer.style.position = 'fixed';
-        rippleContainer.style.top = `${rect.top}px`;
-        rippleContainer.style.left = `${rect.left}px`;
-        rippleContainer.style.width = `${rect.width}px`;
-        rippleContainer.style.height = `${rect.height}px`;
+        rippleContainer.style.top = `${top}px`;
+        rippleContainer.style.left = `${left}px`;
+        rippleContainer.style.width = `${width}px`;
+        rippleContainer.style.height = `${height}px`;
         rippleContainer.style.zIndex = '9999';
         
         const ripple = document.createElement('div');
         ripple.className = 'nav-ripple';
         
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
+        const size = Math.max(width, height);
+        const x = e.clientX - left - size / 2;
+        const y = e.clientY - top - size / 2;
         
         ripple.style.width = ripple.style.height = `${size}px`;
         ripple.style.left = `${x}px`;

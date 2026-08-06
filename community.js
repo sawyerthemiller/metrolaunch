@@ -151,7 +151,7 @@ window.communityAPI = {
           </div>
         </div>
         <div id="comm-apps-list" style="flex: 1; overflow-y: auto; padding: 20px; position: relative;">
-          <div id="comm-loading" style="display:flex; justify-content:center; align-items:center; height:100%; font-size: 18px; opacity: 0.7;">Fetching Data...</div>
+          <div id="comm-loading" style="display:flex; justify-content:center; align-items:center; height:100%; font-size: 18px; opacity: 0.7;">Fetching data...</div>
         </div>
       </div>
     `;
@@ -176,13 +176,21 @@ window.communityAPI = {
     );
     
     const loadData = async () => {
+      loading.textContent = 'Fetching Data...';
       loading.style.display = 'flex';
       Array.from(listContainer.children).forEach(c => {
         if (c.id !== 'comm-loading') c.remove();
       });
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      
       try {
-        const res = await fetch('https://leopardindustries.net:8088/?action=list');
+        const res = await fetch('https://leopardindustries.net:8088/?action=list', {
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
         if (!res.ok) throw new Error('Server error');
         const data = await res.json();
         loading.style.display = 'none';
@@ -280,7 +288,9 @@ window.communityAPI = {
         });
         if (window.applyHaptics) window.applyHaptics(Array.from(listContainer.querySelectorAll('.comm-get-btn')));
       } catch (e) {
-        loading.textContent = 'no apps available...';
+        clearTimeout(timeoutId);
+        loading.textContent = 'Server appears to be down...';
+        loading.style.display = 'flex';
       }
     };
 

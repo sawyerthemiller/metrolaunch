@@ -4072,7 +4072,7 @@ const App = (() => {
             if (!settings.resizeGridEnabled) return;
             const val = parseInt(el.getAttribute('data-val'), 10);
             if (val === 6) {
-              showToast('That is the default so just turn it off...');
+              showToast('Launcher default so just turn it off...');
               return;
             }
             settings.gridCols = val;
@@ -4791,6 +4791,31 @@ const App = (() => {
       SpotifyService.updateFace();
       // Snap any live tile that happens to be middle of flip back to its frontface
       document.querySelectorAll('.live-tile .live-tile-inner').forEach(inner => flipTile(inner, false));
+    });
+
+    function resetLiveTilesToFront() {
+      liveTileIntervals.forEach(clearTimeout);
+      liveTileIntervals = [];
+      document.querySelectorAll('.live-tile .live-tile-inner').forEach(inner => {
+        inner.style.transition = 'none';
+        inner.style.transform = 'translateY(calc(-100% / 3))';
+        inner.classList.remove('is-flipped');
+      });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        resetLiveTilesToFront();
+      } else {
+        startLiveTileFlip();
+      }
+    });
+
+    window.addEventListener('pagehide', resetLiveTilesToFront);
+    window.addEventListener('pageshow', () => {
+      if (document.visibilityState === 'visible') {
+        startLiveTileFlip();
+      }
     });
 
     window.addEventListener('resize', () => { computeCellSize(); render(); });
