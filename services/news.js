@@ -53,6 +53,7 @@
       .replace(/\s*\.{3,}$/, '...')
       .replace(/ő/g, 'o')
       .replace(/á/g, 'a')
+      .replace(/ñ/g, 'n')
       .replace(/\bvs\./gi, 'vs')
       .replace(/\b0+(\d+)/g, '$1')
 

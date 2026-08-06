@@ -279,6 +279,17 @@ window.communityAPI = {
         dotsContainer.style.height = '8px';
         overlayBg.appendChild(dotsContainer);
 
+        let dotColor = 'var(--accent, #0078d4)';
+        try {
+          const rawSet = localStorage.getItem('metrolaunch_settings');
+          if (rawSet) {
+            const parsedSet = JSON.parse(rawSet);
+            if (parsedSet.globalColorEnabled && parsedSet.globalColor) {
+              dotColor = parsedSet.globalColor;
+            }
+          }
+        } catch(e) {}
+
         const styleEl = document.createElement('style');
         styleEl.textContent = `
           @keyframes customLoaderFly {
@@ -292,7 +303,7 @@ window.communityAPI = {
             left: -4px;
             width: 8px;
             height: 8px;
-            background-color: var(--accent, #0078d4);
+            background-color: ${dotColor};
             opacity: 0;
             animation: customLoaderFly 1.8s cubic-bezier(0.1, 0.5, 0.9, 0.5) forwards;
           }
