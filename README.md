@@ -61,7 +61,7 @@ Please fully read the readme before installing and using the launcher...
 - Make sure Spotify is running on your computer, run `python` or `python3` `spotify_client.py` to register a username on the server, and put that username in the the settings of the Spotify tile. It is recommended you use a somewhat unique username.
 - You will need to keep the Python client running to make sure the launcher syncs your Spotify status. 
 
-The code of this server is in the backends directory. You can set this up yourself but you must have a web server, FQDN, and HTTPS certificates. It's mostly there for transparency
+The code of this server is no longer in the backends directory, but it is still what powers the app's tile... I will publish a video at some point explaining the launcher's new features and why i close sourced the data backend of it...
 
 **Fair use warning** 
 
