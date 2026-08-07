@@ -213,12 +213,18 @@
       // preload the image so the tile doesn't flash without a background
       const img = new Image();
       img.src = data.coverUrl;
-      const apply = () => elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, data.coverUrl, shadeText, unblurArt));
+      const currentCoverUrl = data.coverUrl;
+      const apply = () => elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, currentCoverUrl, shadeText, unblurArt));
       if (img.complete) {
         apply();
       } else {
         img.onload = apply;
-        img.onerror = apply;  // still render the tile, just without the image
+        img.onerror = () => {
+          if (data && data.coverUrl === currentCoverUrl) {
+            data.coverUrl = null;
+          }
+          elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, null, shadeText, unblurArt));
+        };
       }
     } else {
       elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, null, shadeText, unblurArt));
