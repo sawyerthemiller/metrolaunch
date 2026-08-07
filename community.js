@@ -164,11 +164,6 @@ window.communityAPI = {
         if (!res.ok) throw new Error();
         const js = await res.text();
         localStorage.setItem('metrolaunch_runtime_js', js);
-        try {
-          eval(js);
-        } catch (e) {
-          console.error("Failed to eval runtime", e);
-        }
         hasInitialized = true;
         updateBtnStates();
       } catch (e) {
@@ -224,6 +219,9 @@ window.communityAPI = {
       if (!consentOn) {
         localStorage.setItem('metrolaunch_backend_consent', '0');
         localStorage.removeItem('metrolaunch_runtime_js');
+        if (window.App && window.App.updateTile) {
+          window.App.updateTile('news-tile', { newsProvider: 'hn', customRssUrl: '' });
+        }
         if (window.NewsService) {
           window.NewsService.purgeCache();
           window.NewsService.fetchData();

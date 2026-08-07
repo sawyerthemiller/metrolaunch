@@ -5173,7 +5173,7 @@ const App = (() => {
     showModal(html);
   }
 
-  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile };
+  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile, updateTile };
 })();
 
 window.App = App;
