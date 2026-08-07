@@ -2454,6 +2454,10 @@ const App = (() => {
     let left = rect.left;
     let top = rect.bottom + 5;
     
+    if (btnElement.id === 'btn-add-m' || btnElement.id === 'btn-add') {
+      top = rect.bottom + 15;
+    }
+    
     // Adjust if off-screen (menu roughly 200px wide)
     if (left + 200 > window.innerWidth) left = window.innerWidth - 210;
     
@@ -4774,8 +4778,10 @@ const App = (() => {
     if (btnMenu && headerMenu) {
       btnMenu.addEventListener('click', (e) => {
         e.stopPropagation();
+        const willClose = headerMenu.classList.contains('active');
         headerMenu.classList.toggle('active');
         if (headerMenuM) headerMenuM.classList.remove('active'); // Close mobile if open
+        if (willClose && typeof hideContextMenu === 'function') hideContextMenu();
       });
     }
 
@@ -4785,8 +4791,10 @@ const App = (() => {
     if (btnMenuM && headerMenuM) {
       btnMenuM.addEventListener('click', (e) => {
         e.stopPropagation();
+        const willClose = headerMenuM.classList.contains('active');
         headerMenuM.classList.toggle('active');
         if (headerMenu) headerMenu.classList.remove('active'); // Close desktop if open
+        if (willClose && typeof hideContextMenu === 'function') hideContextMenu();
       });
     }
 
