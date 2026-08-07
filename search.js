@@ -282,7 +282,10 @@ function renderSearchList() {
       }
       
       html += `
-          <div class="search-item-name">${escapeHtml(tile.name)}</div>
+          <div class="search-item-name">
+            ${escapeHtml(tile.name)}
+            ${tile.isNew ? '<span class="search-new-badge">NEW</span>' : ''}
+          </div>
         </div>
       `;
     });
@@ -316,6 +319,7 @@ function renderSearchList() {
         longPressTimer = setTimeout(() => {
           isLongPress = true;
           const id = item.getAttribute('data-id');
+          clearNewBadge(id, item);
           showSearchContextMenu(id, startX, startY);
         }, 600);
       }, {passive: true});
@@ -337,6 +341,7 @@ function renderSearchList() {
       item.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         const id = item.getAttribute('data-id');
+        clearNewBadge(id, item);
         showSearchContextMenu(id, e.clientX, e.clientY);
       });
       
@@ -346,6 +351,7 @@ function renderSearchList() {
           return;
         }
         const id = item.getAttribute('data-id');
+        clearNewBadge(id, item);
         const tile = tiles.find(t => t.id === id);
         if (tile && window.App && window.App.launchApp) {
           window.App.launchApp(tile);
@@ -353,6 +359,13 @@ function renderSearchList() {
       });
     });
   });
+}
+
+function clearNewBadge(id, element) {
+  const badge = element.querySelector('.search-new-badge');
+  if (!badge || !window.App || !window.App.markTileSeen) return;
+  window.App.markTileSeen(id);
+  badge.remove();
 }
 
 function showSearchContextMenu(tileId, x, y) {

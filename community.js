@@ -523,9 +523,14 @@ window.communityAPI = {
           // GET button logic
           item.querySelector('.comm-get-btn').onclick = (e) => {
             e.stopPropagation();
-            if (window.App) {
-              const installedNames = window.App.getTiles().map(t => (t.name || '').toLowerCase());
-              if (installedNames.includes((app.name || '').toLowerCase())) {
+            if (window.App && window.App.getFlatTiles) {
+              const duplicate = window.App.getFlatTiles().find(t => {
+                if (t.name && t.name.toLowerCase() === (app.name || '').toLowerCase()) return true;
+                if (app.launchUrl && t.url && t.url.toLowerCase() === app.launchUrl.toLowerCase()) return true;
+                return false;
+              });
+              
+              if (duplicate) {
                 if (window.showToast) window.showToast('Cannot install duplicate app');
                 return;
               }

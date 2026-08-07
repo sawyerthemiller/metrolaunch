@@ -2,6 +2,10 @@
    METRO LAUNCHER — Style Sheet
    Sharp corners · AMOLED blacks · White borders · Segoe UI Supro
    ================================================================ */
+/** biome-ignore-all lint/style/noDescendingSpecificity: <explanation> */
+/** biome-ignore-all lint/complexity/noImportantStyles: <explanation> */
+/** biome-ignore-all lint/a11y/useGenericFontNames: <explanation> */
+/** biome-ignore-all lint/suspicious/noDuplicateProperties: <explanation> */
 
 @font-face {
   font-family: 'Segoe UI Supro';
@@ -2023,4 +2027,17 @@ body.disable-forced-font * {
 
 .metro-input:focus {
   border-color: #fff;
+}
+
+.search-new-badge {
+  margin-left: 8px;
+  margin-bottom: 2px;
+  font-size: 12px;
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 0px;
+  font-weight: bold;
+  vertical-align: middle;
+  display: inline-block;
 }

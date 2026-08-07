@@ -863,7 +863,8 @@ const App = (() => {
   // TILE CRAP
   function addTile(data) {
     const spot = findNextFreeSpot(data.size || 'medium');
-    tiles.push({
+    const tile = {
+      ...data,
       id: _uid(),
       name: data.name || 'App',
       icon: data.icon || 'cube',
@@ -872,9 +873,12 @@ const App = (() => {
       size: data.size || 'medium',
       col: spot.col,
       row: spot.row,
-    });
+      isNew: true
+    };
+    tiles.push(tile);
     save();
     render();
+    document.dispatchEvent(new Event('tilesUpdated'));
     
     setTimeout(() => {
       const cy = spot.row * (cellSize + GRID_GAP);
@@ -2347,11 +2351,14 @@ const App = (() => {
 
     let mouseDown = false;
     let mouseMoved = false;
+    let mouseStartX = 0;
+    let mouseStartY = 0;
     gridEl.addEventListener('mousedown', (e) => {
       hideContextMenu();
       const tile = tileFrom(e);
       if (!tile || e.button === 2) return;
       if (editMode && isBadge(e)) return;
+      mouseStartX = e.clientX; mouseStartY = e.clientY;
       mouseDown = true; mouseMoved = false; touchTile = tile; touchStart = Date.now();
       if (editMode) { initDrag(tile.id, e.clientX, e.clientY, isHandle(e)); return; }
       clearTimeout(longPressTimer);
@@ -2361,7 +2368,12 @@ const App = (() => {
     window.addEventListener('mousemove', (e) => {
       if (!mouseDown) return;
       if (dragState) moveDrag(e.clientX, e.clientY);
-      else { clearTimeout(longPressTimer); mouseMoved = true; }
+      else { 
+        if (Math.abs(e.clientX - mouseStartX) > 8 || Math.abs(e.clientY - mouseStartY) > 8) {
+          clearTimeout(longPressTimer); 
+          mouseMoved = true; 
+        }
+      }
     });
 
     window.addEventListener('mouseup', (e) => {
@@ -2993,6 +3005,20 @@ const App = (() => {
     document.getElementById('btn-save-create').onclick = () => {
       const name = document.getElementById('inp-name').value.trim();
       if (!name) { showToast('Name is required'); return; }
+      const newUrl = document.getElementById('inp-url').value.trim();
+      
+      const flatTiles = getFlatTiles();
+      const duplicate = flatTiles.find(t => {
+        if (t.name && t.name.toLowerCase() === name.toLowerCase()) return true;
+        if (newUrl && t.url && t.url.toLowerCase() === newUrl.toLowerCase()) return true;
+        return false;
+      });
+      
+      if (duplicate) {
+        showToast('Cannot install duplicate app');
+        return;
+      }
+
       const iconUrl = document.getElementById('inp-icon-url').value.trim();
       addTile({
         name,
@@ -3134,10 +3160,26 @@ const App = (() => {
     document.getElementById('btn-edit-cancel').onclick = hideModal;
     document.getElementById('btn-edit-save').onclick = () => {
       const iconUrl = document.getElementById('edit-icon-url').value.trim();
+      const newUrl = document.getElementById('edit-url').value.trim();
+
+      const newName = document.getElementById('edit-name').value.trim() || tile.name;
+      const flatTiles = getFlatTiles();
+      const duplicate = flatTiles.find(t => {
+        if (t.id === tileId) return false;
+        if (t.name && t.name.toLowerCase() === newName.toLowerCase()) return true;
+        if (newUrl && t.url && t.url.toLowerCase() === newUrl.toLowerCase()) return true;
+        return false;
+      });
+      
+      if (duplicate) {
+        showToast('Cannot install duplicate app');
+        return;
+      }
+
       updateTile(tileId, {
         name: document.getElementById('edit-name').value.trim() || tile.name,
         icon: iconUrl || document.getElementById('edit-icon').value,
-        url: document.getElementById('edit-url').value.trim(),
+        url: newUrl,
         forceSafari: forceSafari,
         iconForceWhite: iconForceWhite,
         iconScale: editIconScale,
@@ -4947,6 +4989,14 @@ const App = (() => {
     });
     return flat;
   }
+
+  function markTileSeen(id) {
+    const tile = getFlatTiles().find(t => t.id === id);
+    if (!tile || !tile.isNew) return;
+    tile.isNew = false;
+    save();
+  }
+
   function getSettings() { return settings; }
 
   function getTileIconHtml(t) {
@@ -5189,7 +5239,7 @@ const App = (() => {
     showModal(html);
   }
 
-  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, saveSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile, updateTile };
+  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, saveSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile, updateTile, deleteTile, markTileSeen };
 })();
 
 window.App = App;
