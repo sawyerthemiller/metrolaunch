@@ -359,6 +359,10 @@ window.communityAPI = {
         if (window.showToast) window.showToast('Server is in cooldown period');
         return false;
       }
+      if (res.status === 400 || res.status === 413) {
+        if (window.showToast) window.showToast('App breaks rules for community submission');
+        return false;
+      }
       if (!res.ok) throw new Error('Server error');
       if (window.showToast) window.showToast('App submitted to community :)');
       return true;
