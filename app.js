@@ -5049,7 +5049,7 @@ const App = (() => {
       <div style="position: relative; height: 36px; margin: 0 -23px; margin-top: -36px; overflow: hidden; pointer-events: none; z-index: 5;">
         <div style="position: absolute; top: -50px; left: 0; right: 0; bottom: 12px; border: 1px solid var(--border-strong); border-radius: 24px; box-shadow: 0 0 0 50px #000;"></div>
       </div>
-      <div class="modal-actions" style="margin-top:12px; margin-bottom:-24px; display:flex; justify-content:space-between;">
+      <div class="modal-actions" style="margin-top:12px; margin-bottom:${document.body.classList.contains('is-desktop') ? '0' : '-24px'}; display:flex; justify-content:space-between;">
         <button type="button" class="btn-cancel" onclick="window._advResetState()">Reset State</button>
         <button type="button" onclick="App.hideModal()">OK</button>
       </div>
