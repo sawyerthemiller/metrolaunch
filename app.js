@@ -3433,7 +3433,7 @@ const App = (() => {
         NewsService.fetchData().then(() => {
           showToast('Data refreshed successfully');
         });
-      } else if (changedJobs || changedStoryControl) {
+      } else if (changedFilters) {
         NewsService.fetchData();
       }
       hideModal();
