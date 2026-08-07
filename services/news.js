@@ -154,10 +154,13 @@
           if (storyControl.length === 0 || (storyControl.length === 1 && storyControl[0] === '')) return true;
           const lowerTitle = s.title.toLowerCase();
           const titleWords = lowerTitle.split(/\W+/).filter(w => w.length > 0);
-          return !storyControl.some(word => 
-            lowerTitle.includes(word) || 
-            titleWords.some(tw => tw.length >= 4 && word.includes(tw))
-          );
+          return !storyControl.some(word => {
+            if (word === 'ai' || word === 'a.i.' || word === 'a.i') {
+              return /(?:\bai\b|a\.i\.?|\bopenai\b)/.test(lowerTitle);
+            }
+            return lowerTitle.includes(word) || 
+              titleWords.some(tw => tw.length >= 4 && word.includes(tw));
+          });
         });
       hasLoaded = true;
       hasFailed = false;
