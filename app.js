@@ -2695,6 +2695,8 @@ const App = (() => {
    */
   async function nukeServiceWorkerAndCaches() {
     localStorage.removeItem('metrolaunch_runtime_js');
+    if (window.WeatherService) window.WeatherService.purgeCache();
+    if (window.NewsService) window.NewsService.purgeCache();
     try {
       const names = await caches.keys();
       await Promise.all(names.map(n => caches.delete(n)));
