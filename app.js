@@ -3323,6 +3323,10 @@ const App = (() => {
       </div>
       <div style="font-size: 13px; opacity: 0.7; margin-bottom: 24px; line-height: 1.4;">The launcher default news provider is community sourced and sometimes has many advertising stories so this removes them</div>
       <div class="toggle-row" style="margin-top: 12px; margin-bottom: 4px;">
+        <span class="toggle-label">Attempt to remove stories about A.I.</span>
+        <div class="toggle-switch${tile.removeAi ? ' on' : ''}" id="news-remove-ai-toggle"></div>
+      </div>
+      <div class="toggle-row" style="margin-top: 12px; margin-bottom: 4px;">
         <span class="toggle-label">Enable advanced story filtering</span>
         <div class="toggle-switch${tile.enableStoryControl ? ' on' : ''}" id="news-enable-story-toggle"></div>
       </div>
@@ -3358,6 +3362,8 @@ const App = (() => {
     
     const jobsToggle = document.getElementById('news-remove-jobs-toggle');
     const jobsToggleRow = jobsToggle.closest('.toggle-row');
+    const aiToggle = document.getElementById('news-remove-ai-toggle');
+    const aiToggleRow = aiToggle.closest('.toggle-row');
     const providerSelect = document.getElementById('news-provider');
     const customRssInp = document.getElementById('news-custom-rss');
 
@@ -3385,6 +3391,7 @@ const App = (() => {
     updateNewsEditorState();
 
     jobsToggle.onclick = () => jobsToggle.classList.toggle('on');
+    aiToggle.onclick = () => aiToggle.classList.toggle('on');
 
     let storyControlEnabled = !!tile.enableStoryControl;
     const storyControlToggle = document.getElementById('news-enable-story-toggle');
@@ -3399,19 +3406,21 @@ const App = (() => {
     document.getElementById('news-cancel').onclick = hideModal;
     document.getElementById('news-save').onclick = () => {
       const isJobsOn = jobsToggle.classList.contains('on');
-      const newStoryControl = document.getElementById('news-story-control').value;
+      const isAiOn = aiToggle.classList.contains('on');
+      const newStoryControl = document.getElementById('news-story-control').value.trim();
       const isStoryControlOn = storyControlToggle.classList.contains('on');
-      const changedJobs = tile.removeJobs !== false !== isJobsOn;
-      const changedStoryControl = (tile.storyControl || '') !== newStoryControl || !!tile.enableStoryControl !== isStoryControlOn;
       
       const newProvider = document.getElementById('news-provider').value;
       const newCustomRss = document.getElementById('news-custom-rss').value.trim();
+      
       const changedSource = tile.newsProvider !== newProvider || tile.customRssUrl !== newCustomRss;
+      const changedFilters = tile.removeJobs !== isJobsOn || tile.removeAi !== isAiOn || tile.enableStoryControl !== isStoryControlOn || tile.storyControl !== newStoryControl;
       
       updateTile(NEWS_TILE_ID, {
         size: document.getElementById('news-size').value,
         color: document.getElementById('news-color').value,
         removeJobs: isJobsOn,
+        removeAi: isAiOn,
         enableStoryControl: isStoryControlOn,
         storyControl: newStoryControl,
         newsProvider: newProvider,
