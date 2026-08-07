@@ -588,24 +588,22 @@ const App = (() => {
           moved = true;
         }
       }
-      if (moved) {
-        for (let i = 0; i < tiles.length; i++) {
-          for (let j = i + 1; j < tiles.length; j++) {
-            if (tiles[i].visibility === 'search' || tiles[j].visibility === 'search') continue;
-            if (ignoreFolders && (isFolder(tiles[i]) || isFolder(tiles[j]))) continue;
-            if (overlaps(tiles[i], tiles[j])) {
-              let t1 = tiles[i];
-              let t2 = tiles[j];
-              
-              if (t2.id === changedId || (t1.id !== changedId && (t2.row < t1.row || (t2.row === t1.row && t2.col < t1.col)))) {
-                t1 = tiles[j];
-                t2 = tiles[i];
-              }
-              
-              const s1 = TILE_SIZES[t1.size];
-              t2.row = t1.row + s1.rows;
-              moved = true;
+      for (let i = 0; i < tiles.length; i++) {
+        for (let j = i + 1; j < tiles.length; j++) {
+          if (tiles[i].visibility === 'search' || tiles[j].visibility === 'search') continue;
+          if (ignoreFolders && (isFolder(tiles[i]) || isFolder(tiles[j]))) continue;
+          if (overlaps(tiles[i], tiles[j])) {
+            let t1 = tiles[i];
+            let t2 = tiles[j];
+            
+            if (t2.id === changedId || (t1.id !== changedId && (t2.row < t1.row || (t2.row === t1.row && t2.col < t1.col)))) {
+              t1 = tiles[j];
+              t2 = tiles[i];
             }
+            
+            const s1 = TILE_SIZES[t1.size];
+            t2.row = t1.row + s1.rows;
+            moved = true;
           }
         }
       }
@@ -5182,7 +5180,7 @@ const App = (() => {
     showModal(html);
   }
 
-  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile, updateTile };
+  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, saveSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile, updateTile };
 })();
 
 window.App = App;

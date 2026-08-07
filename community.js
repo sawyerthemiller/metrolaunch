@@ -220,7 +220,17 @@ window.communityAPI = {
         localStorage.setItem('metrolaunch_backend_consent', '0');
         localStorage.removeItem('metrolaunch_runtime_js');
         if (window.App && window.App.updateTile) {
-          window.App.updateTile('news-tile', { newsProvider: 'hn', customRssUrl: '' });
+          if (window.NewsService) {
+            window.App.updateTile(window.NewsService.TILE_ID, { newsProvider: 'hn', customRssUrl: '' });
+          }
+          if (window.SpotifyService) {
+            window.App.updateTile(window.SpotifyService.TILE_ID, { spotifyUsername: '' });
+          }
+          if (window.App.getSettings && window.App.saveSettings) {
+            const settings = window.App.getSettings();
+            settings.spotifyUsername = '';
+            window.App.saveSettings();
+          }
         }
         if (window.NewsService) {
           window.NewsService.purgeCache();
