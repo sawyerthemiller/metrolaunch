@@ -31,6 +31,7 @@
     parsed = parsed.replace(/\$/g, 's');
     parsed = parsed.replace(/'/g, '');
     parsed = parsed.replace(/!/g, '');
+    parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     return parsed;
   }
 
@@ -41,6 +42,7 @@
     if (deps && deps.getSettings && deps.getSettings().disableRegexCleaning) return track.trim();
     let parsed = track.replace(/(^|\W)\$(?=\w)/g, '$1S');
     parsed = parsed.replace(/\$/g, 's');
+    parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
     parsed = parsed.replace(/['’“”,.;:+!?]/g, (match, offset, string) => {
       if (match === '.') {
