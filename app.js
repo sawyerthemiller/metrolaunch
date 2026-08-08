@@ -4423,6 +4423,23 @@ const App = (() => {
         './weather_bg/50d.jpg', './weather_bg/50n.jpg'
       ];
 
+      const categoryStatus = {
+        'App HTML': true,
+        'App Styles': true,
+        'App Core': true,
+        'App Version': true,
+        'App Manifest': true,
+        'Component - Search': true,
+        'Component - Haptics': true,
+        'Component - Community': true,
+        'Service - Weather': true,
+        'Service - Spotify': true,
+        'Service - News': true,
+        'Asset - Font': true,
+        'Asset - Icons': true,
+        'Asset - Weather Images': true
+      };
+
       const results = [];
       let cachedCount = 0;
 
@@ -4436,8 +4453,31 @@ const App = (() => {
             const match = await cache.match(url);
             if (match) { found = true; break; }
           }
-          results.push({ asset, found });
           if (found) cachedCount++;
+
+          if (asset === './') continue;
+
+          let cat = null;
+          if (asset === './index.html') cat = 'App HTML';
+          else if (asset === './style.css') cat = 'App Styles';
+          else if (asset === './app.js') cat = 'App Core';
+          else if (asset === './version.txt') cat = 'App Version';
+          else if (asset === './manifest.json') cat = 'App Manifest';
+          else if (asset === './ios-haptics.js') cat = 'Component - Haptics';
+          else if (asset === './search.js') cat = 'Component - Search';
+          else if (asset === './community.js') cat = 'Component - Community';
+          else if (asset === './services/weather.js') cat = 'Service - Weather';
+          else if (asset === './services/news.js') cat = 'Service - News';
+          else if (asset === './services/spotify.js') cat = 'Service - Spotify';
+          else if (asset === './segoe-ui-supro.otf') cat = 'Asset - Font';
+          else if (asset.includes('navbar_icon') || asset === './share.png') cat = 'Asset - Icons';
+          else if (asset.includes('weather_bg')) cat = 'Asset - Weather Images';
+          
+          if (cat && !found) categoryStatus[cat] = false;
+        }
+
+        for (const cat in categoryStatus) {
+          results.push({ asset: cat, found: categoryStatus[cat] });
         }
       } catch {
         await showModal('<h2>Service Worker Checker</h2><div class="weather-nodata" style="padding:24px 0;">Cache API unavailable... Are you in a secure context such as HTTPS?</div><div class="modal-actions"><button class="btn-primary" id="sw-check-close">Close</button></div>');
@@ -4459,11 +4499,7 @@ const App = (() => {
 
       const rows = results.map(r => {
         const isRuntime = r.asset === 'Secured Backend Runtime';
-        const icon = isRuntime 
-          ? (r.found 
-              ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 1px 0 -1px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
-              : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 1px 0 -1px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`)
-          : `<span style="color:${r.found ? '#4caf50' : '#ff6b6b'};font-size:16px;">${r.found ? '\u2713' : '\u2717'}</span>`;
+        const icon = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${r.found ? '#4caf50' : '#ff6b6b'};margin:0 4px;"></span>`;
         return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;${isRuntime ? 'margin-top:12px;' : ''}">
           ${icon}
           <span style="opacity:${r.found ? '0.7' : '1'};${r.found ? '' : 'color:#ff6b6b;'}">${r.asset}</span>
@@ -4475,7 +4511,7 @@ const App = (() => {
         <div style="text-align:center;padding:12px 0;">
           <div style="font-size:36px;font-weight:700;color:${statusColor};">${pct}%</div>
           <div style="font-size:13px;opacity:0.7;margin-top:4px;">${cachedCount} of ${total} assets cached</div>
-          <div style="font-size:14px;margin-top:8px;color:${statusColor};">${allGood ? '\u2713 all assets cached - full offline support' : '<span style="position:relative;top:1px;margin-right:4px;">\u26A0</span> some assets are missing from cache'}</div>
+          <div style="font-size:14px;margin-top:8px;color:${statusColor};">${allGood ? 'all assets cached - full offline support' : 'some assets are missing from cache'}</div>
         </div>
         <div class="form-divider"></div>
         <div class="scrollable-y" style="max-height:240px;overflow-y:auto;padding:4px 0; touch-action: pan-y;">
