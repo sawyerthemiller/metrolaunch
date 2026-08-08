@@ -4750,8 +4750,8 @@ const App = (() => {
           <input type="text" id="inp-owm-country" placeholder="e.g. us" autocomplete="off">
         </div>
         <div class="modal-actions" style="display: flex; gap: 10px;">
-          <button class="btn-primary" id="btn-skip-owm" style="background: rgba(255,255,255,0.1); color: #fff;">Skip This</button>
-          <button class="btn-primary" id="btn-save-owm">Save</button>
+          <button id="btn-skip-owm">Skip This</button>
+          <button id="btn-save-owm">Save</button>
         </div>
       `);
       document.getElementById('btn-skip-owm').onclick = () => {

@@ -1032,8 +1032,8 @@ body.is-desktop .modal-sheet {
   border-color: #fff;
 }
 
-.form-group input[id$="-url"]:not(:focus),
-.form-group input#news-story-control:not(:focus) {
+.form-group input[id$="-url"]:not(:focus):not(:placeholder-shown),
+.form-group input#news-story-control:not(:focus):not(:placeholder-shown) {
   text-transform: lowercase;
 }
 
