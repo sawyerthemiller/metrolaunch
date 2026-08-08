@@ -4113,7 +4113,7 @@ const App = (() => {
           </div>
           
           <div class="toggle-row" style="margin-top: 12px;">
-            <span class="toggle-label">Resize the grid (slightly dangerous)</span>
+            <span class="toggle-label">Resizes the grid (slightly dangerous)</span>
             <div class="toggle-switch${settings.resizeGridEnabled ? ' on' : ''}" id="resize-grid-toggle"></div>
           </div>
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">very experimental and will mess up your current layout</div>
