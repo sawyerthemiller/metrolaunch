@@ -4099,7 +4099,7 @@ const App = (() => {
             <span class="toggle-label">Haptic tap on touch</span>
             <div class="toggle-switch${settings.hapticOnTouch ? ' on' : ''}" id="haptic-touch-toggle"></div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - might work on ios 17.4 to 26.4 ONLY - see haptics JS file for credit</div>
+          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - might work on ios 17.4 to 26.4 only - see haptics JS file for credit</div>
 
           <div class="toggle-row" style="margin-top: 12px;">
             <span class="toggle-label">Windows style navigation bar</span>
@@ -4119,7 +4119,7 @@ const App = (() => {
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">very experimental and will mess up your current layout</div>
           
           <div id="grid-size-selector" style="display: ${settings.resizeGridEnabled ? 'flex' : 'none'}; justify-content: center; margin-bottom: 16px;">
-            <div style="display: flex; background: rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 4px; position: relative; width: 180px;">
+            <div style="display: flex; background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 4px; position: relative; width: 180px;">
               <div id="grid-size-slider" style="position: absolute; top: 4px; left: ${settings.gridCols === 4 ? '4px' : settings.gridCols === 5 ? '61px' : '119px'}; width: 57px; height: calc(100% - 8px); background: rgba(255, 255, 255, 0.25); border-radius: 16px; transition: left 0.2s ease; border: 1px solid rgba(255,255,255,0.4); box-sizing: border-box;"></div>
               <div class="grid-size-option" data-val="4" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">4</div>
               <div class="grid-size-option" data-val="5" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">5</div>
