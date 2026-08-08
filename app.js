@@ -4411,7 +4411,7 @@ const App = (() => {
         './services/weather.js', './services/news.js', './services/spotify.js',
         './manifest.json', './version.txt', './ios-haptics.js',
         './segoe-ui-supro.otf',
-        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png',
+        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './share.png',
         './weather_bg/01d.jpg', './weather_bg/01n.jpg',
         './weather_bg/02d.jpg', './weather_bg/02n.jpg',
         './weather_bg/03d.jpg', './weather_bg/03n.jpg',

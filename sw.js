@@ -16,6 +16,7 @@ const ASSETS_TO_CACHE = [
     './navbar_icon/back.png',
     './navbar_icon/start.png',
     './navbar_icon/search.png',
+    './share.png',
     './weather_bg/01d.jpg',
     './weather_bg/01n.jpg',
     './weather_bg/02d.jpg',
