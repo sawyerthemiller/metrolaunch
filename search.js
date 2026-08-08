@@ -304,6 +304,7 @@ function renderSearchList() {
     
     // Add click and long-press listeners to items
     const items = container.querySelectorAll('.search-item');
+    if (window.applyHaptics) window.applyHaptics(Array.from(items));
     items.forEach(item => {
       let longPressTimer;
       let isLongPress = false;
