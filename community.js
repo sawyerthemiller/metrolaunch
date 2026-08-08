@@ -60,24 +60,24 @@ window.communityAPI = {
         <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:15px; cursor:pointer;" id="comm-toggle-consent">
           <div class="metro-checkbox ${isConsentChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px; flex-shrink: 0;"></div>
           <div style="text-align: left; transform: translateY(-2px);">
-            <div style="font-weight:600; font-size:16px;">Consent to usage of launcher data backend</div>
-            <div style="font-size:13px; opacity:0.7;">for the privacy and safety of users and the server - spotify integration, user counts, alternate news sources, and the community app library have been moved to a closed-source backend system - read more in the GH repo</div>
+            <div style="font-weight:600; font-size:15px;">Consent to usage of launcher data backend</div>
+            <div style="font-size:12px; opacity:0.7;">for the privacy and safety of users and the server - spotify integration, user counts, alternate news sources, and the community app library have been moved to a closed-source backend system - read more in the GH repo</div>
           </div>
         </div>
 
         <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:15px; cursor:pointer; ${uniqueDisabled}" id="comm-toggle-unique">
           <div class="metro-checkbox ${isUniqueChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px; flex-shrink: 0;"></div>
           <div style="text-align: left; transform: translateY(-2px);">
-            <div style="font-weight:600; font-size:16px;">Enables a single unique user count</div>
-            <div style="font-size:13px; opacity:0.7;">this helps me measure how much i should work on it and contains no identifying information</div>
+            <div style="font-weight:600; font-size:15px;">Enables a single unique user count</div>
+            <div style="font-size:12px; opacity:0.7;">this helps me measure how much i should work on it and contains no identifying information</div>
           </div>
         </div>
         
         <div class="form-group" style="display:flex; align-items:flex-start; margin-bottom:20px; cursor:pointer;" id="comm-toggle-submit">
           <div class="metro-checkbox ${isSubmitChecked ? 'checked' : ''}" style="margin-right:12px; margin-top: 4px; flex-shrink: 0;"></div>
           <div style="text-align: left; transform: translateY(-2px);">
-            <div style="font-weight:600; font-size:16px;">Enables the submit button on custom tiles</div>
-            <div style="font-size:13px; opacity:0.7;">shows only in search menu - help people add more apps and cut out the confusion</div>
+            <div style="font-weight:600; font-size:15px;">Enables the submit button on custom tiles</div>
+            <div style="font-size:12px; opacity:0.7;">shows only in search menu - help people add more apps and cut out the confusion</div>
           </div>
         </div>
 

@@ -4084,7 +4084,7 @@ const App = (() => {
             </div>
           </div>
           <div class="toggle-row">
-            <span class="toggle-label">Disable launcher's forced font</span>
+            <span class="toggle-label">Disable launcher forced font</span>
             <div class="toggle-switch${settings.disableForcedFont ? ' on' : ''}" id="disable-font-toggle"></div>
           </div>
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">uses the default OS font for webkit - may be more useful on jailbroken devices</div>
@@ -4206,7 +4206,7 @@ const App = (() => {
             if (!settings.resizeGridEnabled) return;
             const val = parseInt(el.getAttribute('data-val'), 10);
             if (val === 6) {
-              showToast('Launcher default just turn off...');
+              showToast('Launcher default so just turn off...');
               return;
             }
             settings.gridCols = val;
