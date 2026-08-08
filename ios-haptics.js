@@ -15,7 +15,7 @@ function e(el) {
   t.setAttribute('switch', '');
   t.id = id;
 
-  if (el.classList.contains('tile')) {
+  if (el.classList.contains('tile') || el.classList.contains('search-item')) {
     Object.assign(t.style, {
       position: 'absolute', opacity: 0, width: '1px', height: '1px', pointerEvents: 'none', zIndex: -1
     });
@@ -24,7 +24,9 @@ function e(el) {
 
     let label = document.createElement('label');
     label.htmlFor = id;
-    label.addEventListener('click', ev => ev.stopPropagation());
+    label.addEventListener('click', ev => {
+      if (el.classList.contains('tile')) ev.stopPropagation();
+    });
     Object.assign(label.style, {
       position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
       cursor: 'pointer', margin: 0, padding: 0, zIndex: 1,
