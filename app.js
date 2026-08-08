@@ -4206,7 +4206,7 @@ const App = (() => {
             if (!settings.resizeGridEnabled) return;
             const val = parseInt(el.getAttribute('data-val'), 10);
             if (val === 6) {
-              showToast('Launcher default so just turn it off...');
+              showToast('Launcher default just turn off...');
               return;
             }
             settings.gridCols = val;
