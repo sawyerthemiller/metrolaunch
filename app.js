@@ -3348,7 +3348,7 @@ const App = (() => {
         <label>News Provider</label>
         <select id="news-provider"${!isEnabled ? ' style="pointer-events: none;" tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
           <option value="hn"${prov === 'hn' ? ' selected' : ''}>default - hacker news - 🌎</option>
-          <option value="cnn"${prov === 'cnn' ? ' selected' : ''}>CNN - 🇺🇸</option>
+          <option value="cnn"${prov === 'cnn' ? ' selected' : ''}>CNN - top feed - 🇺🇸</option>
           <option value="nbc"${prov === 'nbc' ? ' selected' : ''}>NBC - 🇺🇸</option>
           <option value="abc"${prov === 'abc' ? ' selected' : ''}>ABC - 🇺🇸</option>
           <option value="cbs"${prov === 'cbs' ? ' selected' : ''}>CBS - 🇺🇸</option>
@@ -5067,7 +5067,7 @@ const App = (() => {
           <div style="position: absolute; right: 20px; top: 77px; transform: translateY(-50%); margin-top: 2px; color: var(--accent-color, #fff); pointer-events: none; z-index: 10;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </div>
-          <div id="adv-roller-list" class="hide-scrollbar scrollable-y" style="height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scroll-padding-top: 55px; scroll-padding-bottom: 111px; position: relative;">
+          <div id="adv-roller-list" class="hide-scrollbar scrollable-y" style="height: 100%; overflow-y: auto; overflow-x: hidden; scroll-snap-type: y mandatory; scroll-padding-top: 55px; scroll-padding-bottom: 111px; position: relative;">
             <div style="height: 55px;"></div>
     `;
     sortedTiles.forEach((t, i) => {
