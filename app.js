@@ -418,7 +418,7 @@ const App = (() => {
     // Extra room only while editing/dragging so tiles can be moved past the last row
     // Outside edit mode, snug the grid to its actual content so it doesn't scroll for no reason
     const baseBuffer = editMode ? 120 : 0;
-    const navBuffer = settings.windowsNavBar ? (50 + (parseInt(settings.navBarPaddingBottom, 10) || 0)) : 0;
+    const navBuffer = settings.windowsNavBar ? (50 + (parseInt(settings.navBarPaddingBottom ?? 20, 10))) : 0;
     return contentH + baseBuffer + navBuffer;
   }
 
@@ -528,10 +528,14 @@ const App = (() => {
 
     document.querySelectorAll('.wp-nav-bar').forEach(bar => {
       bar.style.display = settings.windowsNavBar ? 'flex' : 'none';
-      const pad = parseInt(settings.navBarPaddingBottom, 10) || 0;
+      const pad = parseInt(settings.navBarPaddingBottom ?? 20, 10);
       bar.style.height = (50 + pad) + 'px';
       bar.style.paddingBottom = pad + 'px';
       bar.style.boxSizing = 'border-box';
+      const normalIcons = bar.querySelector('.nav-normal-icons');
+      if (normalIcons) {
+        normalIcons.style.gap = (settings.navBarButtonGap ?? 100) + 'px';
+      }
     });
 
     if (!settings.spotifyMeltEnabled) {
@@ -1179,7 +1183,7 @@ const App = (() => {
     });
 
     const baseBuffer = editMode ? 120 : 0;
-    const navBuffer = settings.windowsNavBar ? (50 + (parseInt(settings.navBarPaddingBottom, 10) || 0)) : 0;
+    const navBuffer = settings.windowsNavBar ? (50 + (parseInt(settings.navBarPaddingBottom ?? 20, 10))) : 0;
     gridEl.style.height = `${Math.max(getGridHeight(), maxSimulatedY + baseBuffer + navBuffer)}px`;
   }
 
@@ -4108,8 +4112,13 @@ const App = (() => {
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also enable a beta search feature and enhance the functionality of the tiling system</div>
 
           <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-padding-group">
-            <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">How much to move up <span class="val" id="nav-padding-val">${settings.navBarPaddingBottom || 0}px</span></label>
-            <input type="range" class="metro-range" id="nav-padding-slider" min="0" max="100" value="${settings.navBarPaddingBottom || 0}" style="width: 100%;">
+            <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">How much to move up <span class="val" id="nav-padding-val">${settings.navBarPaddingBottom ?? 20}px</span></label>
+            <input type="range" class="metro-range" id="nav-padding-slider" min="0" max="100" value="${settings.navBarPaddingBottom ?? 20}" style="width: 100%;">
+          </div>
+
+          <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-gap-group">
+            <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Space between buttons <span class="val" id="nav-gap-val">${settings.navBarButtonGap ?? 100}px</span></label>
+            <input type="range" class="metro-range" id="nav-gap-slider" min="30" max="130" value="${settings.navBarButtonGap ?? 100}" style="width: 100%;">
           </div>
           
           <div class="toggle-row" style="margin-top: 12px;">
@@ -4277,6 +4286,11 @@ const App = (() => {
             navGroup.style.opacity = wpNavOn ? '1' : '0.5';
             navGroup.style.pointerEvents = wpNavOn ? 'auto' : 'none';
           }
+          const navGapGroup = document.getElementById('nav-gap-group');
+          if (navGapGroup) {
+            navGapGroup.style.opacity = wpNavOn ? '1' : '0.5';
+            navGapGroup.style.pointerEvents = wpNavOn ? 'auto' : 'none';
+          }
           
           applySettings();
         };
@@ -4290,6 +4304,17 @@ const App = (() => {
             settings.navBarPaddingBottom = parseInt(v, 10);
             applySettings();
             if (gridEl) gridEl.style.height = `${getGridHeight()}px`;
+          };
+        }
+
+        const navGapSlider = document.getElementById('nav-gap-slider');
+        const navGapVal = document.getElementById('nav-gap-val');
+        if (navGapSlider) {
+          navGapSlider.oninput = (e) => {
+            const v = e.target.value;
+            navGapVal.textContent = v + 'px';
+            settings.navBarButtonGap = parseInt(v, 10);
+            applySettings();
           };
         }
 
