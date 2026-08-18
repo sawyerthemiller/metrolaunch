@@ -53,9 +53,10 @@ window.stepSlider = function(id, step) {
   const newVal = Math.max(parseInt(el.min, 10) || 0, Math.min(parseInt(el.max, 10) || 100, oldVal + step));
   if (oldVal !== newVal) {
     el.value = newVal;
-    if (typeof el.oninput === 'function') el.oninput();
+    const mockEvent = { target: el };
+    if (typeof el.oninput === 'function') el.oninput(mockEvent);
     else el.dispatchEvent(new Event('input', { bubbles: true }));
-    if (typeof el.onchange === 'function') el.onchange();
+    if (typeof el.onchange === 'function') el.onchange(mockEvent);
     else el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 };
