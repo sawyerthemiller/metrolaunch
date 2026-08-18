@@ -46,9 +46,90 @@ if (localStorage.getItem('metrolaunch_backend_consent') === '1') {
   }
 }
 
+window.stepSlider = function(id, step) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const oldVal = parseInt(el.value, 10);
+  const newVal = Math.max(parseInt(el.min, 10) || 0, Math.min(parseInt(el.max, 10) || 100, oldVal + step));
+  if (oldVal !== newVal) {
+    el.value = newVal;
+    if (typeof el.oninput === 'function') el.oninput();
+    else el.dispatchEvent(new Event('input', { bubbles: true }));
+    if (typeof el.onchange === 'function') el.onchange();
+    else el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+};
+
+let stepSliderTimer = null;
+let stepSliderInterval = null;
+
+window.startStepSlider = function(id, step) {
+  window.stepSlider(id, step);
+  window.stopStepSlider();
+  stepSliderTimer = setTimeout(() => {
+    stepSliderInterval = setInterval(() => {
+      window.stepSlider(id, step);
+    }, 250);
+  }, 750);
+};
+
+window.stopStepSlider = function() {
+  clearTimeout(stepSliderTimer);
+  clearInterval(stepSliderInterval);
+};
+
 // disable pinch zoom on iOS
 document.addEventListener('gesturestart', (e) => {
   e.preventDefault();
+});
+
+// iOS Keyboard Visual Viewport Sync
+function syncVisualViewport() {
+  if (!window.visualViewport) return;
+  
+  const isKeyboardOpen = window.visualViewport.height < window.screen.height * 0.75;
+  
+  if (isKeyboardOpen) {
+    const h = window.visualViewport.height + 'px';
+    document.documentElement.style.height = h;
+    document.documentElement.style.minHeight = h;
+    document.body.style.height = h;
+    document.body.style.minHeight = h;
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.style.height = h;
+    });
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+  } else {
+    document.documentElement.style.height = '';
+    document.documentElement.style.minHeight = '';
+    document.body.style.height = '';
+    document.body.style.minHeight = '';
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.style.height = '';
+    });
+    window.scrollTo(0, 0);
+  }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', syncVisualViewport);
+  window.visualViewport.addEventListener('scroll', () => {
+    if (window.visualViewport.height < window.screen.height * 0.75) {
+      window.scrollTo(0, 0);
+    }
+  });
+}
+
+document.addEventListener('focusin', (e) => {
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+    const sheet = e.target.closest('.modal-sheet');
+    if (sheet) {
+      setTimeout(() => {
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }
 });
 
 // prevent rubber-banding or overscroll on iOS globally
@@ -363,6 +444,7 @@ const App = (() => {
     collapsedSections: {},
   };
   let isDesktop = false;
+  let isIPad = false;
   let editMode = false;
   let renderedExpandedFolderId = null;
   let cellSize = 0;
@@ -476,7 +558,9 @@ const App = (() => {
   // APPLY SETTINGS
   function applySettings() {
     // Update global grid columns if it changed via backup or settings
-    GRID_COLS = settings.gridCols || 6;
+    if (typeof isIPad !== 'undefined' && isIPad && settings.gridCols < 12) settings.gridCols = 14;
+    else if (typeof isIPad !== 'undefined' && !isIPad && settings.gridCols > 6) settings.gridCols = 6;
+    GRID_COLS = settings.gridCols || (isIPad ? 14 : 6);
     
     // Background image
     if (settings.bgUrl) {
@@ -502,7 +586,7 @@ const App = (() => {
     document.documentElement.style.setProperty('--tile-radius', `${settings.tileRadius || 0}px`);
 
     // live tile text scale based on grid columns
-    const liveTileScale = 6 / GRID_COLS;
+    const liveTileScale = (typeof isIPad !== 'undefined' && isIPad) ? (6 / (GRID_COLS - 8)) : (6 / GRID_COLS);
     document.documentElement.style.setProperty('--live-tile-scale', liveTileScale.toFixed(2));
 
     // hide dynamic content or notch
@@ -3663,12 +3747,20 @@ const App = (() => {
           <input type="text" id="bg-url" value="${escHtml(settings.bgUrl)}" placeholder="https://..." autocomplete="off">
         </div>
         <div class="form-group">
-          <label>Blur: <span id="blur-val">${settings.bgBlur}</span>px</label>
-          <input type="range" id="bg-blur" min="0" max="60" value="${settings.bgBlur}">
+          <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Blur <span><span id="blur-val">${settings.bgBlur}</span>px</span></label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('bg-blur', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <input type="range" id="bg-blur" min="0" max="60" value="${settings.bgBlur}" style="flex: 1; width: 0;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('bg-blur', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+          </div>
         </div>
         <div class="form-group">
-          <label>Darken: <span id="darken-val">${settings.bgDarken || 0}</span>%</label>
-          <input type="range" id="bg-darken" min="0" max="90" value="${settings.bgDarken || 0}">
+          <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Darken <span><span id="darken-val">${settings.bgDarken || 0}</span>%</span></label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('bg-darken', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <input type="range" id="bg-darken" min="0" max="90" value="${settings.bgDarken || 0}" style="flex: 1; width: 0;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('bg-darken', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+          </div>
         </div>
         <div class="modal-actions">
           <button class="btn-secondary" id="bg-random">Random Image</button>
@@ -3681,16 +3773,28 @@ const App = (() => {
       <div class="form-section-title${sectionClass('tile')}" data-section="tile">Tile Appearance <span class="section-chevron">\u25BC</span></div>
       <div class="section-body${sectionClass('tile')}" id="sec-tile">
         <div class="form-group">
-          <label>Opacity: <span id="opacity-val">${settings.tileOpacity != null ? settings.tileOpacity : 85}</span>%</label>
-          <input type="range" id="tile-opacity" min="10" max="100" value="${settings.tileOpacity != null ? settings.tileOpacity : 85}">
+          <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Opacity <span><span id="opacity-val">${settings.tileOpacity != null ? settings.tileOpacity : 85}</span>%</span></label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-opacity', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <input type="range" id="tile-opacity" min="10" max="100" value="${settings.tileOpacity != null ? settings.tileOpacity : 85}" style="flex: 1; width: 0;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-opacity', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+          </div>
         </div>
         <div class="form-group">
-          <label>Blur: <span id="tile-blur-val">${settings.tileBlur || 0}</span>px</label>
-          <input type="range" id="tile-blur" min="0" max="40" value="${settings.tileBlur || 0}">
+          <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Blur <span><span id="tile-blur-val">${settings.tileBlur || 0}</span>px</span></label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-blur', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <input type="range" id="tile-blur" min="0" max="40" value="${settings.tileBlur || 0}" style="flex: 1; width: 0;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-blur', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+          </div>
         </div>
         <div class="form-group">
-          <label>Border Radius: <span id="radius-val">${settings.tileRadius || 0}</span>px</label>
-          <input type="range" id="tile-radius" min="0" max="24" value="${settings.tileRadius || 0}">
+          <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Border Radius <span><span id="radius-val">${settings.tileRadius || 0}</span>px</span></label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-radius', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <input type="range" id="tile-radius" min="0" max="24" value="${settings.tileRadius || 0}" style="flex: 1; width: 0;">
+            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-radius', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+          </div>
         </div>
       </div>
 
@@ -4113,12 +4217,20 @@ const App = (() => {
 
           <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-padding-group">
             <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">How much to move up <span class="val" id="nav-padding-val">${settings.navBarPaddingBottom ?? 20}px</span></label>
-            <input type="range" class="metro-range" id="nav-padding-slider" min="0" max="100" value="${settings.navBarPaddingBottom ?? 20}" style="width: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+              <input type="range" class="metro-range" id="nav-padding-slider" min="0" max="100" value="${settings.navBarPaddingBottom ?? 20}" style="flex: 1; width: 0;">
+              <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            </div>
           </div>
 
           <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-gap-group">
             <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Space between buttons <span class="val" id="nav-gap-val">${settings.navBarButtonGap ?? 100}px</span></label>
-            <input type="range" class="metro-range" id="nav-gap-slider" min="30" max="130" value="${settings.navBarButtonGap ?? 100}" style="width: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+              <input type="range" class="metro-range" id="nav-gap-slider" min="30" max="130" value="${settings.navBarButtonGap ?? 100}" style="flex: 1; width: 0;">
+              <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            </div>
           </div>
           
           <div class="toggle-row" style="margin-top: 12px;">
@@ -4129,10 +4241,10 @@ const App = (() => {
           
           <div id="grid-size-selector" style="display: ${settings.resizeGridEnabled ? 'flex' : 'none'}; justify-content: center; margin-bottom: 16px;">
             <div style="display: flex; background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 4px; position: relative; width: 180px;">
-              <div id="grid-size-slider" style="position: absolute; top: 4px; left: ${settings.gridCols === 4 ? '4px' : settings.gridCols === 5 ? '61px' : '119px'}; width: 57px; height: calc(100% - 8px); background: rgba(255, 255, 255, 0.25); border-radius: 16px; transition: left 0.2s ease; border: 1px solid rgba(255,255,255,0.4); box-sizing: border-box;"></div>
-              <div class="grid-size-option" data-val="4" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">4</div>
-              <div class="grid-size-option" data-val="5" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">5</div>
-              <div class="grid-size-option" data-val="6" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">6</div>
+              <div id="grid-size-slider" style="position: absolute; top: 4px; left: ${(settings.gridCols === 4 || settings.gridCols === 12) ? '4px' : (settings.gridCols === 5 || settings.gridCols === 13) ? '61px' : '119px'}; width: 57px; height: calc(100% - 8px); background: rgba(255, 255, 255, 0.25); border-radius: 16px; transition: left 0.2s ease; border: 1px solid rgba(255,255,255,0.4); box-sizing: border-box;"></div>
+              <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 12 : 4}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 12 : 4}</div>
+              <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 13 : 5}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 13 : 5}</div>
+              <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 14 : 6}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 14 : 6}</div>
             </div>
           </div>
 
@@ -4160,7 +4272,8 @@ const App = (() => {
           if (window.communityAPI) window.communityAPI.showUserAppsModal();
         };
         document.getElementById('adv-close').onclick = () => {
-          if (settings.resizeGridEnabled && settings.gridCols === 6) {
+          const isIPadVal = typeof isIPad !== 'undefined' && isIPad;
+          if (settings.resizeGridEnabled && ((isIPadVal && settings.gridCols === 14) || (!isIPadVal && settings.gridCols === 6))) {
             settings.resizeGridEnabled = false;
             save();
           }
@@ -4189,21 +4302,22 @@ const App = (() => {
         const resizeToggle = document.getElementById('resize-grid-toggle');
         const gridSelector = document.getElementById('grid-size-selector');
         let resizeOn = !!settings.resizeGridEnabled;
+        
         resizeToggle.onclick = () => {
           resizeOn = !resizeOn;
           resizeToggle.classList.toggle('on', resizeOn);
           settings.resizeGridEnabled = resizeOn;
           gridSelector.style.display = resizeOn ? 'flex' : 'none';
           if (!resizeOn) {
-            settings.gridCols = 6;
-            GRID_COLS = 6;
+            settings.gridCols = isIPad ? 14 : 6;
+            GRID_COLS = isIPad ? 14 : 6;
             document.getElementById('grid-size-slider').style.left = '119px';
             applySettings();
             save();
             render();
           } else {
-            settings.gridCols = 6;
-            GRID_COLS = 6;
+            settings.gridCols = isIPad ? 14 : 6;
+            GRID_COLS = isIPad ? 14 : 6;
             document.getElementById('grid-size-slider').style.left = '119px';
             applySettings();
           }
@@ -4214,14 +4328,14 @@ const App = (() => {
           el.onclick = () => {
             if (!settings.resizeGridEnabled) return;
             const val = parseInt(el.getAttribute('data-val'), 10);
-            if (val === 6) {
+            if ((!isIPad && val === 6) || (isIPad && val === 14)) {
               showToast('Launcher default so just turn off...');
               return;
             }
             settings.gridCols = val;
             GRID_COLS = val;
-            if (val === 4) slider.style.left = '4px';
-            else if (val === 5) slider.style.left = '61px';
+            if (val === 4 || val === 12) slider.style.left = '4px';
+            else if (val === 5 || val === 13) slider.style.left = '61px';
             else slider.style.left = '119px';
             
             [...tiles].sort((a,b) => a.row !== b.row ? a.row - b.row : a.col - b.col).forEach(t => {
@@ -4381,6 +4495,15 @@ const App = (() => {
             if (data.tiles && data.settings) {
               tiles = data.tiles;
               settings = data.settings;
+              if (typeof isIPad !== 'undefined' && isIPad && settings.gridCols < 12) {
+                if (settings.gridCols === 4) settings.gridCols = 12;
+                else if (settings.gridCols === 5) settings.gridCols = 13;
+                else settings.gridCols = 14;
+              } else if (typeof isIPad !== 'undefined' && !isIPad && settings.gridCols > 6) {
+                if (settings.gridCols === 12) settings.gridCols = 4;
+                else if (settings.gridCols === 13) settings.gridCols = 5;
+                else settings.gridCols = 6;
+              }
               save();
               saveSettings();
               applySettings();
@@ -4730,6 +4853,7 @@ const App = (() => {
         `<h1>Not Supported</h1>` +
         `<p>Metro Launcher is designed for iOS devices only. Android is not supported.</p>`;
       gate.style.display = 'flex';
+      document.body.classList.add('gate-active');
       return true;
     }
 
@@ -4752,6 +4876,7 @@ const App = (() => {
         `</svg>` +
         `</div>`;
       gate.style.display = 'flex';
+      document.body.classList.add('gate-active');
       return true;
     }
 
@@ -4806,9 +4931,19 @@ const App = (() => {
   }
 
   function init() {
+    isIPad = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    if (isIPad) {
+      document.body.classList.add('is-ipad');
+      const lockText = document.querySelector('#orientation-lock-screen p');
+      if (lockText) {
+        lockText.textContent = "Please rotate device to landscape to continue using the launcher.";
+      }
+    }
+
     if (checkPlatformGate()) return;
 
-    isDesktop = window.innerWidth > 600;
+    isDesktop = window.innerWidth > 600 && !isIPad;
 
     if (isDesktop) {
       document.body.classList.add('is-desktop');
@@ -4936,7 +5071,10 @@ const App = (() => {
     if (savedSettings) {
       settings = { ...settings, ...savedSettings };
     }
-    GRID_COLS = settings.gridCols || 6;
+    
+    if (typeof isIPad !== 'undefined' && isIPad && settings.gridCols < 12) settings.gridCols = 14;
+    else if (typeof isIPad !== 'undefined' && !isIPad && settings.gridCols > 6) settings.gridCols = 6;
+    GRID_COLS = settings.gridCols || (isIPad ? 14 : 6);
 
     // sanitize out of bounds tiles
     let tilesChanged = false;

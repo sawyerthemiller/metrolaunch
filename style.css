@@ -23,6 +23,15 @@
   padding: 0;
 }
 
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+}
+
 :root {
   --grid-cols: 6;
   --grid-gap: 4px;
@@ -57,6 +66,11 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   overscroll-behavior-y: none !important;
+}
+
+input, textarea, select {
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 /* ========== BACKGROUND LAYER ========== */
@@ -1610,14 +1624,25 @@ body.disable-forced-font * {
   margin-bottom: 10px;
 }
 
-/* show only in landscape when not in desktop mode */
+/* show only in landscape when not in desktop mode, but exclude iPad */
 @media screen and (orientation: landscape) {
-  body:not(.is-desktop) #orientation-lock-screen {
+  body:not(.is-desktop):not(.is-ipad):not(.gate-active) #orientation-lock-screen {
     display: flex;
   }
 
   /* hide the rest of the launcher so it doesn't cause scrolling or layout issues */
-  body:not(.is-desktop) #launcher-mobile {
+  body:not(.is-desktop):not(.is-ipad) #launcher-mobile {
+    display: none !important;
+  }
+}
+
+/* For iPad, reverse the logic: enforce landscape by showing lock screen in portrait */
+@media screen and (orientation: portrait) {
+  body.is-ipad:not(.gate-active) #orientation-lock-screen {
+    display: flex;
+  }
+
+  body.is-ipad #launcher-mobile {
     display: none !important;
   }
 }
