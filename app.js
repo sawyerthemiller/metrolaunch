@@ -498,7 +498,20 @@ const App = (() => {
     // Outside edit mode, snug the grid to its actual content so it doesn't scroll for no reason
     const baseBuffer = editMode ? 120 : 0;
     const navBuffer = settings.windowsNavBar ? (50 + (parseInt(settings.navBarPaddingBottom ?? 20, 10))) : 0;
-    return contentH + baseBuffer + navBuffer;
+    
+    let effectiveNavBuffer = navBuffer;
+    if (gridEl && navBuffer > 0 && !editMode) {
+      let parentH = gridEl.parentElement ? gridEl.parentElement.clientHeight : 0;
+      if (!parentH || parentH < 100) {
+        parentH = window.innerHeight - 60;
+      }
+      // Top padding 8px + 4px visual clearance = 12px. Bottom padding doesn't matter for navbar collision.
+      if (contentH + 12 <= parentH - navBuffer) {
+        effectiveNavBuffer = 0;
+      }
+    }
+    
+    return contentH + baseBuffer + effectiveNavBuffer;
   }
 
   function hexToRgba(hex, opacity01) {
@@ -1624,7 +1637,8 @@ const App = (() => {
     document.getElementById('btn-edit-folder-cancel').onclick = hideModal;
     document.getElementById('btn-edit-folder-save').onclick = () => {
       const newName = input.value.trim() || 'Folder';
-      if (newName.toLowerCase() !== folder.name.toLowerCase() && tiles.find(t => t.type === 'folder' && t.name.toLowerCase() === newName.toLowerCase() && t.id !== folderId)) {
+      const currentNameLower = (folder.name || 'Folder').toLowerCase();
+      if (newName.toLowerCase() !== currentNameLower && tiles.find(t => t.type === 'folder' && (t.name || 'Folder').toLowerCase() === newName.toLowerCase() && t.id !== folderId)) {
         showToast('Cannot add duplicate folder');
         return;
       }

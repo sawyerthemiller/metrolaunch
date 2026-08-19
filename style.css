@@ -2,6 +2,7 @@
    METRO LAUNCHER — Style Sheet
    Sharp corners · AMOLED blacks · White borders · Segoe UI Supro
    ================================================================ */
+/** biome-ignore-all lint/correctness/noUnknownProperty: <explanation> */
 /** biome-ignore-all lint/style/noDescendingSpecificity: <explanation> */
 /** biome-ignore-all lint/complexity/noImportantStyles: <explanation> */
 /** biome-ignore-all lint/a11y/useGenericFontNames: <explanation> */
@@ -348,6 +349,10 @@ body:not(.is-desktop) .header {
   scrollbar-width: none !important;
   -ms-overflow-style: none;
   overscroll-behavior-y: none !important;
+}
+
+.grid-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .grid-scroll.dragging-active {
@@ -1052,6 +1057,11 @@ body.is-desktop .modal-sheet {
   text-transform: lowercase;
 }
 
+@keyframes force-repaint-input {
+  0% { opacity: 0.99; }
+  100% { opacity: 1; }
+}
+
 .form-group input:not([type="range"]):not([type="hidden"]):not(:focus):not(:placeholder-shown) {
   color: transparent;
   -webkit-text-fill-color: transparent;
@@ -1063,6 +1073,7 @@ body.is-desktop .modal-sheet {
   -webkit-background-clip: text, border-box;
   background-clip: text, border-box;
   background-color: transparent;
+  animation: force-repaint-input 0.05s;
 }
 
 .form-group input::placeholder {
