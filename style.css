@@ -927,6 +927,7 @@ body:not(.is-desktop) .header {
 .modal-overlay {
   position: fixed;
   inset: 0;
+  height: var(--vv-height, 100%);
   background: rgba(0, 0, 0, 0.65);
   display: none;
   align-items: flex-end;
@@ -953,8 +954,7 @@ body.is-desktop .modal-overlay {
   border-radius: 0;
   width: 100%;
   max-width: 400px;
-  max-height: calc(100vh - env(safe-area-inset-top, 20px) - 60px);
-  max-height: calc(100dvh - env(safe-area-inset-top, 20px) - 60px);
+  max-height: calc(100% - env(safe-area-inset-top, 20px) - 20px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 24px 22px calc(22px + env(safe-area-inset-bottom, 20px));
@@ -1528,6 +1528,7 @@ body.disable-forced-font * {
 .confirm-overlay {
   position: fixed;
   inset: 0;
+  height: var(--vv-height, 100%);
   z-index: 100000;
   background: rgba(0, 0, 0, 0.7);
   display: flex;

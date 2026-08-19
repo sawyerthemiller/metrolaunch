@@ -96,9 +96,7 @@ function syncVisualViewport() {
     document.documentElement.style.minHeight = h;
     document.body.style.height = h;
     document.body.style.minHeight = h;
-    document.querySelectorAll('.modal-overlay').forEach(el => {
-      el.style.height = h;
-    });
+    document.documentElement.style.setProperty('--vv-height', h);
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
   } else {
@@ -106,9 +104,7 @@ function syncVisualViewport() {
     document.documentElement.style.minHeight = '';
     document.body.style.height = '';
     document.body.style.minHeight = '';
-    document.querySelectorAll('.modal-overlay').forEach(el => {
-      el.style.height = '';
-    });
+    document.documentElement.style.removeProperty('--vv-height');
     window.scrollTo(0, 0);
   }
 }
@@ -1063,6 +1059,10 @@ const App = (() => {
   function createEmptyFolder() {
     showFolderCreatePrompt((name) => {
       if (!name) return;
+      if (tiles.find(t => t.type === 'folder' && t.name.toLowerCase() === name.toLowerCase())) {
+        showToast('Cannot add duplicate folder');
+        return;
+      }
       const pos = findNextFreeSpot('medium');
       const color = ALL_COLORS[Math.floor(Math.random() * ALL_COLORS.length)];
       const folder = {
@@ -1623,7 +1623,12 @@ const App = (() => {
 
     document.getElementById('btn-edit-folder-cancel').onclick = hideModal;
     document.getElementById('btn-edit-folder-save').onclick = () => {
-      folder.name = input.value.trim() || 'Folder';
+      const newName = input.value.trim() || 'Folder';
+      if (newName.toLowerCase() !== folder.name.toLowerCase() && tiles.find(t => t.type === 'folder' && t.name.toLowerCase() === newName.toLowerCase() && t.id !== folderId)) {
+        showToast('Cannot add duplicate folder');
+        return;
+      }
+      folder.name = newName;
       if (showColor) {
         const colorInput = document.getElementById('edit-folder-color');
         if (colorInput) folder.color = colorInput.value;
