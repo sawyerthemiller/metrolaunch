@@ -85,10 +85,21 @@ document.addEventListener('gesturestart', (e) => {
 });
 
 // iOS Keyboard Visual Viewport Sync
+let lastKeyboardOpen = false;
+let keyboardCloseTimeout;
+let maxViewportHeight = window.visualViewport ? window.visualViewport.height : 0;
+
 function syncVisualViewport() {
   if (!window.visualViewport) return;
   
-  const isKeyboardOpen = window.visualViewport.height < window.screen.height * 0.75;
+  if (window.visualViewport.height > maxViewportHeight) {
+    maxViewportHeight = window.visualViewport.height;
+  }
+  
+  // If viewport shrinks by more than 100px, keyboard is open
+  const isKeyboardOpen = window.visualViewport.height < maxViewportHeight - 100;
+  
+  clearTimeout(keyboardCloseTimeout);
   
   if (isKeyboardOpen) {
     const h = window.visualViewport.height + 'px';
@@ -99,6 +110,7 @@ function syncVisualViewport() {
     document.documentElement.style.setProperty('--vv-height', h);
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
+    lastKeyboardOpen = true;
   } else {
     document.documentElement.style.height = '';
     document.documentElement.style.minHeight = '';
@@ -106,6 +118,20 @@ function syncVisualViewport() {
     document.body.style.minHeight = '';
     document.documentElement.style.removeProperty('--vv-height');
     window.scrollTo(0, 0);
+    
+    if (lastKeyboardOpen) {
+      keyboardCloseTimeout = setTimeout(() => {
+        document.querySelectorAll('input:not([type="range"]):not([type="hidden"])').forEach(el => {
+          el.blur();
+          const originalOpacity = el.style.opacity;
+          el.style.opacity = '0.99';
+          setTimeout(() => {
+            el.style.opacity = originalOpacity;
+          }, 50);
+        });
+        lastKeyboardOpen = false;
+      }, 300);
+    }
   }
 }
 
@@ -1564,7 +1590,7 @@ const App = (() => {
       `<div class="confirm-box">` +
       `<h3>New Folder</h3>` +
       `<p>Please enter a folder name...</p>` +
-      `<input type="text" class="metro-input" id="folder-name-input" placeholder="Folder name" value="New Folder" autofocus>` +
+      `<input type="text" spellcheck="false" autocorrect="off" class="metro-input" id="folder-name-input" placeholder="Folder name" value="New Folder" autofocus>` +
       `<div class="confirm-actions">` +
       `<button class="confirm-cancel">Cancel</button>` +
       `<button class="confirm-ok" style="color:#fff; border-color:var(--accent, #0078d4);">OK</button>` +
@@ -1609,7 +1635,7 @@ const App = (() => {
       <h2>Edit Folder</h2>
       <div class="form-group">
         <label>Folder Name</label>
-        <input type="text" id="edit-folder-name" value="${escHtml(folder.name || 'Folder')}" autocomplete="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="edit-folder-name" value="${escHtml(folder.name || 'Folder')}" autocomplete="off">
       </div>
       ${showColor ? `
       <div class="form-group">
@@ -3011,7 +3037,7 @@ const App = (() => {
       <h2>New Tile</h2>
       <div class="form-group">
         <label>App Name</label>
-        <input type="text" id="inp-name" placeholder="e.g. Spotify" autocomplete="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="inp-name" placeholder="e.g. Spotify" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Icon</label>
@@ -3020,11 +3046,11 @@ const App = (() => {
       </div>
       <div class="form-group">
         <label>Or Icon Image URL</label>
-        <input type="text" id="inp-icon-url" placeholder="https://..." autocomplete="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="inp-icon-url" placeholder="https://..." autocomplete="off">
       </div>
       <div class="form-group">
         <label>URL Scheme</label>
-        <input type="text" id="inp-url" placeholder="e.g. spotify://" autocomplete="off" autocapitalize="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="inp-url" placeholder="e.g. spotify://" autocomplete="off" autocapitalize="off">
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Force alternate open</span>
@@ -3162,7 +3188,7 @@ const App = (() => {
       <h2>Edit Tile</h2>
       <div class="form-group">
         <label>App Name</label>
-        <input type="text" id="edit-name" value="${escHtml(tile.name)}" autocomplete="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="edit-name" value="${escHtml(tile.name)}" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Icon</label>
@@ -3171,11 +3197,11 @@ const App = (() => {
       </div>
       <div class="form-group">
         <label>Or Icon Image URL</label>
-        <input type="text" id="edit-icon-url" value="${isUrlIcon ? escHtml(tile.icon) : ''}" placeholder="https://..." autocomplete="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="edit-icon-url" value="${isUrlIcon ? escHtml(tile.icon) : ''}" placeholder="https://..." autocomplete="off">
       </div>
       <div class="form-group">
         <label>URL Scheme</label>
-        <input type="text" id="edit-url" value="${escHtml(tile.url)}" autocomplete="off" autocapitalize="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="edit-url" value="${escHtml(tile.url)}" autocomplete="off" autocapitalize="off">
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Force alternate open</span>
@@ -3318,15 +3344,15 @@ const App = (() => {
       <h2>Weather Tile</h2>
       <div class="form-group">
         <label>Postal / Zip Code</label>
-        <input type="text" id="weather-zip" value="${escHtml(settings.weatherZip)}" placeholder="e.g. 90210 or SW1A 1AA" autocomplete="off" inputmode="text">
+        <input type="text" spellcheck="false" autocorrect="off" id="weather-zip" value="${escHtml(settings.weatherZip)}" placeholder="e.g. 90210 or SW1A 1AA" autocomplete="off" inputmode="text">
       </div>
       <div class="form-group">
         <label>API Key</label>
-        <input type="text" id="weather-api" value="${escHtml(settings.weatherApiKey || '')}" placeholder="OpenWeatherMap API Key" autocomplete="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="weather-api" value="${escHtml(settings.weatherApiKey || '')}" placeholder="OpenWeatherMap API Key" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Country Code</label>
-        <input type="text" id="weather-country" value="${escHtml(settings.weatherCountry || '')}" placeholder="e.g. us" autocomplete="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="weather-country" value="${escHtml(settings.weatherCountry || '')}" placeholder="e.g. us" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Tile Size</label>
@@ -3337,7 +3363,7 @@ const App = (() => {
       </div>
       <div class="form-group">
         <label>App URL (optional)</label>
-        <input type="text" id="weather-url" value="${escHtml(tile.url)}" placeholder="e.g. weather://" autocomplete="off" autocapitalize="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="weather-url" value="${escHtml(tile.url)}" placeholder="e.g. weather://" autocomplete="off" autocapitalize="off">
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Use Celsius</span>
@@ -3469,7 +3495,7 @@ const App = (() => {
       </div>
       <div class="form-group" style="margin-bottom: 24px; transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'};"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
         <label>Custom RSS Feed</label>
-        <input type="text" class="metro-input" id="news-custom-rss" style="margin-bottom: 0;${!isEnabled ? ' pointer-events: none;' : ''}" placeholder="e.g. https://example.com/rss.xml" value="${tile.customRssUrl || ''}"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
+        <input type="text" spellcheck="false" autocorrect="off" class="metro-input" id="news-custom-rss" style="margin-bottom: 0;${!isEnabled ? ' pointer-events: none;' : ''}" placeholder="e.g. https://example.com/rss.xml" value="${tile.customRssUrl || ''}"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
       </div>
       <div class="toggle-row" style="margin-top: 12px; margin-bottom: 4px;">
         <span class="toggle-label">Remove job promotion stories</span>
@@ -3486,7 +3512,7 @@ const App = (() => {
       </div>
       <div class="form-group" style="margin-bottom: 24px; transition: opacity 0.2s; opacity: ${tile.enableStoryControl ? '1' : '0.5'}; pointer-events: ${tile.enableStoryControl ? 'auto' : 'none'};" id="news-story-control-group">
         <label>User story control</label>
-        <input type="text" class="metro-input" id="news-story-control" style="margin-bottom: 0;" placeholder="Tired of those stories anyways..." value="${tile.storyControl || ''}">
+        <input type="text" spellcheck="false" autocorrect="off" class="metro-input" id="news-story-control" style="margin-bottom: 0;" placeholder="Tired of those stories anyways..." value="${tile.storyControl || ''}">
         <div style="font-size: 13px; opacity: 0.7; margin-top: 4px;">Enter space separated words, case insensitive, and stories with them will not be shown</div>
       </div>
       <div class="form-group">
@@ -3621,7 +3647,7 @@ const App = (() => {
       <div class="form-group" style="transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'};"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
         <label>Username (On Leopard Server)</label>
         <div class="input-btn-row" style="display:flex;gap:8px;align-items:stretch;width:100%;${!isEnabled ? ' pointer-events: none;' : ''}">
-          <input type="text" id="spotify-username" value="${escHtml(tile.spotifyUsername || settings.spotifyUsername || '')}" placeholder="Your registered username" autocomplete="off" autocapitalize="none" style="flex:1 1 auto;min-width:0;width:auto;"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
+          <input type="text" spellcheck="false" autocorrect="off" id="spotify-username" value="${escHtml(tile.spotifyUsername || settings.spotifyUsername || '')}" placeholder="Your registered username" autocomplete="off" autocapitalize="none" style="flex:1 1 auto;min-width:0;width:auto;"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
           <button type="button" class="inline-btn" id="spotify-test" style="-webkit-appearance:none;appearance:none;padding:10px 14px;border:1px solid rgba(255,255,255,0.85);border-radius:0;background:transparent;color:#fff;font-size:13px;font-family:'Segoe UI Supro';cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:none;line-height:1;"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>TEST</button>
         </div>
         ${!isEnabled ? `<div style="font-size:13px; opacity:0.7; margin-top:4px;">${consent && !runtimeReady ? blockReason : 'Enable community networking in advanced settings to unlock these options'}</div>` : ''}
@@ -3646,7 +3672,7 @@ const App = (() => {
       </div>
       <div class="form-group">
         <label>App URL (optional)</label>
-        <input type="text" id="spotify-url" value="${escHtml(tile.url || settings.spotifyUrl || 'spotify://')}" placeholder="e.g. spotify://" autocomplete="off" autocapitalize="off">
+        <input type="text" spellcheck="false" autocorrect="off" id="spotify-url" value="${escHtml(tile.url || settings.spotifyUrl || 'spotify://')}" placeholder="e.g. spotify://" autocomplete="off" autocapitalize="off">
       </div>
 
       <div class="form-group" id="spotify-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
@@ -3764,7 +3790,7 @@ const App = (() => {
       <div class="section-body${sectionClass('bg')}" id="sec-bg">
         <div class="form-group">
           <label>Image URL</label>
-          <input type="text" id="bg-url" value="${escHtml(settings.bgUrl)}" placeholder="https://..." autocomplete="off">
+          <input type="text" spellcheck="false" autocorrect="off" id="bg-url" value="${escHtml(settings.bgUrl)}" placeholder="https://..." autocomplete="off">
         </div>
         <div class="form-group">
           <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Blur <span><span id="blur-val">${settings.bgBlur}</span>px</span></label>
@@ -3782,9 +3808,12 @@ const App = (() => {
             <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('bg-darken', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
           </div>
         </div>
-        <div class="modal-actions">
-          <button class="btn-secondary" id="bg-random">Random Image</button>
-          <button class="btn-secondary" id="bg-clear">Clear</button>
+        <div class="modal-actions" style="margin-bottom: 8px;">
+          <button id="bg-random">Random Image</button>
+          <button id="bg-clear">Clear</button>
+        </div>
+        <div class="modal-actions" style="margin-bottom: 12px;">
+          <button id="bg-export">Export Current Background</button>
         </div>
       </div>
 
@@ -3907,7 +3936,7 @@ const App = (() => {
         </div>
         <div class="form-group" style="margin-top:8px;">
           <label>Header title says</label>
-          <input type="text" id="header-title-input" value="${escHtml(settings.headerTitle || 'Hello')}" placeholder="Hello" autocomplete="off">
+          <input type="text" spellcheck="false" autocorrect="off" id="header-title-input" value="${escHtml(settings.headerTitle || 'Hello')}" placeholder="Hello" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Label Alignment</label>
@@ -4254,7 +4283,7 @@ const App = (() => {
           </div>
           
           <div class="toggle-row" style="margin-top: 12px;">
-            <span class="toggle-label">Resizes the grid (slightly dangerous)</span>
+            <span class="toggle-label">Resizes the grid - slightly dangerous</span>
             <div class="toggle-switch${settings.resizeGridEnabled ? ' on' : ''}" id="resize-grid-toggle"></div>
           </div>
           <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">very experimental and will mess up your current layout</div>
@@ -4465,14 +4494,68 @@ const App = (() => {
       };
     }
 
-    document.getElementById('bg-random').onclick = () => {
-      document.getElementById('bg-url').value = `https://picsum.photos/1080/1920?t=${Date.now()}`;
-      showToast('Random image set');
+    document.getElementById('bg-random').onclick = async () => {
+      const btn = document.getElementById('bg-random');
+      btn.disabled = true;
+      btn.innerText = 'Working...';
+      try {
+        const res = await fetch(`https://picsum.photos/1080/1920?t=${Date.now()}`);
+        document.getElementById('bg-url').value = res.url;
+        showToast('Random image set');
+      } catch (e) {
+        showToast('Failed to generate image');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Random Image';
+      }
     };
 
     document.getElementById('bg-clear').onclick = () => {
       document.getElementById('bg-url').value = '';
       showToast('Image cleared');
+    };
+
+    document.getElementById('bg-export').onclick = () => {
+      if (!settings.bgUrl) {
+        showToast('No background image currently set');
+        return;
+      }
+      metroConfirm(
+        'Download Image',
+        'This will allow you download the image currently set as the launcher background',
+        'Continue',
+        async () => {
+          try {
+            if (settings.bgUrl.startsWith('data:')) {
+              const a = document.createElement('a');
+              a.href = settings.bgUrl;
+              a.download = 'background.jpg';
+              a.click();
+              return;
+            }
+            
+            if (settings.bgUrl.includes('picsum.photos') && !settings.bgUrl.includes('/id/')) {
+              showToast('Your old background is dynamic');
+            } else {
+              showToast('Downloading image...');
+            }
+            
+            const res = await fetch(settings.bgUrl, { cache: 'force-cache' });
+            if (!res.ok) throw new Error('Network response was not ok');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'background.jpg';
+            a.click();
+            URL.revokeObjectURL(url);
+          } catch (e) {
+            console.error('Failed to download background:', e);
+            showToast('Failed to download image...');
+          }
+        },
+        'var(--accent)'
+      );
     };
 
     document.getElementById('settings-reset').onclick = () => {
@@ -4913,11 +4996,11 @@ const App = (() => {
         </p>
         <div class="form-group">
           <label>API Key</label>
-          <input type="text" id="inp-owm-api" placeholder="Enter API Key" autocomplete="off">
+          <input type="text" spellcheck="false" autocorrect="off" id="inp-owm-api" placeholder="Enter API Key" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Country Code</label>
-          <input type="text" id="inp-owm-country" placeholder="e.g. us" autocomplete="off">
+          <input type="text" spellcheck="false" autocorrect="off" id="inp-owm-country" placeholder="e.g. us" autocomplete="off">
         </div>
         <div class="modal-actions" style="display: flex; gap: 10px;">
           <button id="btn-skip-owm">Skip This</button>
