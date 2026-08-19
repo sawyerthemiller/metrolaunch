@@ -4500,7 +4500,15 @@ const App = (() => {
       btn.innerText = 'Working...';
       try {
         const res = await fetch(`https://picsum.photos/1080/1920?t=${Date.now()}`);
-        document.getElementById('bg-url').value = res.url;
+        const input = document.getElementById('bg-url');
+        input.value = res.url;
+        
+        const originalOpacity = input.style.opacity;
+        input.style.opacity = '0.99';
+        setTimeout(() => {
+          input.style.opacity = originalOpacity;
+        }, 50);
+
         showToast('Random image set');
       } catch (e) {
         showToast('Failed to generate image');
@@ -4511,7 +4519,15 @@ const App = (() => {
     };
 
     document.getElementById('bg-clear').onclick = () => {
-      document.getElementById('bg-url').value = '';
+      const input = document.getElementById('bg-url');
+      input.value = '';
+      
+      const originalOpacity = input.style.opacity;
+      input.style.opacity = '0.99';
+      setTimeout(() => {
+        input.style.opacity = originalOpacity;
+      }, 50);
+
       showToast('Image cleared');
     };
 
