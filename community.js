@@ -478,13 +478,13 @@ window.communityAPI = {
           }
         };
 
-        data.apps.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach(app => {
+        data.apps.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach((app, index, arr) => {
           const item = document.createElement('div');
           item.style.display = 'flex';
           item.style.justifyContent = 'space-between';
           item.style.alignItems = 'center';
           item.style.padding = '12px 0';
-          item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+          item.style.borderBottom = index === arr.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)';
           item.dataset.id = app.id;
           
           item.innerHTML = `
@@ -497,12 +497,47 @@ window.communityAPI = {
 
           // Swipe to delete logic
           let startX = 0;
+          let startY = 0;
+          let isScrolling = false;
+          let isSwiping = false;
+
           item.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isScrolling = false;
+            isSwiping = false;
+            item.style.transition = 'none';
+          });
+          item.addEventListener('touchmove', (e) => {
+            if (isScrolling) return;
+            const diffX = e.touches[0].clientX - startX;
+            const diffY = e.touches[0].clientY - startY;
+
+            if (!isSwiping) {
+              if (Math.abs(diffY) > 10) {
+                isScrolling = true;
+                return;
+              }
+              if (Math.abs(diffX) > 10) {
+                isSwiping = true;
+              }
+            }
+
+            if (isSwiping && diffX > 0) {
+              const maxTranslate = item.offsetWidth * 0.25;
+              const translateX = Math.min(diffX, maxTranslate);
+              item.style.transform = `translateX(${translateX}px)`;
+              if (e.cancelable) e.preventDefault();
+            }
           });
           item.addEventListener('touchend', (e) => {
+            item.style.transition = 'transform 0.3s ease';
+            item.style.transform = 'translateX(0)';
+            if (isScrolling) return;
+
             const endX = e.changedTouches[0].clientX;
-            if (endX - startX > 80) { // Swiped right
+            const maxTranslate = item.offsetWidth * 0.25;
+            if (endX - startX > maxTranslate * 0.8) { // Swiped right far enough
               communityAPI.showAdminDeleteModal(app.id, overlay);
             }
           });
@@ -510,13 +545,37 @@ window.communityAPI = {
           // Also allow mouse dragging for testing
           let mStartX = 0;
           let mDown = false;
-          item.addEventListener('mousedown', (e) => { mStartX = e.clientX; mDown = true; });
+          item.addEventListener('mousedown', (e) => {
+            mStartX = e.clientX;
+            mDown = true;
+            item.style.transition = 'none';
+          });
+          item.addEventListener('mousemove', (e) => {
+            if (!mDown) return;
+            const diffX = e.clientX - mStartX;
+            if (diffX > 0) {
+              const maxTranslate = item.offsetWidth * 0.25;
+              const translateX = Math.min(diffX, maxTranslate);
+              item.style.transform = `translateX(${translateX}px)`;
+            }
+          });
           item.addEventListener('mouseup', (e) => {
             if (!mDown) return;
             mDown = false;
+            item.style.transition = 'transform 0.3s ease';
+            item.style.transform = 'translateX(0)';
+
             const endX = e.clientX;
-            if (endX - mStartX > 80) {
+            const maxTranslate = item.offsetWidth * 0.25;
+            if (endX - mStartX > maxTranslate * 0.8) {
               communityAPI.showAdminDeleteModal(app.id, overlay);
+            }
+          });
+          item.addEventListener('mouseleave', () => {
+            if (mDown) {
+              mDown = false;
+              item.style.transition = 'transform 0.3s ease';
+              item.style.transform = 'translateX(0)';
             }
           });
           

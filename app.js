@@ -155,10 +155,43 @@ document.addEventListener('focusin', (e) => {
   }
 });
 
+// iOS does not scroll a text field sideways to follow the caret, so scrubbing
+// the cursor (holding space to turn the keyboard into a trackpad) strands it in
+// the clipped tail of a long value. Measure where the caret actually sits and
+// move the field ourselves. Desktop already handles this, and there the caret
+// measures as visible, so this stays a no-op.
+const caretRuler = document.createElement('canvas').getContext('2d');
+const CARET_SCROLL_EDGE = 8;
+
+function keepCaretVisible(el) {
+  if (!el || el.tagName !== 'INPUT') return;
+  if (!['text', 'search', 'url', 'tel'].includes(el.type)) return;
+
+  const caret = el.selectionDirection === 'backward' ? el.selectionStart : el.selectionEnd;
+  if (caret == null) return;
+
+  const style = getComputedStyle(el);
+  const visible = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  if (!(visible > 0)) return;
+
+  caretRuler.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  const caretX = caretRuler.measureText(el.value.slice(0, caret)).width;
+
+  if (caretX < el.scrollLeft + CARET_SCROLL_EDGE) {
+    el.scrollLeft = Math.max(0, caretX - CARET_SCROLL_EDGE);
+  } else if (caretX > el.scrollLeft + visible - CARET_SCROLL_EDGE) {
+    el.scrollLeft = caretX - visible + CARET_SCROLL_EDGE;
+  }
+}
+
+document.addEventListener('selectionchange', () => keepCaretVisible(document.activeElement));
+
 // prevent rubber-banding or overscroll on iOS globally
 document.addEventListener('touchmove', (e) => {
-  // let range sliders work natively
+  // let range sliders work natively, and leave text fields alone so iOS keeps
+  // its own caret dragging, selection and scrub gestures
   if (e.target.closest('input[type="range"]')) return;
+  if (e.target.closest('input:not([type="range"]):not([type="hidden"]), textarea')) return;
   const scrollEl = e.target.closest('.grid-scroll, .modal-sheet, .scrollable-y, .search-page');
 
   if (scrollEl) {
@@ -5569,7 +5602,12 @@ document.addEventListener('DOMContentLoaded', App.init);
         const wrapper = document.createElement('div');
         wrapper.className = 'input-blur-wrapper';
         wrapper.style.position = 'relative';
-        wrapper.style.display = 'flex';
+        // Block rather than flex: the field only has to fill the wrapper, and
+        // blockifying it collapses the inline baseline gap that would otherwise
+        // leave the wrapper taller than the field and drop the copy out of
+        // vertical alignment.
+        wrapper.style.display = 'block';
+        input.style.display = 'block';
         
         if (input.parentElement.classList.contains('input-btn-row')) {
           wrapper.style.flex = '1 1 auto';
@@ -5618,12 +5656,16 @@ document.addEventListener('DOMContentLoaded', App.init);
         
         const paint = () => {
           // While the field is being edited the copy is taken out of the layout
-          // rather than just made transparent: on iOS a second text field
-          // stacked on the live one breaks caret scrubbing, so the field stops
-          // scrolling to follow the cursor.
+          // rather than just made transparent, so there is only ever one text
+          // field on the page while typing. Nothing is rewritten on repeat:
+          // this also runs on the field's own scroll events, and touching
+          // styles mid-scroll can cancel the scroll that is bringing the caret
+          // into view.
           if (document.activeElement === input) {
-            overlay.style.opacity = '0';
-            overlay.style.display = 'none';
+            if (overlay.style.display !== 'none') {
+              overlay.style.opacity = '0';
+              overlay.style.display = 'none';
+            }
             return;
           }
           
