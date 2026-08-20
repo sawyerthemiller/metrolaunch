@@ -391,7 +391,7 @@ window.communityAPI = {
             </button>
           </div>
         </div>
-        <div id="comm-apps-list" style="flex: 1; overflow-y: auto; padding: 20px; position: relative;">
+        <div id="comm-apps-list" class="scrollable-y" style="flex: 1; overflow-y: auto; padding: 20px; position: relative;">
           <div id="comm-loading" style="display:flex; justify-content:center; align-items:center; height:100%; font-size: 18px; opacity: 0.7;">Fetching data...</div>
         </div>
       </div>
