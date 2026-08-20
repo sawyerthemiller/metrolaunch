@@ -121,14 +121,10 @@ function syncVisualViewport() {
     
     if (lastKeyboardOpen) {
       keyboardCloseTimeout = setTimeout(() => {
-        document.querySelectorAll('input:not([type="range"]):not([type="hidden"])').forEach(el => {
-          el.blur();
-          const originalOpacity = el.style.opacity;
-          el.style.opacity = '0.99';
-          setTimeout(() => {
-            el.style.opacity = originalOpacity;
-          }, 50);
-        });
+        // Nothing here may touch opacity: this selector also catches the haptic
+        // helpers, which are real <input switch> elements parked at opacity 0
+        // over buttons and toggles. Lifting that paints them as white dots.
+        document.querySelectorAll('input:not([type="range"]):not([type="hidden"])').forEach(el => el.blur());
         lastKeyboardOpen = false;
       }, 300);
     }
