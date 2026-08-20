@@ -4502,12 +4502,7 @@ const App = (() => {
         const res = await fetch(`https://picsum.photos/1080/1920?t=${Date.now()}`);
         const input = document.getElementById('bg-url');
         input.value = res.url;
-        
-        const originalOpacity = input.style.opacity;
-        input.style.opacity = '0.99';
-        setTimeout(() => {
-          input.style.opacity = originalOpacity;
-        }, 50);
+        window.syncInputBlurOverlay?.(input);
 
         showToast('Random image set');
       } catch (e) {
@@ -4521,12 +4516,7 @@ const App = (() => {
     document.getElementById('bg-clear').onclick = () => {
       const input = document.getElementById('bg-url');
       input.value = '';
-      
-      const originalOpacity = input.style.opacity;
-      input.style.opacity = '0.99';
-      setTimeout(() => {
-        input.style.opacity = originalOpacity;
-      }, 50);
+      window.syncInputBlurOverlay?.(input);
 
       showToast('Image cleared');
     };
@@ -5611,7 +5601,6 @@ document.addEventListener('DOMContentLoaded', App.init);
         overlay.style.color = 'rgba(255, 255, 255, 0.5)';
         overlay.style.webkitTextFillColor = 'rgba(255, 255, 255, 0.5)';
         overlay.style.backgroundImage = 'none';
-        overlay.style.textTransform = getComputedStyle(input).textTransform;
         
         overlay.style.filter = 'blur(1.25px)';
         overlay.style.webkitFilter = 'blur(1.25px)';
@@ -5623,7 +5612,14 @@ document.addEventListener('DOMContentLoaded', App.init);
         
         wrapper.appendChild(overlay);
         
+        const inputStyle = getComputedStyle(input);
+        
         const sync = () => {
+          // url fields are only lowercased while blurred and non-empty, so the
+          // casing has to be re-read rather than captured once
+          const transform = inputStyle.textTransform;
+          if (overlay.style.textTransform !== transform) overlay.style.textTransform = transform;
+          
           overlay.value = input.value;
           overlay.scrollLeft = input.scrollLeft;
           const isFocused = document.activeElement === input;
@@ -5631,17 +5627,38 @@ document.addEventListener('DOMContentLoaded', App.init);
           overlay.style.opacity = (!isFocused && hasText) ? '1' : '0';
         };
         
-        input.addEventListener('focus', sync);
-        input.addEventListener('blur', () => {
+        // scrollLeft only settles once the input has been laid out again,
+        // so re-read it over the next couple of frames
+        const syncSettled = () => {
           sync();
           requestAnimationFrame(() => {
             sync();
             setTimeout(sync, 50);
           });
-        });
+        };
+        
+        input.addEventListener('focus', sync);
+        input.addEventListener('blur', syncSettled);
         input.addEventListener('change', sync);
         input.addEventListener('input', sync);
         input.addEventListener('scroll', sync);
+        
+        // Assigning input.value from code fires no events, so without this the
+        // overlay keeps painting whatever the user last typed.
+        const nativeValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+        if (nativeValue && nativeValue.configurable) {
+          Object.defineProperty(input, 'value', {
+            configurable: true,
+            enumerable: nativeValue.enumerable,
+            get() { return nativeValue.get.call(this); },
+            set(v) {
+              nativeValue.set.call(this, v);
+              syncSettled();
+            }
+          });
+        }
+        
+        input._syncBlurOverlay = syncSettled;
         sync();
       }
     });
@@ -5650,4 +5667,8 @@ document.addEventListener('DOMContentLoaded', App.init);
   const mutObserver = new MutationObserver(() => attachOverlays());
   mutObserver.observe(document.body, { childList: true, subtree: true });
   setTimeout(attachOverlays, 100);
+
+  window.syncInputBlurOverlay = (input) => {
+    if (input && typeof input._syncBlurOverlay === 'function') input._syncBlurOverlay();
+  };
 })();
