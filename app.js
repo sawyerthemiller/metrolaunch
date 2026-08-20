@@ -5609,12 +5609,26 @@ document.addEventListener('DOMContentLoaded', App.init);
         overlay.style.transition = 'opacity 0.2s';
         overlay.style.zIndex = '10';
         overlay.tabIndex = -1;
+        overlay.setAttribute('aria-hidden', 'true');
         
         wrapper.appendChild(overlay);
         
         const inputStyle = getComputedStyle(input);
+        let holdHidden = false;
         
-        const sync = () => {
+        const paint = () => {
+          // While the field is being edited the copy is taken out of the layout
+          // rather than just made transparent: on iOS a second text field
+          // stacked on the live one breaks caret scrubbing, so the field stops
+          // scrolling to follow the cursor.
+          if (document.activeElement === input) {
+            overlay.style.opacity = '0';
+            overlay.style.display = 'none';
+            return;
+          }
+          
+          overlay.style.display = '';
+          
           // url fields are only lowercased while blurred and non-empty, so the
           // casing has to be re-read rather than captured once
           const transform = inputStyle.textTransform;
@@ -5622,9 +5636,12 @@ document.addEventListener('DOMContentLoaded', App.init);
           
           overlay.value = input.value;
           overlay.scrollLeft = input.scrollLeft;
-          const isFocused = document.activeElement === input;
-          const hasText = input.value.length > 0;
-          overlay.style.opacity = (!isFocused && hasText) ? '1' : '0';
+          overlay.style.opacity = (!holdHidden && input.value.length > 0) ? '1' : '0';
+        };
+        
+        const sync = () => {
+          holdHidden = false;
+          paint();
         };
         
         // scrollLeft only settles once the input has been laid out again,
@@ -5635,6 +5652,22 @@ document.addEventListener('DOMContentLoaded', App.init);
             sync();
             setTimeout(sync, 50);
           });
+        };
+        
+        // Swapping the text under the live blur leaves the old glyphs smeared
+        // into the tail, so drop both copies of the tail and rebuild them: the
+        // overlay's box is torn down, and the field's own faded tail (drawn with
+        // background-clip:text) is forced to repaint by restarting the
+        // stylesheet's repaint animation. Neither invalidates on its own when
+        // the value is replaced from code.
+        const syncReplaced = () => {
+          holdHidden = true;
+          overlay.style.display = 'none';
+          input.style.animation = 'none';
+          void input.offsetHeight;
+          input.style.animation = '';
+          paint();
+          requestAnimationFrame(syncSettled);
         };
         
         input.addEventListener('focus', sync);
@@ -5653,12 +5686,12 @@ document.addEventListener('DOMContentLoaded', App.init);
             get() { return nativeValue.get.call(this); },
             set(v) {
               nativeValue.set.call(this, v);
-              syncSettled();
+              syncReplaced();
             }
           });
         }
         
-        input._syncBlurOverlay = syncSettled;
+        input._syncBlurOverlay = syncReplaced;
         sync();
       }
     });
