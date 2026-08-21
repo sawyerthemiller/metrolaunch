@@ -376,7 +376,7 @@ function showSearchContextMenu(tileId, x, y) {
   if (!tile) return;
   
   const DEFAULT_APP_NAMES = ['weather', 'messages', 'chrome', 'maps', 'mail', 'camera', 'settings', 'photos', 'music', 'youtube'];
-  const isLiveTile = tile.id.startsWith('__') || (tile.url || '').toLowerCase().startsWith('livecontainer://');
+  const isLiveTile = tile.id.startsWith('__') || (tile.url || '').toLowerCase().startsWith('livecontainer://') || (tile.url || '').toLowerCase().startsWith('shortcuts://');
   const isDefaultApp = DEFAULT_APP_NAMES.includes((tile.name || '').toLowerCase());
   const isSubmittable = !isDefaultApp && !isLiveTile;
   
@@ -416,7 +416,7 @@ function showSearchContextMenu(tileId, x, y) {
       }
     } else if (action === 'submit') {
       const tileUrl = tile.url || tile.launchUrl || '';
-      if (tileUrl.toLowerCase().startsWith('livecontainer://')) {
+      if (tileUrl.toLowerCase().startsWith('livecontainer://') || tileUrl.toLowerCase().startsWith('shortcuts://')) {
         if (window.showToast) window.showToast('Not allowed for community submission');
       } else if (decodeURIComponent(tileUrl).toLowerCase().replace(/\s/g, '').startsWith('javascript:')) {
         if (window.showToast) window.showToast('Nice try asshole...');
