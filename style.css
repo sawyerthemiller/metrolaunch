@@ -1242,6 +1242,11 @@ body.disable-forced-font * {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 }
 
+body.disable-forced-font #btn-info span,
+body.disable-forced-font #btn-info-m span {
+  font-family: Arial, sans-serif !important;
+}
+
 .btn-primary {
   background: rgba(255, 255, 255, 0.1) !important;
 }

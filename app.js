@@ -3804,17 +3804,24 @@ const App = (() => {
     // collapsedSections accessed via sectionClass() helper
     await showModal(`
       <h2>Settings</h2>
-
-      <div class="modal-actions" style="margin-bottom:12px;">
-        <button class="btn-secondary" id="settings-reset" style="color:#ff9800; border-color:#ff9800;">Reset Launcher</button>
-      </div>
-      <div class="modal-actions" style="margin-bottom:12px;">
-        <button class="btn-secondary" id="settings-backup">Backup Launcher Data</button>
-        <button class="btn-secondary" id="settings-restore">Restore Launcher Data</button>
-      </div>
+      
       <div class="modal-actions" style="margin-bottom:12px;${settings.hideDonateButton ? ' display:none;' : ''}" id="donate-btn-wrapper">
         <button class="btn-secondary" id="settings-donate" style="color:#22c55e; border-color:#22c55e;">Donate / Support Me</button>
       </div>
+
+      <div class="form-section-title${sectionClass('general')}" data-section="general">General <span class="section-chevron">\u25BC</span></div>
+      <div class="section-body${sectionClass('general')}" id="sec-general">
+        <div class="modal-actions" style="margin-bottom:12px;">
+          <button class="btn-secondary" id="settings-backup">Backup Launcher Data</button>
+          <button class="btn-secondary" id="settings-restore">Restore Launcher Data</button>
+        </div>
+        <div class="modal-actions" style="margin-bottom:12px;">
+          <button class="btn-secondary" id="settings-reset" style="color:#ff9800; border-color:#ff9800;">Reset Launcher</button>
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+
       <div class="form-section-title${sectionClass('bg')}" data-section="bg">Background <span class="section-chevron">\u25BC</span></div>
       <div class="section-body${sectionClass('bg')}" id="sec-bg">
         <div class="form-group">
@@ -3928,7 +3935,7 @@ const App = (() => {
 
       <div class="form-divider"></div>
 
-      <div class="form-section-title${sectionClass('display')}" data-section="display">Display <span class="section-chevron">\u25BC</span></div>
+      <div class="form-section-title${sectionClass('display')}" data-section="display">Display & Visibility <span class="section-chevron">\u25BC</span></div>
       <div class="section-body${sectionClass('display')}" id="sec-display">
         <div class="toggle-row">
           <span class="toggle-label">Hide donate button</span>
@@ -4269,69 +4276,82 @@ const App = (() => {
               </div>
             </div>
           </div>
-          <div class="toggle-row">
-            <span class="toggle-label">Disable launcher forced font</span>
-            <div class="toggle-switch${settings.disableForcedFont ? ' on' : ''}" id="disable-font-toggle"></div>
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">uses the default OS font for webkit - may be more useful on jailbroken devices</div>
-          
-          <div class="toggle-row" style="margin-top: 12px;">
-            <span class="toggle-label">Disable regex cleaning</span>
-            <div class="toggle-switch${settings.disableRegexCleaning ? ' on' : ''}" id="disable-regex-toggle"></div>
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will stop cleaning characters and beautification of other user-facing text feilds</div>
-
-          <div class="toggle-row" style="margin-top: 12px;">
-            <span class="toggle-label">Haptic tap on touch</span>
-            <div class="toggle-switch${settings.hapticOnTouch ? ' on' : ''}" id="haptic-touch-toggle"></div>
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - might work on ios 17.4 to 26.4 only - see haptics JS file for credit</div>
-
-          <div class="toggle-row" style="margin-top: 12px;">
-            <span class="toggle-label">Windows style navigation bar</span>
-            <div class="toggle-switch${settings.windowsNavBar ? ' on' : ''}" id="windows-nav-bar-toggle"></div>
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also enable a beta search feature and enhance the functionality of the tiling system</div>
-
-          <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-padding-group">
-            <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">How much to move up <span class="val" id="nav-padding-val">${settings.navBarPaddingBottom ?? 20}px</span></label>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
-              <input type="range" class="metro-range" id="nav-padding-slider" min="0" max="100" value="${settings.navBarPaddingBottom ?? 20}" style="flex: 1; width: 0;">
-              <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+          <div class="form-section-title${sectionClass('adv-text')}" data-section="adv-text">Text <span class="section-chevron">\u25BC</span></div>
+          <div class="section-body${sectionClass('adv-text')}" id="sec-adv-text">
+            <div class="toggle-row">
+              <span class="toggle-label">Disable launcher forced font</span>
+              <div class="toggle-switch${settings.disableForcedFont ? ' on' : ''}" id="disable-font-toggle"></div>
             </div>
-          </div>
-
-          <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-gap-group">
-            <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Space between buttons <span class="val" id="nav-gap-val">${settings.navBarButtonGap ?? 100}px</span></label>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
-              <input type="range" class="metro-range" id="nav-gap-slider" min="30" max="130" value="${settings.navBarButtonGap ?? 100}" style="flex: 1; width: 0;">
-              <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
-            </div>
-          </div>
-          
-          <div class="toggle-row" style="margin-top: 12px;">
-            <span class="toggle-label">Resizes the grid - slightly dangerous</span>
-            <div class="toggle-switch${settings.resizeGridEnabled ? ' on' : ''}" id="resize-grid-toggle"></div>
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">very experimental and will mess up your current layout</div>
-          
-          <div id="grid-size-selector" style="display: ${settings.resizeGridEnabled ? 'flex' : 'none'}; justify-content: center; margin-bottom: 16px;">
-            <div style="display: flex; background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 4px; position: relative; width: 180px;">
-              <div id="grid-size-slider" style="position: absolute; top: 4px; left: ${(settings.gridCols === 4 || settings.gridCols === 12) ? '4px' : (settings.gridCols === 5 || settings.gridCols === 13) ? '61px' : '119px'}; width: 57px; height: calc(100% - 8px); background: rgba(255, 255, 255, 0.25); border-radius: 16px; transition: left 0.2s ease; border: 1px solid rgba(255,255,255,0.4); box-sizing: border-box;"></div>
-              <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 12 : 4}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 12 : 4}</div>
-              <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 13 : 5}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 13 : 5}</div>
-              <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 14 : 6}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 14 : 6}</div>
-            </div>
-          </div>
-
-          <div style="${opacityStyle}">
+            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">uses the default OS font for webkit - may be more useful on jailbroken devices</div>
+            
             <div class="toggle-row" style="margin-top: 12px;">
-              <span class="toggle-label">Lock spotify tile during playback</span>
-              <div class="toggle-switch${settings.spotifyMeltEnabled ? ' on' : ''}" id="spotify-melt-toggle"></div>
+              <span class="toggle-label">Disable regex cleaning</span>
+              <div class="toggle-switch${settings.disableRegexCleaning ? ' on' : ''}" id="disable-regex-toggle"></div>
             </div>
-            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 4px; margin-top: -8px;">locks the live tile in its display state during playback</div>
+            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will stop cleaning characters and beautification of other user-facing text feilds</div>
+          </div>
+
+          <div class="form-divider"></div>
+
+          <div class="form-section-title${sectionClass('adv-touch')}" data-section="adv-touch">Touch <span class="section-chevron">\u25BC</span></div>
+          <div class="section-body${sectionClass('adv-touch')}" id="sec-adv-touch">
+            <div class="toggle-row">
+              <span class="toggle-label">Haptic tap on touch</span>
+              <div class="toggle-switch${settings.hapticOnTouch ? ' on' : ''}" id="haptic-touch-toggle"></div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - might work on ios 17.4 to 26.4 only - see haptics JS file for credit</div>
+
+            <div class="toggle-row" style="margin-top: 12px;">
+              <span class="toggle-label">Windows style navigation bar</span>
+              <div class="toggle-switch${settings.windowsNavBar ? ' on' : ''}" id="windows-nav-bar-toggle"></div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also enable a beta search feature and enhance the functionality of the tiling system</div>
+
+            <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-padding-group">
+              <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">How much to move up <span class="val" id="nav-padding-val">${settings.navBarPaddingBottom ?? 20}px</span></label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+                <input type="range" class="metro-range" id="nav-padding-slider" min="0" max="100" value="${settings.navBarPaddingBottom ?? 20}" style="flex: 1; width: 0;">
+                <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+              </div>
+            </div>
+
+            <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-gap-group">
+              <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Space between buttons <span class="val" id="nav-gap-val">${settings.navBarButtonGap ?? 100}px</span></label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+                <input type="range" class="metro-range" id="nav-gap-slider" min="30" max="130" value="${settings.navBarButtonGap ?? 100}" style="flex: 1; width: 0;">
+                <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-divider"></div>
+
+          <div class="form-section-title${sectionClass('adv-appearance')}" data-section="adv-appearance">Appearance <span class="section-chevron">\u25BC</span></div>
+          <div class="section-body${sectionClass('adv-appearance')}" id="sec-adv-appearance">
+            <div class="toggle-row">
+              <span class="toggle-label">Resizes the grid - slightly dangerous</span>
+              <div class="toggle-switch${settings.resizeGridEnabled ? ' on' : ''}" id="resize-grid-toggle"></div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">very experimental and will mess up your current layout</div>
+            
+            <div id="grid-size-selector" style="display: ${settings.resizeGridEnabled ? 'flex' : 'none'}; justify-content: center; margin-bottom: 16px;">
+              <div style="display: flex; background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 4px; position: relative; width: 180px;">
+                <div id="grid-size-slider" style="position: absolute; top: 4px; left: ${(settings.gridCols === 4 || settings.gridCols === 12) ? '4px' : (settings.gridCols === 5 || settings.gridCols === 13) ? '61px' : '119px'}; width: 57px; height: calc(100% - 8px); background: rgba(255, 255, 255, 0.25); border-radius: 16px; transition: left 0.2s ease; border: 1px solid rgba(255,255,255,0.4); box-sizing: border-box;"></div>
+                <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 12 : 4}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 12 : 4}</div>
+                <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 13 : 5}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 13 : 5}</div>
+                <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 14 : 6}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 14 : 6}</div>
+              </div>
+            </div>
+
+            <div style="${opacityStyle}">
+              <div class="toggle-row" style="margin-top: 12px;">
+                <span class="toggle-label">Lock spotify tile during playback</span>
+                <div class="toggle-switch${settings.spotifyMeltEnabled ? ' on' : ''}" id="spotify-melt-toggle"></div>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 4px; margin-top: -8px;">locks the live tile in its display state during playback</div>
+            </div>
           </div>
 
           <div class="modal-actions" style="margin-top:24px; flex-direction: column; gap: 8px;">
@@ -4342,7 +4362,30 @@ const App = (() => {
             <button id="adv-close">Close</button>
           </div>
         `);
-        document.getElementById('modal-sheet').classList.add('all-collapsed');
+        
+        const checkAdvCollapsed = () => {
+          const titles = document.querySelectorAll('#modal-sheet .form-section-title[data-section]');
+          if (!titles.length) return;
+          const allCollapsed = Array.from(titles).every(t => t.classList.contains('collapsed'));
+          document.getElementById('modal-sheet').classList.toggle('all-collapsed', allCollapsed);
+        };
+
+        const localCollapsed = { ...(settings.collapsedSections || {}) };
+        document.querySelectorAll('#modal-sheet .form-section-title[data-section]').forEach(title => {
+          title.onclick = () => {
+            const key = title.dataset.section;
+            const body = document.getElementById(`sec-${key}`);
+            const isCollapsed = !localCollapsed[key];
+            localCollapsed[key] = isCollapsed;
+            title.classList.toggle('collapsed', isCollapsed);
+            body.classList.toggle('collapsed', isCollapsed);
+            settings.collapsedSections = localCollapsed;
+            if (typeof saveSettings === 'function') saveSettings();
+            checkAdvCollapsed();
+          };
+        });
+        checkAdvCollapsed();
+
         document.getElementById('adv-reshow-privacy').onclick = () => {
           if (window.communityAPI) window.communityAPI.showPrivacyModal(false);
         };

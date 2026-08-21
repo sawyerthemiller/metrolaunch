@@ -391,7 +391,7 @@ window.communityAPI = {
             </button>
           </div>
         </div>
-        <div id="comm-apps-list" class="scrollable-y" style="flex: 1; overflow-y: auto; padding: 20px; position: relative;">
+        <div id="comm-apps-list" class="scrollable-y" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; position: relative;">
           <div id="comm-loading" style="display:flex; justify-content:center; align-items:center; height:100%; font-size: 18px; opacity: 0.7;">Fetching data...</div>
         </div>
       </div>
@@ -469,10 +469,10 @@ window.communityAPI = {
           try {
             const d = new Date(dateStr);
             if (isNaN(d.getTime())) return dateStr;
-            const yyyy = d.getFullYear();
+            const yy = String(d.getFullYear()).slice(-2);
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
-            return `${yyyy} - ${mm} - ${dd}`;
+            return `${yy} - ${mm} - ${dd}`;
           } catch(e) {
             return dateStr;
           }

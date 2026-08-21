@@ -1,4 +1,4 @@
-const CACHE_NAME = 'metro-launcher-v25';
+const CACHE_NAME = 'metro-launcher-v26';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
