@@ -3676,13 +3676,13 @@ const App = (() => {
       <div class="form-group" style="transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'};"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
         <label>Username (On Leopard Server)</label>
         <div class="input-btn-row" style="display:flex;gap:8px;align-items:stretch;width:100%;${!isEnabled ? ' pointer-events: none;' : ''}">
-          <input type="text" spellcheck="false" autocorrect="off" id="spotify-username" value="${escHtml(tile.spotifyUsername || settings.spotifyUsername || '')}" placeholder="Your registered username" autocomplete="off" autocapitalize="none" style="flex:1 1 auto;min-width:0;width:auto;"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
+          <input type="text" spellcheck="false" autocorrect="off" id="spotify-username" value="${escHtml(tile.spotifyUsername || settings.spotifyUsername || '')}" placeholder="Your registered username" autocomplete="off" autocapitalize="none" style="flex:1 1 auto;min-width:0;width:100%;"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
           <button type="button" class="inline-btn" id="spotify-test" style="-webkit-appearance:none;appearance:none;padding:10px 14px;border:1px solid rgba(255,255,255,0.85);border-radius:0;background:transparent;color:#fff;font-size:13px;font-family:'Segoe UI Supro';cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:none;line-height:1;"${!isEnabled ? ' tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>TEST</button>
         </div>
         ${!isEnabled ? `<div style="font-size:13px; opacity:0.7; margin-top:4px;">${consent && !runtimeReady ? blockReason : 'Enable community networking in advanced settings to unlock these options'}</div>` : ''}
       </div>
       <div class="form-group" style="transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'};"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>
-        <label>Query Rate (seconds, min 2)</label>
+        <label>Query Rate (seconds, least 2)</label>
         <input type="number" id="spotify-interval" value="${escHtml(tile.spotifyInterval || settings.spotifyInterval || '2')}" min="2" autocomplete="off" inputmode="numeric"${!isEnabled ? ' style="pointer-events: none;" tabindex="-1" onkeydown="return false;" onfocus="this.blur();"' : ''}>
       </div>
       <div style="transition: opacity 0.2s; opacity: ${isEnabled ? '1' : '0.5'}; margin-bottom: 24px;"${!isEnabled ? ` onmousedown="showToast('${toastReason}'); return false;"` : ''}>

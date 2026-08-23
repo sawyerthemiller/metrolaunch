@@ -1116,7 +1116,7 @@ body.is-desktop .modal-sheet {
 .input-btn-row > input {
   flex: 1 1 auto;
   min-width: 0;
-  width: auto;
+  width: 100%;
 }
 
 .input-btn-row > .inline-btn {
