@@ -690,6 +690,7 @@ const App = (() => {
 
     // glossy tiles
     document.body.classList.toggle('glossy-tiles', !!settings.glossyTiles);
+    document.body.classList.toggle('glossy-style-2', settings.glossyStyle === 2);
 
     document.querySelectorAll('.wp-nav-bar').forEach(bar => {
       bar.style.display = settings.windowsNavBar ? 'flex' : 'none';
@@ -3970,6 +3971,14 @@ const App = (() => {
           <span class="toggle-label">Glossy tiles</span>
           <div class="toggle-switch${settings.glossyTiles ? ' on' : ''}" id="glossy-tiles-toggle"></div>
         </div>
+        <div id="glossy-style-selector" style="display: ${settings.glossyTiles ? 'flex' : 'none'}; align-items: center; justify-content: space-between; margin-bottom: 16px; margin-top: -8px;">
+          <span class="toggle-label" style="font-size: 14px; color: var(--text-muted); margin-left: 20px;">Gloss style</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="header-btn" id="inp-gloss-style-minus"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <span id="inp-gloss-style-val" style="min-width:60px; text-align:center; font-size:15px;">Style ${settings.glossyStyle || 1}</span>
+            <button type="button" class="header-btn" id="inp-gloss-style-plus"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </div>
         <div class="toggle-row">
           <span class="toggle-label">Mask dynamic content</span>
           <div class="toggle-switch${settings.hideDynamicContent ? ' on' : ''}" id="hdc-toggle"></div>
@@ -4087,6 +4096,18 @@ const App = (() => {
 
     let glossyTilesEnabled = !!settings.glossyTiles;
     const glossyTilesToggle = document.getElementById('glossy-tiles-toggle');
+    const glossyStyleSelector = document.getElementById('glossy-style-selector');
+    
+    let currentGlossStyle = settings.glossyStyle || 1;
+    const glossStyleVal = document.getElementById('inp-gloss-style-val');
+    document.getElementById('inp-gloss-style-minus').onclick = () => {
+      currentGlossStyle = currentGlossStyle === 1 ? 2 : 1;
+      glossStyleVal.textContent = 'Style ' + currentGlossStyle;
+    };
+    document.getElementById('inp-gloss-style-plus').onclick = () => {
+      currentGlossStyle = currentGlossStyle === 2 ? 1 : 2;
+      glossStyleVal.textContent = 'Style ' + currentGlossStyle;
+    };
 
     let hdcEnabled = !!settings.hideDynamicContent;
     const hdcToggle = document.getElementById('hdc-toggle');
@@ -4137,6 +4158,7 @@ const App = (() => {
     glossyTilesToggle.onclick = () => {
       glossyTilesEnabled = !glossyTilesEnabled;
       glossyTilesToggle.classList.toggle('on', glossyTilesEnabled);
+      glossyStyleSelector.style.display = glossyTilesEnabled ? 'flex' : 'none';
     };
 
     hdcToggle.onclick = () => {
@@ -4916,6 +4938,7 @@ const App = (() => {
       settings.globalColor = document.getElementById('global-color-val').value;
       settings.hideDonateButton = hideDonateEnabled;
       settings.glossyTiles = glossyTilesEnabled;
+      settings.glossyStyle = currentGlossStyle;
       settings.hideDynamicContent = hdcEnabled;
       settings.disableDateInHeader = disableDateEnabled;
       settings.hideSearchIcons = hideSearchIconsEnabled;
