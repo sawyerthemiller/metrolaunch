@@ -124,7 +124,7 @@
     return window.MetroRuntime.Spotify.fetchStatus(username)
       .then(r => r.json())
       .then(d => {
-        if (d.isPlaying) {
+        if (d.isPlaying && (d.track || d.artist)) {
           nullCount = 0;
           let cUrl = null;
           if (d.coverUrl) {
