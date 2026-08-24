@@ -5315,10 +5315,13 @@ const App = (() => {
         const d = new Date();
         let h = d.getHours();
         const m = d.getMinutes().toString().padStart(2, '0');
+        const s = d.getSeconds();
         const ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12;
         if (h === 0) h = 12;
-        const timeStr = `${h.toString().padStart(2, '0')}:${m}`;
+        const colonVisibility = s % 2 === 0 ? 'visible' : 'hidden';
+        const colon = `<span style="visibility:${colonVisibility}; margin: 0 6px 4px 4px;">:</span>`;
+        const timeStr = `${h.toString().padStart(2, '0')}${colon}${m}`;
         const dtEl = document.getElementById('desktop-time');
         if (dtEl) {
           dtEl.innerHTML = `${timeStr} <span class="ampm">${ampm}</span>`;
