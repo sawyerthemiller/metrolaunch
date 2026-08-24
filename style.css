@@ -1935,7 +1935,7 @@ body.glossy-tiles .folder-tile::after {
   bottom: 0;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.1) 100%);
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), inset 0 -1px 1px rgba(0, 0, 0, 0.15);
-  border-radius: inherit;
+  border-radius: calc(var(--tile-radius) - 1px);
   pointer-events: none;
   z-index: 0;
   transition: opacity 0.2s ease-in-out;
@@ -1954,10 +1954,18 @@ body.glossy-style-2 .folder-tile::before {
   left: 0; 
   width: 100%; 
   height: 100%;
-  border-radius: inherit;
+  border-radius: calc(var(--tile-radius) - 1px);
   background: rgba(255, 255, 255, 0.20);
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M100 0 C 100 40, 0 60, 0 100 L 0 0 Z' fill='black'/%3E%3C/svg%3E");
   -webkit-mask-size: 100% 100%;
+}
+
+/* Hide glossy effect during edit mode to preserve performance */
+.tile-grid.edit-mode .tile::before,
+.tile-grid.edit-mode .tile::after,
+.tile-grid.edit-mode .folder-tile::before,
+.tile-grid.edit-mode .folder-tile::after {
+  display: none !important;
 }
 
 body.glossy-tiles .tile-icon,
