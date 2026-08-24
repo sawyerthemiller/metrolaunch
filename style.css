@@ -900,7 +900,7 @@ body:not(.is-desktop) .header {
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: 0.40px;
+  letter-spacing: 0.35px;
   text-align: center;
   transform: translateZ(1px);
 }
