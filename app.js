@@ -1951,6 +1951,15 @@ const App = (() => {
     overlay.appendChild(wrapper);
     document.body.appendChild(overlay);
 
+    // The tap that started this launch still has a click coming, and that click
+    // is what toggles the haptic switch under the tile. The .animate class turns
+    // this overlay into a hit target two frames from now, so it has to stay out
+    // of hit testing until the click has been delivered or it swallows it and
+    // the tile opens with no haptic. Folders never hit this, which is why they
+    // are the one tap that always buzzes.
+    overlay.style.pointerEvents = 'none';
+    setTimeout(() => { overlay.style.pointerEvents = ''; }, 350);
+
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         overlay.classList.add('animate');
