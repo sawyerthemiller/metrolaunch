@@ -119,14 +119,46 @@ input, textarea, select {
   z-index: 1;
 }
 
+#desktop-frame .desktop-container {
+  display: flex;
+  flex-direction: column;
+}
+
+#desktop-frame .desktop-header-wrapper {
+  width: 393px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+#desktop-frame .desktop-header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: 50px;
+}
+
 #desktop-frame .frame-label {
-  position: absolute;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 13px;
+  font-size: 15px;
+  line-height: 1;
   color: rgba(255, 255, 255, 0.25);
   letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+#desktop-frame .desktop-time {
+  font-size: 34px;
+  font-weight: 200;
+  color: #fff;
+  line-height: 1;
+  margin-top: 0;
+}
+
+#desktop-frame .desktop-time .ampm {
+  font-size: 16px;
+  margin-left: 4px;
   text-transform: uppercase;
 }
 

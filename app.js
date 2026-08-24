@@ -5309,6 +5309,58 @@ const App = (() => {
     const dateStr = `${DAYS[now.getDay()]}, ${now.getDate().toString().padStart(2, '0')} ${MONTHS[now.getMonth()]}`;
     document.querySelectorAll('.header-date').forEach(el => { el.textContent = dateStr; });
 
+    // Desktop testing environment clock and purge button
+    if (isDesktop) {
+      const updateDesktopClock = () => {
+        const d = new Date();
+        let h = d.getHours();
+        const m = d.getMinutes().toString().padStart(2, '0');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        if (h === 0) h = 12;
+        const timeStr = `${h.toString().padStart(2, '0')}:${m}`;
+        const dtEl = document.getElementById('desktop-time');
+        if (dtEl) {
+          dtEl.innerHTML = `${timeStr} <span class="ampm">${ampm}</span>`;
+        }
+      };
+      updateDesktopClock();
+      setInterval(updateDesktopClock, 1000);
+
+      const btnDesktopPurge = document.getElementById('btn-desktop-purge');
+      if (btnDesktopPurge) {
+        btnDesktopPurge.onclick = () => {
+          if (!navigator.onLine) {
+            showToast('Cannot purge cache while offline');
+            return;
+          }
+          metroConfirm(
+            'Purge Cache / Update Launcher',
+            'This will delete all cached assets and reload the page to fetch fresh files, thus performing an update. Your launcher data (tiles, settings) will be preserved',
+            'Purge & Reload',
+            async () => {
+              delete settings.skipUpdateCheck;
+              delete settings.skippedUpdateVersion;
+              saveSettings();
+              if (typeof nukeServiceWorkerAndCaches === 'function') {
+                await nukeServiceWorkerAndCaches();
+              } else {
+                if ('serviceWorker' in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  for (let r of regs) r.unregister();
+                }
+                if (window.WeatherService) window.WeatherService.purgeCache();
+                if (window.NewsService) window.NewsService.purgeCache();
+                localStorage.clear();
+              }
+              location.reload();
+            },
+            '#0078d4'
+          );
+        };
+      }
+    }
+
     render();
     setupInput();
     startLiveTileFlip();

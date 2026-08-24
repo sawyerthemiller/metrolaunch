@@ -19,9 +19,20 @@
 
   <!-- Desktop -->
   <div id="desktop-frame">
-    <span class="frame-label">Metro Launcher</span>
-    <div class="phone-bezel">
-      <div id="launcher">
+    <div class="desktop-container">
+      <div class="desktop-header-wrapper">
+        <div class="desktop-header-left">
+          <span class="frame-label" style="margin-bottom: 3px;">Metro Launcher</span>
+          <div class="desktop-time" id="desktop-time">00:00 <span class="ampm">AM</span></div>
+        </div>
+        <div class="desktop-header-right">
+          <button type="button" class="header-btn" id="btn-desktop-purge" title="Purge Cache" style="transform: scale(1.3); transform-origin: right bottom;">
+            <img src="pull.png" alt="Purge" style="transform: scale(1.25); width: 12px; height: 18px; filter: brightness(0) invert(1);">
+          </button>
+        </div>
+      </div>
+      <div class="phone-bezel">
+        <div id="launcher">
         <div class="bg-layer" id="bg-layer-desktop"></div>
         <div class="bg-darken" id="bg-darken-desktop"></div>
         <div class="header">
@@ -104,6 +115,7 @@
             <div onclick="discardEditMode()" style="flex: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; border-right: 1px solid rgba(255,255,255,0.2); font-family: 'Segoe UI Supro'; font-weight: 500;">Discard</div>
             <div onclick="saveEditMode()" style="flex: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; font-family: 'Segoe UI Supro'; font-weight: 500;">Save</div>
           </div>
+        </div>
         </div>
       </div>
     </div>
