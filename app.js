@@ -5702,7 +5702,7 @@ const App = (() => {
 
     html += `
       </div>
-      <div class="modal-actions" style="margin-top:20px; margin-bottom:-24px;">
+      <div class="modal-actions" style="margin-top:20px; margin-bottom:${isDesktop ? '0' : '-24px'};">
         <button type="button" class="btn-cancel" onclick="App.showAdvancedIconControl()">Cancel</button>
         <button type="button" onclick="window._advSave()">OK</button>
       </div>
