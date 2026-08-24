@@ -25,10 +25,21 @@
           <span class="frame-label" style="margin-bottom: 3px;">MetroLaunch</span>
           <div class="desktop-time" id="desktop-time">00:00 <span class="ampm">AM</span></div>
         </div>
-        <div class="desktop-header-right">
-          <button type="button" class="header-btn" id="btn-desktop-purge" title="Purge Cache" style="transform: scale(1.3); transform-origin: right bottom;">
-            <img src="pull.png" alt="Purge" style="transform: scale(1.25); width: 12px; height: 18px; filter: brightness(0) invert(1);">
-          </button>
+        <div class="desktop-header-right" style="display: flex; gap: 20px; align-items: center;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <span style="font-size: 10px; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; letter-spacing: 0.5px;">Pull</span>
+            <button type="button" class="header-btn" id="btn-desktop-purge" title="Purge Cache" style="transform: scale(1.3);">
+              <img src="pull.png" alt="Purge" style="transform: scale(1.25); width: 12px; height: 18px; filter: brightness(0) invert(1);">
+            </button>
+            <span style="font-size: 10px; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; letter-spacing: 0.5px;">Changes</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <span style="font-size: 10px; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; letter-spacing: 0.5px;">Close</span>
+            <button type="button" class="header-btn" id="btn-desktop-exit" title="Exit" style="transform: scale(1.3);" onclick="window.close()">
+              <img src="exit.png" alt="Exit" style="transform: scale(1.25); width: 18px; height: 8.5px; filter: brightness(0) invert(1);">
+            </button>
+            <span style="font-size: 10px; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; letter-spacing: 0.5px;">Page</span>
+          </div>
         </div>
       </div>
       <div class="phone-bezel">

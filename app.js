@@ -355,14 +355,27 @@ const App = (() => {
   function isFolder(t) { return t && t.type === 'folder'; }
 
   function flipTile(inner, show) {
-    inner.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
+    const tile = inner.closest('.tile');
     if (!show) {
+      inner.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
       inner.style.transform = 'translateY(calc(-100% / 3))';
       inner.classList.remove('is-flipped');
+      if (tile) {
+        setTimeout(() => {
+          if (!inner.classList.contains('is-flipped')) {
+            tile.classList.remove('is-flipped');
+          }
+        }, 200);
+      }
     } else {
-      const up = Math.random() < 0.5;
-      inner.style.transform = up ? 'translateY(calc(-200% / 3))' : 'translateY(0%)';
-      inner.classList.add('is-flipped');
+      if (tile) tile.classList.add('is-flipped');
+      setTimeout(() => {
+        if (tile && !tile.classList.contains('is-flipped')) return;
+        const up = Math.random() < 0.5;
+        inner.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
+        inner.style.transform = up ? 'translateY(calc(-200% / 3))' : 'translateY(0%)';
+        inner.classList.add('is-flipped');
+      }, 200);
     }
   }
 
@@ -675,6 +688,9 @@ const App = (() => {
     // disable forced font
     document.body.classList.toggle('disable-forced-font', !!settings.disableForcedFont);
 
+    // glossy tiles
+    document.body.classList.toggle('glossy-tiles', !!settings.glossyTiles);
+
     document.querySelectorAll('.wp-nav-bar').forEach(bar => {
       bar.style.display = settings.windowsNavBar ? 'flex' : 'none';
       const pad = parseInt(settings.navBarPaddingBottom ?? 20, 10);
@@ -889,7 +905,7 @@ const App = (() => {
         inner.className = 'live-tile-inner';
 
         const front = document.createElement('div');
-        front.className = 'live-tile-face';
+        front.className = 'live-tile-face front-face';
         const iconF = document.createElement('div');
         iconF.className = 'tile-icon';
         if (isWeatherTile(t)) iconF.innerHTML = svgIcon('weather');
@@ -3951,6 +3967,10 @@ const App = (() => {
           <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideSearchIcons ? ' on' : ''}" id="hide-search-icons-toggle"></div>
         </div>
         <div class="toggle-row">
+          <span class="toggle-label">Glossy tiles</span>
+          <div class="toggle-switch${settings.glossyTiles ? ' on' : ''}" id="glossy-tiles-toggle"></div>
+        </div>
+        <div class="toggle-row">
           <span class="toggle-label">Mask dynamic content</span>
           <div class="toggle-switch${settings.hideDynamicContent ? ' on' : ''}" id="hdc-toggle"></div>
         </div>
@@ -4065,6 +4085,9 @@ const App = (() => {
 
     attachColorPicker('global-color-picker', 'global-color-val');
 
+    let glossyTilesEnabled = !!settings.glossyTiles;
+    const glossyTilesToggle = document.getElementById('glossy-tiles-toggle');
+
     let hdcEnabled = !!settings.hideDynamicContent;
     const hdcToggle = document.getElementById('hdc-toggle');
     
@@ -4110,6 +4133,11 @@ const App = (() => {
     }
 
     updateLhState();
+
+    glossyTilesToggle.onclick = () => {
+      glossyTilesEnabled = !glossyTilesEnabled;
+      glossyTilesToggle.classList.toggle('on', glossyTilesEnabled);
+    };
 
     hdcToggle.onclick = () => {
       hdcEnabled = !hdcEnabled;
@@ -4887,6 +4915,7 @@ const App = (() => {
       settings.globalColorEnabled = gcEnabled;
       settings.globalColor = document.getElementById('global-color-val').value;
       settings.hideDonateButton = hideDonateEnabled;
+      settings.glossyTiles = glossyTilesEnabled;
       settings.hideDynamicContent = hdcEnabled;
       settings.disableDateInHeader = disableDateEnabled;
       settings.hideSearchIcons = hideSearchIconsEnabled;
@@ -5320,7 +5349,7 @@ const App = (() => {
         h = h % 12;
         if (h === 0) h = 12;
         const colonVisibility = s % 2 === 0 ? 'visible' : 'hidden';
-        const colon = `<span style="visibility:${colonVisibility}; margin: 0 6px 4px 4px;">:</span>`;
+        const colon = `<span style="visibility:${colonVisibility}; margin: 0 6px 0 6px; display: inline-block; transform: translateY(-2px);">:</span>`;
         const timeStr = `${h.toString().padStart(2, '0')}${colon}${m}`;
         const dtEl = document.getElementById('desktop-time');
         if (dtEl) {
