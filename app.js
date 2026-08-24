@@ -187,7 +187,7 @@ document.addEventListener('touchmove', (e) => {
   // let range sliders work natively, and leave text fields alone so iOS keeps
   // its own caret dragging, selection and scrub gestures
   if (e.target.closest('input[type="range"]')) return;
-  if (e.target.closest('input:not([type="range"]):not([type="hidden"]), textarea')) return;
+  if (e.target.closest('input:not([type="range"]):not([type="hidden"]), textarea, label')) return;
   const scrollEl = e.target.closest('.grid-scroll, .modal-sheet, .scrollable-y, .search-page');
 
   if (scrollEl) {
