@@ -546,7 +546,7 @@ body:not(.is-desktop) .header {
   border-radius: 0;
   align-items: center;
   justify-content: center;
-  z-index: 5;
+  z-index: 20;
 }
 
 .edit-badge svg {
@@ -568,7 +568,7 @@ body:not(.is-desktop) .header {
   right: 0;
   width: 18px;
   height: 18px;
-  z-index: 5;
+  z-index: 20;
   cursor: nwse-resize;
 }
 
