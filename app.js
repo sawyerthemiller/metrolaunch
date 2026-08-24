@@ -3972,8 +3972,8 @@ const App = (() => {
           <div class="toggle-switch${settings.glossyTiles ? ' on' : ''}" id="glossy-tiles-toggle"></div>
         </div>
         <div id="glossy-style-selector" style="display: ${settings.glossyTiles ? 'flex' : 'none'}; align-items: center; justify-content: space-between; margin-bottom: 16px; margin-top: -8px;">
-          <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-left: 20px;">Gloss style</span>
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-left: 20px; margin-top: 5px;">Glossy style</span>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
             <button type="button" class="header-btn" id="inp-gloss-style-minus"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <span id="inp-gloss-style-val" style="min-width:60px; text-align:center; font-size:15px;">style ${settings.glossyStyle === 2 ? 'b' : 'a'}</span>
             <button type="button" class="header-btn" id="inp-gloss-style-plus"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
