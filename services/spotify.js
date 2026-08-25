@@ -45,11 +45,14 @@
     parsed = parsed.replace(/\$/g, 's');
     parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
+    // Strip apostrophes early so contractions don't break capitalisation (e.g. She's -> SheS)
+    parsed = parsed.replace(/['’]/g, '');
+
     if (deps && deps.getSettings && deps.getSettings().spotifyCapitaliseSong) {
       parsed = parsed.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     }
     
-    parsed = parsed.replace(/['’“”,.;:+!?^]/g, (match, offset, string) => {
+    parsed = parsed.replace(/[“”,.;:+!?^]/g, (match, offset, string) => {
       if (match === '.') {
         const prev = string[offset - 1];
         const next = string[offset + 1];
