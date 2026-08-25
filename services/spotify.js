@@ -62,6 +62,10 @@
     
     // Aesthetic cleanups
     
+    // Remove spaces immediately inside parentheses and brackets
+    parsed = parsed.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')');
+    parsed = parsed.replace(/\[\s+/g, '[').replace(/\s+\]/g, ']');
+    
     // Replace hyphens that are strictly bounded by letters/numbers with a space
     parsed = parsed.replace(/(\w)-(\w)/g, '$1 $2');
 
