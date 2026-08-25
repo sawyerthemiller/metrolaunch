@@ -668,6 +668,7 @@ body:not(.is-desktop) .header {
   background-position: center;
   filter: blur(1.5px) brightness(0.8);
   opacity: 1.0;
+  transform: scale(1.05);
 }
 
 .weather-bg-blur.unblurred {
@@ -677,7 +678,7 @@ body:not(.is-desktop) .header {
   right: -10px !important;
   filter: brightness(0.8) !important;
   -webkit-filter: brightness(0.8) !important;
-  transform: none !important;
+  transform: scale(1.05) !important;
 }
 
 .weather-location {
@@ -871,7 +872,7 @@ body:not(.is-desktop) .header {
   background-position: center;
   filter: blur(2px) brightness(0.6);
   opacity: 1.0;
-  transform: translateZ(0);
+  transform: scale(1.05) translateZ(0);
 }
 
 .spotify-bg-blur.unblurred {
@@ -881,7 +882,7 @@ body:not(.is-desktop) .header {
   right: -12px !important;
   filter: brightness(0.6) !important;
   -webkit-filter: brightness(0.6) !important;
-  transform: scale(1) translateZ(0) !important;
+  transform: scale(1.05) translateZ(0) !important;
 }
 
 
