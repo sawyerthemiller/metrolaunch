@@ -668,7 +668,6 @@ body:not(.is-desktop) .header {
   background-position: center;
   filter: blur(1.5px) brightness(0.8);
   opacity: 1.0;
-  transform: translateZ(0);
 }
 
 .weather-bg-blur.unblurred {
@@ -678,7 +677,7 @@ body:not(.is-desktop) .header {
   right: -10px !important;
   filter: brightness(0.8) !important;
   -webkit-filter: brightness(0.8) !important;
-  transform: scale(1) !important;
+  transform: none !important;
 }
 
 .weather-location {
