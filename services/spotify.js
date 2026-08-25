@@ -40,9 +40,14 @@
   function cleanTrackName(track) {
     if (!track) return '';
     if (deps && deps.getSettings && deps.getSettings().disableRegexCleaning) return track.trim();
+    
     let parsed = track.replace(/(^|\W)\$(?=\w)/g, '$1S');
     parsed = parsed.replace(/\$/g, 's');
     parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    if (deps && deps.getSettings && deps.getSettings().spotifyCapitaliseSong) {
+      parsed = parsed.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    }
     
     parsed = parsed.replace(/['’“”,.;:+!?^]/g, (match, offset, string) => {
       if (match === '.') {
@@ -65,10 +70,6 @@
     parsed = parsed.replace(/\bwith\b/gi, 'With');
     parsed = parsed.replace(/\bpt\b/gi, 'PT');
     parsed = parsed.replace(/\bvs\b/gi, 'VS');
-
-    if (deps && deps.getSettings && deps.getSettings().spotifyCapitaliseSong) {
-      parsed = parsed.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-    }
 
     return parsed;
   }
