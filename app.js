@@ -415,8 +415,11 @@ const App = (() => {
         const el = document.querySelector(`[data-id="${SPOTIFY_TILE_ID}"] .live-tile-inner`);
         if (el && navigator.onLine && SpotifyService.hasData() && !editMode && !el.classList.contains('is-flipped')) {
           if (settings.spotifyMeltEnabled) {
+            const tile = el.closest('.tile');
+            if (tile) tile.classList.add('is-flipped');
             el.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
             el.style.transform = 'translateY(0%)';
+            el.classList.add('is-flipped');
           } else {
             flipTile(el, true);
             liveTileIntervals.push(setTimeout(() => flipTile(el, false), 4000 + Math.random() * 2000));
@@ -707,8 +710,11 @@ const App = (() => {
     if (!settings.spotifyMeltEnabled) {
       const sEl = document.querySelector(`[data-id="${SPOTIFY_TILE_ID}"] .live-tile-inner`);
       if (sEl && sEl.style.transform === 'translateY(0%)') {
+        const tile = sEl.closest('.tile');
+        if (tile) tile.classList.remove('is-flipped');
         sEl.style.transition = 'transform 0.5s cubic-bezier(0.2,0,0,1)';
         sEl.style.transform = 'translateY(calc(-100% / 3))';
+        sEl.classList.remove('is-flipped');
       }
     }
 
