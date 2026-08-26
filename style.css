@@ -95,6 +95,10 @@ input, textarea, select {
   transform: scale(1.1);
 }
 
+body.setting-hide-bg-edit.edit-mode .bg-layer {
+  opacity: 0 !important;
+}
+
 .bg-darken {
   position: absolute;
   top: 0;

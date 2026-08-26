@@ -3,6 +3,7 @@
 * tijn.dev
 * @license MIT
 **/
+/** biome-ignore-all lint/style/useConst: <explanation> */
 let hapticIdCounter = 0;
 function e(el) {
   if (!el || el.hasAttribute('data-haptic-id')) return;

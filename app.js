@@ -691,6 +691,9 @@ const App = (() => {
     // disable forced font
     document.body.classList.toggle('disable-forced-font', !!settings.disableForcedFont);
 
+    // hide background when editing
+    document.body.classList.toggle('setting-hide-bg-edit', !!settings.hideBgEditing);
+
     // glossy tiles
     document.body.classList.toggle('glossy-tiles', !!settings.glossyTiles);
     document.body.classList.toggle('glossy-style-2', settings.glossyStyle === 2);
@@ -1017,6 +1020,7 @@ const App = (() => {
     }
 
     gridEl.classList.toggle('edit-mode', editMode);
+    document.body.classList.toggle('edit-mode', editMode);
 
     // If a folder is expanded, render the expansion container
     if (expandedFolderId) {
@@ -2064,6 +2068,7 @@ const App = (() => {
     document.querySelectorAll('.wp-nav-bar').forEach(bar => {
       bar.classList.toggle('is-edit', editMode);
     });
+    document.body.classList.toggle('edit-mode', editMode);
     if (editMode) showToast('Edit mode');
   }
 
@@ -3983,6 +3988,11 @@ const App = (() => {
           <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideSearchIcons ? ' on' : ''}" id="hide-search-icons-toggle"></div>
         </div>
         <div class="toggle-row">
+          <span class="toggle-label">Hide background when editing</span>
+          <div class="toggle-switch${settings.hideBgEditing ? ' on' : ''}" id="hide-bg-edit-toggle"></div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also improve dragging performance</div>
+        <div class="toggle-row">
           <span class="toggle-label">Glossy tiles</span>
           <div class="toggle-switch${settings.glossyTiles ? ' on' : ''}" id="glossy-tiles-toggle"></div>
         </div>
@@ -4148,6 +4158,13 @@ const App = (() => {
     hideSearchIconsToggle.onclick = () => {
       hideSearchIconsEnabled = !hideSearchIconsEnabled;
       hideSearchIconsToggle.classList.toggle('on', hideSearchIconsEnabled);
+    };
+
+    let hideBgEditEnabled = !!settings.hideBgEditing;
+    const hideBgEditToggle = document.getElementById('hide-bg-edit-toggle');
+    hideBgEditToggle.onclick = () => {
+      hideBgEditEnabled = !hideBgEditEnabled;
+      hideBgEditToggle.classList.toggle('on', hideBgEditEnabled);
     };
     
     let lhOn = !!settings.lightHeader;
@@ -4952,6 +4969,7 @@ const App = (() => {
       settings.globalColorEnabled = gcEnabled;
       settings.globalColor = document.getElementById('global-color-val').value;
       settings.hideDonateButton = hideDonateEnabled;
+      settings.hideBgEditing = hideBgEditEnabled;
       settings.glossyTiles = glossyTilesEnabled;
       settings.glossyStyle = currentGlossStyle;
       settings.hideDynamicContent = hdcEnabled;
