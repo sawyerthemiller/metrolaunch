@@ -634,10 +634,10 @@ window.communityAPI = {
         <h3>Administrator Access</h3>
         <p>Enter 4-digit code to delete...</p>
         <div style="display:flex; justify-content:center; gap: 10px; margin: 20px 0;">
-          <input type="password" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
-          <input type="password" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
-          <input type="password" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
-          <input type="password" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="-webkit-text-security: disc; text-security: disc; width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="-webkit-text-security: disc; text-security: disc; width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="-webkit-text-security: disc; text-security: disc; width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="-webkit-text-security: disc; text-security: disc; width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
         </div>
         <div class="confirm-actions">
           <button class="confirm-cancel">Cancel</button>
