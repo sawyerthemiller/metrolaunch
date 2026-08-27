@@ -1458,7 +1458,7 @@ body.disable-forced-font #btn-info-m span {
 .section-body {
   overflow: hidden;
   transition: max-height 0.25s ease, opacity 0.2s ease;
-  max-height: 600px;
+  max-height: 1500px;
   opacity: 1;
 }
 
