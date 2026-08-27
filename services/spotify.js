@@ -49,7 +49,7 @@
     parsed = parsed.replace(/['’]/g, '');
 
     if (deps && deps.getSettings && deps.getSettings().spotifyCapitaliseSong) {
-      parsed = parsed.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+      parsed = parsed.replace(/\b\w/g, c => c.toUpperCase());
     }
     
     parsed = parsed.replace(/[“”,.;:+!?^]/g, (match, offset, string) => {
