@@ -1915,7 +1915,11 @@ const App = (() => {
 
   function playLaunchAnimation(tile, executeLaunch) {
     if (settings.launchAnim === false) {
-      executeLaunch();
+      if (settings.demoModeEnabled && tile.type !== 'folder' && tile.id !== '__news__') {
+        metroAlert('Demo Mode', 'Cannot open app while in demo mode');
+      } else {
+        executeLaunch(tile);
+      }
       return;
     }
 
@@ -1978,7 +1982,11 @@ const App = (() => {
 
     setTimeout(() => {
       try {
-        executeLaunch(tile);
+        if (settings.demoModeEnabled && tile.type !== 'folder' && tile.id !== '__news__') {
+          metroAlert('Demo Mode', 'Cannot open app while in demo mode');
+        } else {
+          executeLaunch(tile);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -4000,7 +4008,7 @@ const App = (() => {
           <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-left: 20px; margin-top: 5px;">Glossy style</span>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
             <button type="button" class="header-btn" id="inp-gloss-style-minus"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <span id="inp-gloss-style-val" style="min-width:60px; text-align:center; font-size:15px;">style ${settings.glossyStyle === 2 ? 'B' : 'A'}</span>
+            <span id="inp-gloss-style-val" style="min-width:60px; text-align:center; font-size:15px;">style - ${settings.glossyStyle === 2 ? 'b' : 'a'}</span>
             <button type="button" class="header-btn" id="inp-gloss-style-plus"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
         </div>
@@ -4127,11 +4135,11 @@ const App = (() => {
     const glossStyleVal = document.getElementById('inp-gloss-style-val');
     document.getElementById('inp-gloss-style-minus').onclick = () => {
       currentGlossStyle = currentGlossStyle === 1 ? 2 : 1;
-      glossStyleVal.textContent = 'style ' + (currentGlossStyle === 1 ? 'A' : 'B');
+      glossStyleVal.textContent = 'style - ' + (currentGlossStyle === 1 ? 'a' : 'b');
     };
     document.getElementById('inp-gloss-style-plus').onclick = () => {
       currentGlossStyle = currentGlossStyle === 2 ? 1 : 2;
-      glossStyleVal.textContent = 'style ' + (currentGlossStyle === 1 ? 'A' : 'B');
+      glossStyleVal.textContent = 'style - ' + (currentGlossStyle === 1 ? 'a' : 'b');
     };
 
     let hdcEnabled = !!settings.hideDynamicContent;
@@ -4333,7 +4341,7 @@ const App = (() => {
         const opacityStyle = meltAllowed ? '' : 'opacity: 0.5; pointer-events: none;';
         await showModal(`
           <h2>Advanced & Experimental</h2>
-          <div id="adv-warning-box" style="margin-bottom: 24px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; text-align: left;">
+          <div id="adv-warning-box" style="margin-bottom: 24px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 0px; text-align: left;">
             <div id="adv-warning-expanded" style="max-height: ${settings.advWarningCollapsed ? '0px' : '400px'}; opacity: ${settings.advWarningCollapsed ? '0' : '1'}; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease;">
               <div style="padding-bottom: 4px;">
                 <div style="display: flex; align-items: stretch;">
@@ -4382,6 +4390,12 @@ const App = (() => {
               <div class="toggle-switch${settings.hapticOnTouch ? ' on' : ''}" id="haptic-touch-toggle"></div>
             </div>
             <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">feel your taps - might work on ios 17.4 to 26.4 only - see haptics JS file for credit</div>
+
+            <div class="toggle-row" style="margin-top: 12px;">
+              <span class="toggle-label">Restrict launcher - demo purposes</span>
+              <div class="toggle-switch${settings.demoModeEnabled ? ' on' : ''}" id="demo-mode-toggle"></div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will prevent the launcher from opening apps</div>
 
             <div class="toggle-row" style="margin-top: 12px;">
               <span class="toggle-label">Windows style navigation bar</span>
@@ -4587,6 +4601,15 @@ const App = (() => {
           settings.hapticOnTouch = hapticOff;
           applySettings();
           if (hapticOff) initHaptics();
+        };
+
+        const demoToggle = document.getElementById('demo-mode-toggle');
+        let demoOff = !!settings.demoModeEnabled;
+        demoToggle.onclick = () => {
+          demoOff = !demoOff;
+          demoToggle.classList.toggle('on', demoOff);
+          settings.demoModeEnabled = demoOff;
+          applySettings();
         };
 
         const wpNavToggle = document.getElementById('windows-nav-bar-toggle');
