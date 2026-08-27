@@ -4000,7 +4000,7 @@ const App = (() => {
           <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-left: 20px; margin-top: 5px;">Glossy style</span>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
             <button type="button" class="header-btn" id="inp-gloss-style-minus"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <span id="inp-gloss-style-val" style="min-width:60px; text-align:center; font-size:15px;">style ${settings.glossyStyle === 2 ? 'b' : 'a'}</span>
+            <span id="inp-gloss-style-val" style="min-width:60px; text-align:center; font-size:15px;">style ${settings.glossyStyle === 2 ? 'B' : 'A'}</span>
             <button type="button" class="header-btn" id="inp-gloss-style-plus"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
         </div>
@@ -4127,11 +4127,11 @@ const App = (() => {
     const glossStyleVal = document.getElementById('inp-gloss-style-val');
     document.getElementById('inp-gloss-style-minus').onclick = () => {
       currentGlossStyle = currentGlossStyle === 1 ? 2 : 1;
-      glossStyleVal.textContent = 'style ' + (currentGlossStyle === 1 ? 'a' : 'b');
+      glossStyleVal.textContent = 'style ' + (currentGlossStyle === 1 ? 'A' : 'B');
     };
     document.getElementById('inp-gloss-style-plus').onclick = () => {
       currentGlossStyle = currentGlossStyle === 2 ? 1 : 2;
-      glossStyleVal.textContent = 'style ' + (currentGlossStyle === 1 ? 'a' : 'b');
+      glossStyleVal.textContent = 'style ' + (currentGlossStyle === 1 ? 'A' : 'B');
     };
 
     let hdcEnabled = !!settings.hideDynamicContent;
