@@ -632,7 +632,7 @@ window.communityAPI = {
     adminModal.innerHTML = `
       <div class="confirm-box" style="width: 280px; text-align: center;">
         <h3>Administrator Access</h3>
-        <p>Enter 4-digit code to delete...</p>
+        <p>Enter four digit code to delete...</p>
         <div style="display:flex; justify-content:center; gap: 10px; margin: 20px 0;">
           <input type="tel" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="2" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
           <input type="tel" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="2" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
@@ -661,16 +661,16 @@ window.communityAPI = {
         } else if (!inp.value) {
           inp.dataset.val = '';
         }
-        if (inp.value && idx < inputs.length - 1) inputs[idx + 1].focus();
+        if (inp.value && idx < inputs.length - 1) inputs[idx + 1].focus({ preventScroll: true });
       });
       inp.addEventListener('keydown', (e) => {
         if (e.key === 'Backspace' && !inp.value && idx > 0) {
-          inputs[idx - 1].focus();
+          inputs[idx - 1].focus({ preventScroll: true });
         }
       });
     });
     
-    setTimeout(() => inputs[0].focus(), 100);
+    setTimeout(() => inputs[0].focus({ preventScroll: true }), 100);
 
     adminModal.querySelector('.confirm-cancel').onclick = () => {
       adminModal.remove();
