@@ -52,6 +52,7 @@
 
     if (deps && deps.getSettings && deps.getSettings().spotifyCapitaliseSong) {
       parsed = parsed.replace(/\b\w/g, c => c.toUpperCase());
+      parsed = parsed.replace(/\b(\d+)(st|nd|rd|th)\b/gi, (m, num, sfx) => num + sfx.toUpperCase());
     }
     
     parsed = parsed.replace(/[“”,.;:+!?^]/g, (match, offset, string) => {
