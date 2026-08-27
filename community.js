@@ -634,10 +634,10 @@ window.communityAPI = {
         <h3>Administrator Access</h3>
         <p>Enter 4-digit code to delete...</p>
         <div style="display:flex; justify-content:center; gap: 10px; margin: 20px 0;">
-          <input type="text" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="-webkit-text-security: disc; text-security: disc; width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
-          <input type="text" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="-webkit-text-security: disc; text-security: disc; width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
-          <input type="text" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="-webkit-text-security: disc; text-security: disc; width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
-          <input type="text" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="1" style="-webkit-text-security: disc; text-security: disc; width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="tel" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="2" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="tel" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="2" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="tel" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="2" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
+          <input type="tel" inputmode="numeric" pattern="[0-9]*" class="admin-digit" maxlength="2" style="width: 40px; height: 50px; text-align: center; font-size: 24px; background: transparent; border: 2px solid var(--border); color: var(--text); border-radius: 0; outline: none;">
         </div>
         <div class="confirm-actions">
           <button class="confirm-cancel">Cancel</button>
@@ -651,7 +651,16 @@ window.communityAPI = {
     const inputs = Array.from(adminModal.querySelectorAll('.admin-digit'));
     
     inputs.forEach((inp, idx) => {
+      inp.addEventListener('focus', () => {
+        inp.select();
+      });
       inp.addEventListener('input', () => {
+        if (inp.value && inp.value !== '•') {
+          inp.dataset.val = inp.value.slice(-1);
+          inp.value = '•';
+        } else if (!inp.value) {
+          inp.dataset.val = '';
+        }
         if (inp.value && idx < inputs.length - 1) inputs[idx + 1].focus();
       });
       inp.addEventListener('keydown', (e) => {
@@ -668,7 +677,7 @@ window.communityAPI = {
     };
 
     adminModal.querySelector('#admin-ok-btn').onclick = async () => {
-      const code = inputs.map(i => i.value).join('');
+      const code = inputs.map(i => i.dataset.val || '').join('');
       if (code.length !== 4) return;
       
       try {

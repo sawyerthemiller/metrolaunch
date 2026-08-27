@@ -29,6 +29,7 @@
     let parsed = artist.replace(/P!NK/gi, 'PINK');
     parsed = parsed.replace(/(^|\W)\$(?=\w)/g, '$1S');
     parsed = parsed.replace(/\$/g, 's');
+    parsed = parsed.replace(/&/g, 'and');
     parsed = parsed.replace(/'/g, '');
     parsed = parsed.replace(/!/g, '');
     parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -44,6 +45,7 @@
     let parsed = track.replace(/(^|\W)\$(?=\w)/g, '$1S');
     parsed = parsed.replace(/\$/g, 's');
     parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    parsed = parsed.replace(/&/g, 'and');
     
     // Strip apostrophes early so contractions don't break capitalisation (e.g. She's -> SheS)
     parsed = parsed.replace(/['’]/g, '');
