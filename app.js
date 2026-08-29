@@ -383,6 +383,14 @@ const App = (() => {
     liveTileIntervals.forEach(clearTimeout);
     liveTileIntervals = [];
 
+    document.querySelectorAll('.live-tile .live-tile-inner').forEach(inner => {
+      inner.style.transition = 'none';
+      inner.style.transform = 'translateY(calc(-100% / 3))';
+      inner.classList.remove('is-flipped');
+      const tile = inner.closest('.tile');
+      if (tile) tile.classList.remove('is-flipped');
+    });
+
     // Only flip a live tile to its back face when we actually have live content to show
     function scheduleWeather() {
       const delay = 4000 + Math.random() * 3000;
