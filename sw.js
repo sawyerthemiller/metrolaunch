@@ -1,4 +1,4 @@
-const CACHE_NAME = 'metro-launcher-v26';
+const CACHE_NAME = 'metro-launcher-v27';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -17,6 +17,9 @@ const ASSETS_TO_CACHE = [
     './navbar_icon/start.png',
     './navbar_icon/search.png',
     './share.png',
+    './arrow-rite.png',
+    './exit.png',
+    './pull.png',
     './weather_bg/01d.jpg',
     './weather_bg/01n.jpg',
     './weather_bg/02d.jpg',

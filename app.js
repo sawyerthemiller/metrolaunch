@@ -4853,7 +4853,7 @@ const App = (() => {
         './services/weather.js', './services/news.js', './services/spotify.js',
         './manifest.json', './version.txt', './ios-haptics.js',
         './segoe-ui-supro.otf',
-        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './share.png',
+        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './share.png', './arrow-rite.png', './exit.png', './pull.png',
         './weather_bg/01d.jpg', './weather_bg/01n.jpg',
         './weather_bg/02d.jpg', './weather_bg/02n.jpg',
         './weather_bg/03d.jpg', './weather_bg/03n.jpg',
@@ -4912,7 +4912,7 @@ const App = (() => {
           else if (asset === './services/news.js') cat = 'Service - News';
           else if (asset === './services/spotify.js') cat = 'Service - Spotify';
           else if (asset === './segoe-ui-supro.otf') cat = 'Asset - Font';
-          else if (asset.includes('navbar_icon') || asset === './share.png') cat = 'Asset - Icons';
+          else if (asset.includes('navbar_icon') || asset === './share.png' || asset === './arrow-rite.png' || asset === './exit.png' || asset === './pull.png') cat = 'Asset - Icons';
           else if (asset.includes('weather_bg')) cat = 'Asset - Weather Images';
           
           if (cat && !found) categoryStatus[cat] = false;
