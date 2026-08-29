@@ -2855,7 +2855,7 @@ const App = (() => {
       'The Navigation Bar',
       'This is possibly the most beta feature in the launcher yet, so apologies if it\'s not super polished...<br><br>' +
       '<a href="https://github.com/Nnnnnnn274/Infern0" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); margin-bottom: 8px; color: var(--text); text-decoration: none; position: relative;">Learn how to disable the home bar</a>' +
-      '<a href="https://github.com/leminlimez/Nugget" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); margin-bottom: 8px; color: var(--text); text-decoration: none; position: relative;">Learn how to disable the dynamic island</a>' +
+      '<a href="https://github.com/leminlimez/Nugget" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); margin-bottom: 8px; color: var(--text); text-decoration: none; position: relative;">Learn how to disable the dynamic island or status bar</a>' +
       '<a href="https://www.icloud.com/shortcuts/ef18975eafea4392ae3712f1a0cbb64a" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); color: var(--text); text-decoration: none; position: relative;">Install the Apple homescreen shortcut</a>' +
       '<style>.confirm-overlay .confirm-cancel { display: none !important; } .confirm-overlay .confirm-danger { width: 100%; }</style>',
       'OK',
@@ -5303,7 +5303,7 @@ const App = (() => {
         .then(version => {
           metroAlert(
             'MetroLaunch',
-            "The first ever non-jailbreak third party launcher for iOS...<br><br>Developed by Sawyer Miller (plumhusky)<br><br>Code may not be re-used without full attribution...<br><br>version is " + version.trim() + "<br><br>" + osInfo,
+            "One of the first ever (but best) non-jailbreak third party launcher for iOS...<br><br>Developed by Sawyer Miller (plumhusky)<br><br>Code may not be re-used without full attribution...<br><br>version is " + version.trim() + "<br><br>" + osInfo,
             'OK',
             () => {},
             'Get Help',
