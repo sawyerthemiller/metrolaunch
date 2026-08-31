@@ -3583,6 +3583,13 @@ const App = (() => {
     await showModal(`
       <h2>Weather Tile</h2>
       <div class="form-group">
+        <label>Tile Size</label>
+        <select id="weather-size">
+          <option value="medium"${tile.size === 'medium' ? ' selected' : ''}>Medium (2x2)</option>
+          <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label>Postal / Zip Code</label>
         <input type="text" spellcheck="false" autocorrect="off" id="weather-zip" value="${escHtml(settings.weatherZip)}" placeholder="e.g. 90210 or SW1A 1AA" autocomplete="off" inputmode="text">
       </div>
@@ -3593,13 +3600,6 @@ const App = (() => {
       <div class="form-group">
         <label>Country Code</label>
         <input type="text" spellcheck="false" autocorrect="off" id="weather-country" value="${escHtml(settings.weatherCountry || '')}" placeholder="e.g. us" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label>Tile Size</label>
-        <select id="weather-size">
-          <option value="medium"${tile.size === 'medium' ? ' selected' : ''}>Medium (2x2)</option>
-          <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
-        </select>
       </div>
       <div class="form-group">
         <label>App URL (optional)</label>
