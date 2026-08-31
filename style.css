@@ -818,7 +818,7 @@ body:not(.is-desktop) .header {
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: 0.30px;
+  letter-spacing: 0.275px;
   padding-bottom: 2px;
 }
 
@@ -898,7 +898,7 @@ body:not(.is-desktop) .header {
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: 0.25px;
+  letter-spacing: 0.20px;
   text-align: center;
   transform: translateZ(1px);
 }
