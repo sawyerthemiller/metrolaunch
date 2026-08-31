@@ -4684,7 +4684,7 @@ const App = (() => {
       btn.disabled = true;
       btn.innerText = 'Working...';
       try {
-        const res = await fetch(`https://picsum.photos/1080/1920?t=${Date.now()}`);
+        const res = await fetch(`https://loremflickr.com/1080/1920?random=${Date.now()}`);
         const input = document.getElementById('bg-url');
         input.value = res.url;
         window.syncInputBlurOverlay?.(input);
