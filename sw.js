@@ -20,6 +20,8 @@ const ASSETS_TO_CACHE = [
     './arrow-rite.png',
     './exit.png',
     './pull.png',
+    './store.png',
+    './paint.png',
     './weather_bg/01d.jpg',
     './weather_bg/01n.jpg',
     './weather_bg/02d.jpg',

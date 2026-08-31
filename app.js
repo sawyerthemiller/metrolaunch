@@ -250,6 +250,17 @@ const App = (() => {
     large: { cols: 4, rows: 4 },
   };
 
+  function ensureTileSize(sizeStr) {
+    if (!sizeStr) return;
+    if (TILE_SIZES[sizeStr]) return;
+    if (sizeStr.includes('x')) {
+      const [c, r] = sizeStr.split('x').map(Number);
+      if (!isNaN(c) && !isNaN(r)) {
+        TILE_SIZES[sizeStr] = { cols: c, rows: r };
+      }
+    }
+  }
+
   const COLOR_PALETTE = {
     Red: ['#1a0000', '#4a0a0a', '#7f1d1d', '#b91c1c', '#e81123', '#ef4444', '#f87171', '#fca5a5'],
     Orange: ['#1a0d00', '#4a2000', '#92400e', '#c2410c', '#ff8c00', '#fb923c', '#fdba74', '#fed7aa'],
@@ -625,6 +636,14 @@ const App = (() => {
           if (ver === 6) {
             localStorage.setItem(VERSION_KEY, DATA_VERSION);
           }
+          p.forEach(t => {
+            if (t.size) ensureTileSize(t.size);
+            if (t.children) {
+              t.children.forEach(c => {
+                if (c.size) ensureTileSize(c.size);
+              });
+            }
+          });
           return p;
         }
       }
@@ -2737,6 +2756,7 @@ const App = (() => {
         <div class="context-menu-item" data-action="resize-medium">${UI_SVG.resize_m} Medium</div>
         <div class="context-menu-item" data-action="resize-wide">${UI_SVG.resize_w} Wide</div>
         <div class="context-menu-item" data-action="resize-large">${UI_SVG.resize_l} Large</div>
+        <div class="context-menu-item" data-action="resize-custom"><img src="paint.png" style="width: 13px; height: 13px; filter: brightness(0) invert(1); object-fit: contain;"> Custom Size</div>
         <div class="context-menu-divider"></div>
         <div class="context-menu-item danger" data-action="delete">${UI_SVG.trash} Remove</div>
       `;
@@ -2767,7 +2787,28 @@ const App = (() => {
           deleteTile(tileId);
         }
       }
-      else if (action.startsWith('resize-')) updateTile(tileId, { size: action.replace('resize-', '') });
+      else if (action.startsWith('resize-')) {
+        if (action === 'resize-custom') {
+          const tile = getFlatTiles().find(t => t.id === tileId);
+          if (tile) {
+            ensureTileSize(tile.size);
+            const s = TILE_SIZES[tile.size || 'medium'] || { cols: 2, rows: 2 };
+            showCustomDimsModal(s.cols, s.rows).then(res => {
+              if (res) {
+                let finalSize = `${res.w}x${res.h}`;
+                if (res.w === 1 && res.h === 1) finalSize = 'small';
+                else if (res.w === 2 && res.h === 2) finalSize = 'medium';
+                else if (res.w === 4 && res.h === 2) finalSize = 'wide';
+                else if (res.w === 4 && res.h === 4) finalSize = 'large';
+                else ensureTileSize(finalSize);
+                updateTile(tileId, { size: finalSize });
+              }
+            });
+          }
+        } else {
+          updateTile(tileId, { size: action.replace('resize-', '') });
+        }
+      }
     };
   }
 
@@ -3112,6 +3153,80 @@ const App = (() => {
     });
   }
 
+  // CUSTOM DIMS MODAL
+  function showCustomDimsModal(initialW, initialH) {
+    return new Promise(resolve => {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay visible';
+      modal.style.display = 'flex';
+      modal.style.zIndex = '9999';
+      modal.innerHTML = `
+        <div class="modal-sheet" style="margin-bottom: 30px; text-align: center;">
+          <h2>Custom Dimensions</h2>
+          <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+              <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Height</span>
+              <svg id="cd-h-up" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="18 15 12 9 6 15"/></svg>
+              <span id="cd-h-val" style="font-size: 24px; font-weight: bold;">${initialH}</span>
+              <svg id="cd-h-down" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+              <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Width</span>
+              <svg id="cd-w-up" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="18 15 12 9 6 15"/></svg>
+              <span id="cd-w-val" style="font-size: 24px; font-weight: bold;">${initialW}</span>
+              <svg id="cd-w-down" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" id="cd-cancel">Cancel</button>
+            <button class="btn-primary" id="cd-save">Save</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      // Force reflow for animation
+      void modal.offsetWidth;
+
+      applyHapticToEls(modal.querySelectorAll('button, #cd-w-up, #cd-w-down, #cd-h-up, #cd-h-down'));
+
+      let w = initialW;
+      let h = initialH;
+
+      const updateUI = () => {
+        document.getElementById('cd-w-val').textContent = w;
+        document.getElementById('cd-h-val').textContent = h;
+        document.getElementById('cd-w-up').style.opacity = w >= 4 ? '0.2' : '1';
+        document.getElementById('cd-w-up').style.pointerEvents = w >= 4 ? 'none' : 'auto';
+        document.getElementById('cd-w-down').style.opacity = w <= 1 ? '0.2' : '1';
+        document.getElementById('cd-w-down').style.pointerEvents = w <= 1 ? 'none' : 'auto';
+        
+        document.getElementById('cd-h-up').style.opacity = h >= 4 ? '0.2' : '1';
+        document.getElementById('cd-h-up').style.pointerEvents = h >= 4 ? 'none' : 'auto';
+        document.getElementById('cd-h-down').style.opacity = h <= 1 ? '0.2' : '1';
+        document.getElementById('cd-h-down').style.pointerEvents = h <= 1 ? 'none' : 'auto';
+      };
+
+      updateUI();
+
+      document.getElementById('cd-w-up').onclick = () => { if(w < 4) { w++; updateUI(); } };
+      document.getElementById('cd-w-down').onclick = () => { if(w > 1) { w--; updateUI(); } };
+      document.getElementById('cd-h-up').onclick = () => { if(h < 4) { h++; updateUI(); } };
+      document.getElementById('cd-h-down').onclick = () => { if(h > 1) { h--; updateUI(); } };
+
+      const close = (res) => {
+        modal.classList.remove('visible');
+        setTimeout(() => {
+          modal.remove();
+          resolve(res);
+        }, 300);
+      };
+
+      document.getElementById('cd-cancel').onclick = () => close(null);
+      document.getElementById('cd-save').onclick = () => close({w, h});
+      modal.onclick = (e) => { if(e.target === modal) close(null); };
+    });
+  }
+
   // CREATE TILE MODAL
   async function showCreateModal() {
     const dc = ALL_COLORS[Math.floor(Math.random() * ALL_COLORS.length)];
@@ -3162,7 +3277,9 @@ const App = (() => {
           <option value="medium" selected>Medium (2x2)</option>
           <option value="wide">Wide (4x2)</option>
           <option value="large">Large (4x4)</option>
+          <option value="custom">Custom</option>
         </select>
+        <button class="btn-secondary" id="btn-custom-dims" style="display:none; margin-top: 10px; width: 100%;">Customise Dimensions</button>
       </div>
       <div class="form-group" id="create-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
         <label>Color</label>
@@ -3177,6 +3294,37 @@ const App = (() => {
 
     attachColorPicker('color-picker-create', 'inp-color');
     attachIconPicker('icon-picker-create', 'inp-icon');
+
+    let customDims = null;
+    const inpSize = document.getElementById('inp-size');
+    const btnCustomDims = document.getElementById('btn-custom-dims');
+    inpSize.addEventListener('change', () => {
+      btnCustomDims.style.display = inpSize.value === 'custom' ? 'block' : 'none';
+    });
+    btnCustomDims.onclick = async () => {
+      const res = await showCustomDimsModal(customDims ? customDims.w : 2, customDims ? customDims.h : 2);
+      if (res) {
+        if (res.w === 1 && res.h === 1) {
+          inpSize.value = 'small';
+          btnCustomDims.style.display = 'none';
+          customDims = null;
+        } else if (res.w === 2 && res.h === 2) {
+          inpSize.value = 'medium';
+          btnCustomDims.style.display = 'none';
+          customDims = null;
+        } else if (res.w === 4 && res.h === 2) {
+          inpSize.value = 'wide';
+          btnCustomDims.style.display = 'none';
+          customDims = null;
+        } else if (res.w === 4 && res.h === 4) {
+          inpSize.value = 'large';
+          btnCustomDims.style.display = 'none';
+          customDims = null;
+        } else {
+          customDims = res;
+        }
+      }
+    };
 
     let forceSafari = false;
     const forceSafariToggle = document.getElementById('inp-force-safari');
@@ -3239,6 +3387,16 @@ const App = (() => {
         return;
       }
 
+      let finalSize = document.getElementById('inp-size').value;
+      if (finalSize === 'custom') {
+        if (customDims) {
+          finalSize = `${customDims.w}x${customDims.h}`;
+          ensureTileSize(finalSize);
+        } else {
+          finalSize = 'medium';
+        }
+      }
+
       const iconUrl = document.getElementById('inp-icon-url').value.trim();
       addTile({
         name,
@@ -3247,7 +3405,7 @@ const App = (() => {
         forceSafari: forceSafari,
         iconForceWhite: iconForceWhite,
         iconScale: iconScale,
-        size: document.getElementById('inp-size').value,
+        size: finalSize,
         color: document.getElementById('inp-color').value,
       });
       hideModal();
@@ -4003,6 +4161,10 @@ const App = (() => {
           <span class="toggle-label">Hide app icons in search</span>
           <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideSearchIcons ? ' on' : ''}" id="hide-search-icons-toggle"></div>
         </div>
+        <div class="toggle-row" style="opacity: ${settings.advancedEnabled && settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.advancedEnabled && settings.windowsNavBar ? 'auto' : 'none'};">
+          <span class="toggle-label">Hide app store shortcut</span>
+          <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideStoreShortcut ? ' on' : ''}" id="hide-store-toggle"></div>
+        </div>
         <div class="toggle-row">
           <span class="toggle-label">Hide background when editing</span>
           <div class="toggle-switch${settings.hideBgEditing ? ' on' : ''}" id="hide-bg-edit-toggle"></div>
@@ -4175,6 +4337,15 @@ const App = (() => {
       hideSearchIconsEnabled = !hideSearchIconsEnabled;
       hideSearchIconsToggle.classList.toggle('on', hideSearchIconsEnabled);
     };
+
+    let hideStoreEnabled = (settings.advancedEnabled && settings.windowsNavBar) ? !!settings.hideStoreShortcut : false;
+    const hideStoreToggle = document.getElementById('hide-store-toggle');
+    if (hideStoreToggle) {
+      hideStoreToggle.onclick = () => {
+        hideStoreEnabled = !hideStoreEnabled;
+        hideStoreToggle.classList.toggle('on', hideStoreEnabled);
+      };
+    }
 
     let hideBgEditEnabled = !!settings.hideBgEditing;
     const hideBgEditToggle = document.getElementById('hide-bg-edit-toggle');
@@ -4853,7 +5024,7 @@ const App = (() => {
         './services/weather.js', './services/news.js', './services/spotify.js',
         './manifest.json', './version.txt', './ios-haptics.js',
         './segoe-ui-supro.otf',
-        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './share.png', './arrow-rite.png', './exit.png', './pull.png',
+        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './share.png', './arrow-rite.png', './exit.png', './pull.png', './store.png', './paint.png',
         './weather_bg/01d.jpg', './weather_bg/01n.jpg',
         './weather_bg/02d.jpg', './weather_bg/02n.jpg',
         './weather_bg/03d.jpg', './weather_bg/03n.jpg',
@@ -4912,7 +5083,7 @@ const App = (() => {
           else if (asset === './services/news.js') cat = 'Service - News';
           else if (asset === './services/spotify.js') cat = 'Service - Spotify';
           else if (asset === './segoe-ui-supro.otf') cat = 'Asset - Font';
-          else if (asset.includes('navbar_icon') || asset === './share.png' || asset === './arrow-rite.png' || asset === './exit.png' || asset === './pull.png') cat = 'Asset - Icons';
+          else if (asset.includes('navbar_icon') || asset === './share.png' || asset === './arrow-rite.png' || asset === './exit.png' || asset === './pull.png' || asset === './store.png' || asset === './paint.png') cat = 'Asset - Icons';
           else if (asset.includes('weather_bg')) cat = 'Asset - Weather Images';
           
           if (cat && !found) categoryStatus[cat] = false;
