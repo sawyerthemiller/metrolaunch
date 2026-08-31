@@ -495,7 +495,7 @@ body:not(.is-desktop) .header {
 }
 
 .tile-label {
-  font-size: calc(11px * var(--live-tile-scale, 1));
+  font-size: calc(12px * var(--live-tile-scale, 1));
   font-weight: 400;
   color: rgba(255, 255, 255, 0.88);
   text-align: center;
@@ -507,14 +507,9 @@ body:not(.is-desktop) .header {
   pointer-events: none;
 }
 
-.tile[data-size="small"] .tile-label {
+.tile[data-size="small"] .tile-label,
+.tile[data-size^="1x"] .tile-label {
   font-size: calc(9px * var(--live-tile-scale, 1));
-}
-
-.tile[data-size="wide"] .tile-label,
-.tile[data-size="medium"] .tile-label,
-.tile[data-size="large"] .tile-label {
-  font-size: calc(12px * var(--live-tile-scale, 1));
 }
 
 /* Label Alignment Overrides */
@@ -1244,7 +1239,8 @@ body.is-desktop .modal-sheet {
   margin-top: 22px;
 }
 
-.modal-actions button {
+.modal-actions button,
+.btn-secondary {
   flex: 1;
   padding: 11px 8px;
   border: 1px solid var(--border-strong);
@@ -1258,15 +1254,18 @@ body.is-desktop .modal-sheet {
   transition: background 0.12s;
 }
 
-.modal-actions button:hover {
+.modal-actions button:hover,
+.btn-secondary:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.modal-actions button:active {
+.modal-actions button:active,
+.btn-secondary:active {
   background: rgba(255, 255, 255, 0.15);
 }
 
-.modal-actions button:disabled {
+.modal-actions button:disabled,
+.btn-secondary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   pointer-events: none;

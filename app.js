@@ -1010,7 +1010,7 @@ const App = (() => {
         const label = document.createElement('div');
         label.className = 'tile-label';
         label.textContent = t.name;
-        if (settings.hideSmallLabels && t.size === 'small') label.style.display = 'none';
+        if (settings.hideSmallLabels && (t.size === 'small' || (t.size && t.size.startsWith('1x')))) label.style.display = 'none';
 
         el.append(iconWrap, label);
 
@@ -1540,7 +1540,7 @@ const App = (() => {
       const label = document.createElement('div');
       label.className = 'tile-label';
       label.textContent = child.name;
-      if (settings.hideSmallLabels && child.size === 'small') label.style.display = 'none';
+      if (settings.hideSmallLabels && (child.size === 'small' || (child.size && child.size.startsWith('1x')))) label.style.display = 'none';
       el.append(iconWrap, label);
 
       // Tap handler for child tiles
