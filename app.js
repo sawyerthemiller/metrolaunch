@@ -5451,6 +5451,7 @@ const App = (() => {
         'Service - Weather': true,
         'Service - Spotify': true,
         'Service - News': true,
+        'Service - Events': true,
         'Asset - Font': true,
         'Asset - Icons': true,
         'Asset - Weather Images': true
