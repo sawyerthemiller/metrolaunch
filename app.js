@@ -2037,7 +2037,10 @@ const App = (() => {
   }
 
   function launchApp(tile) {
-    if (!tile.url) { showToast('No URL scheme set'); return; }
+    if (!tile.url) { 
+      if (!isEventsTile(tile)) showToast('No URL scheme set'); 
+      return; 
+    }
     playLaunchAnimation(tile, (t) => {
       if (t.forceSafari) { window.open(t.url, '_blank'); }
       else { window.location.href = t.url; }
