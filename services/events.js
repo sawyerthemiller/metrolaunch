@@ -49,9 +49,9 @@
   }
 
   function formatTime(mins) {
-    if (mins < 60) return `In ${mins} minute${mins !== 1 ? 's' : ''}`;
+    if (mins < 60) return `Happens in ${mins} minute${Number(mins) !== 1 ? 's' : ''}`;
     const hrs = Math.round(mins / 60);
-    return `In ${hrs} hour${hrs !== 1 ? 's' : ''}`;
+    return `Happens in ${hrs} hour${Number(hrs) !== 1 ? 's' : ''}`;
   }  function _renderEventsTile(el, alertMins) {
     const escHtml = deps.escHtml;
     const tile = deps.getTile(TILE_ID);

@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/style/useTemplate: <explanation> */
+/** biome-ignore-all lint/correctness/useParseIntRadix: <explanation> */
 /** biome-ignore-all lint/suspicious/noGlobalIsNan: <explanation> */
 /** biome-ignore-all lint/style/useConst: <explanation> */
 /** biome-ignore-all lint/complexity/useOptionalChain: <explanation> */
@@ -4156,7 +4157,7 @@ const App = (() => {
         </button>
         <div style="width: 1.5px; height: 100%; background-color: var(--text);"></div>
         <button id="evt-btn-add" style="flex:1; background:transparent; border:none; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0;">
-           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
       </div>
       <div id="evt-days-container" style="display:flex; justify-content:space-between; position:relative; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.2);"></div>
