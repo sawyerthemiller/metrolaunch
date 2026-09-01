@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/style/useConst: <explanation> */
+/** biome-ignore-all lint/correctness/noUnusedFunctionParameters: <explanation> */
 /** biome-ignore-all lint/complexity/useArrowFunction: <explanation> */
 /** biome-ignore-all lint/suspicious/useIterableCallbackReturn: <explanation> */
 
