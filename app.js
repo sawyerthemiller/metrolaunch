@@ -442,7 +442,7 @@ const App = (() => {
       const delay = 5000 + Math.random() * 3000;
       liveTileIntervals.push(setTimeout(function eventsCycle() {
         const el = document.querySelector(`[data-id="${EVENTS_TILE_ID}"] .live-tile-inner`);
-        if (el && navigator.onLine && window.EventsService && !editMode && !el.classList.contains('is-flipped')) {
+        if (el && window.EventsService && !editMode && !el.classList.contains('is-flipped')) {
           flipTile(el, true);
           liveTileIntervals.push(setTimeout(() => flipTile(el, false), 4000 + Math.random() * 2000));
         }
