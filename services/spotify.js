@@ -21,7 +21,8 @@
     parsed = parsed.replace(/(^|\W)\$(?=\w)/g, '$1S');
     parsed = parsed.replace(/\$/g, 's');
     parsed = parsed.replace(/&/g, 'and');
-    parsed = parsed.replace(/'/g, '');
+    parsed = parsed.replace(/\bO['’]([a-zA-Z]+)/gi, 'O $1');
+    parsed = parsed.replace(/['’]/g, '');
     parsed = parsed.replace(/!/g, '');
     parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     return parsed;
@@ -35,6 +36,7 @@
     parsed = parsed.replace(/\$/g, 's');
     parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     parsed = parsed.replace(/&/g, 'and');
+    parsed = parsed.replace(/\bO['’]([a-zA-Z]+)/gi, 'O $1');
     parsed = parsed.replace(/['’]/g, '');
 
     if (deps && deps.getSettings && deps.getSettings().spotifyCapitaliseSong) {
@@ -172,10 +174,12 @@
     blurEl.className = 'spotify-bg-blur' + (unblurArt ? ' unblurred' : '');
     wrapperEl.className = `spotify-text-wrapper${shadeTextClass}`;
     
-    if (coverUrl) {
-      blurEl.style.backgroundImage = `url("${coverUrl.replace(/"/g, '\\"')}")`;
-    } else {
-      blurEl.style.backgroundImage = '';
+    if (coverUrl !== undefined) {
+      if (coverUrl) {
+        blurEl.style.backgroundImage = `url("${coverUrl.replace(/"/g, '\\"')}")`;
+      } else {
+        blurEl.style.backgroundImage = '';
+      }
     }
     
     trackEl.textContent = parsedTrack;
@@ -201,21 +205,33 @@
     const shadeText = !!tile?.spotifyShadeText;
     const unblurArt = !!tile?.spotifyUnblurArt;
 
+    // Immediately render text, passing undefined to leave the background unchanged while loading
+    elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, undefined, shadeText, unblurArt));
+
     if (showCover && data.coverUrl) {
       // preload the image so the tile doesn't flash without a background
       const img = new Image();
       img.src = data.coverUrl;
-      const currentCoverUrl = data.coverUrl;
-      const apply = () => elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, currentCoverUrl, shadeText, unblurArt));
+      const targetCoverUrl = data.coverUrl;
+      const apply = () => {
+        // Only apply if the data hasn't changed since we started loading
+        if (data && data.coverUrl === targetCoverUrl) {
+          const latestArtist = cleanArtistName(data.artist);
+          const latestTrack = cleanTrackName(data.track);
+          elements.forEach(el => _renderSpotifyTile(el, latestTrack, latestArtist, targetCoverUrl, shadeText, unblurArt));
+        }
+      };
       if (img.complete) {
         apply();
       } else {
         img.onload = apply;
         img.onerror = () => {
-          if (data && data.coverUrl === currentCoverUrl) {
+          if (data && data.coverUrl === targetCoverUrl) {
             data.coverUrl = null;
+            const latestArtist = cleanArtistName(data.artist);
+            const latestTrack = cleanTrackName(data.track);
+            elements.forEach(el => _renderSpotifyTile(el, latestTrack, latestArtist, null, shadeText, unblurArt));
           }
-          elements.forEach(el => _renderSpotifyTile(el, parsedTrack, parsedArtist, null, shadeText, unblurArt));
         };
       }
     } else {
