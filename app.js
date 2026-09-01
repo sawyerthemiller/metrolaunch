@@ -1027,7 +1027,7 @@ const App = (() => {
         const label = document.createElement('div');
         label.className = 'tile-label';
         label.textContent = t.name;
-        if (settings.hideSmallLabels && (t.size === 'small' || (t.size && t.size.startsWith('1x')))) label.style.display = 'none';
+        if (settings.hideSmallLabels && (t.size === 'small' || (t.size && (t.size.startsWith('1x') || t.size.endsWith('x1'))))) label.style.display = 'none';
 
         el.append(iconWrap, label);
 
@@ -1558,7 +1558,7 @@ const App = (() => {
       const label = document.createElement('div');
       label.className = 'tile-label';
       label.textContent = child.name;
-      if (settings.hideSmallLabels && (child.size === 'small' || (child.size && child.size.startsWith('1x')))) label.style.display = 'none';
+      if (settings.hideSmallLabels && (child.size === 'small' || (child.size && (child.size.startsWith('1x') || child.size.endsWith('x1'))))) label.style.display = 'none';
       el.append(iconWrap, label);
 
       // Tap handler for child tiles
@@ -3493,7 +3493,9 @@ const App = (() => {
           <option value="medium"${tile.size === 'medium' ? ' selected' : ''}>Medium (2x2)</option>
           <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
           <option value="large"${tile.size === 'large' ? ' selected' : ''}>Large (4x4)</option>
+          <option value="custom"${!['small', 'medium', 'wide', 'large'].includes(tile.size) ? ' selected' : ''}>Custom</option>
         </select>
+        <button class="btn-secondary" id="btn-edit-custom-dims" style="display:${!['small', 'medium', 'wide', 'large'].includes(tile.size) ? 'block' : 'none'}; margin-top: 10px; width: 100%;">Customise Dimensions</button>
       </div>
       <div class="form-group" id="edit-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
         <label>Color</label>
@@ -3557,6 +3559,38 @@ const App = (() => {
       }
     });
 
+    let editCustomDims = null;
+    if (!['small', 'medium', 'wide', 'large'].includes(tile.size) && typeof tile.size === 'string' && tile.size.includes('x')) {
+      const parts = tile.size.split('x');
+      editCustomDims = { w: parseInt(parts[0]), h: parseInt(parts[1]) };
+    }
+    const editSize = document.getElementById('edit-size');
+    const btnEditCustomDims = document.getElementById('btn-edit-custom-dims');
+    editSize.addEventListener('change', () => {
+      btnEditCustomDims.style.display = editSize.value === 'custom' ? 'block' : 'none';
+    });
+    btnEditCustomDims.onclick = async () => {
+      const res = await showCustomDimsModal(editCustomDims ? editCustomDims.w : 2, editCustomDims ? editCustomDims.h : 2);
+      if (res) {
+        if (res.w === 1 && res.h === 1) {
+          editSize.value = 'small';
+          btnEditCustomDims.style.display = 'none';
+        } else if (res.w === 2 && res.h === 2) {
+          editSize.value = 'medium';
+          btnEditCustomDims.style.display = 'none';
+        } else if (res.w === 4 && res.h === 2) {
+          editSize.value = 'wide';
+          btnEditCustomDims.style.display = 'none';
+        } else if (res.w === 4 && res.h === 4) {
+          editSize.value = 'large';
+          btnEditCustomDims.style.display = 'none';
+        } else {
+          editCustomDims = res;
+          editSize.value = 'custom';
+        }
+      }
+    };
+
     document.getElementById('btn-edit-cancel').onclick = hideModal;
     document.getElementById('btn-edit-save').onclick = () => {
       const iconUrl = document.getElementById('edit-icon-url').value.trim();
@@ -3576,6 +3610,13 @@ const App = (() => {
         return;
       }
 
+      let finalSize = document.getElementById('edit-size').value;
+      if (finalSize === 'custom' && editCustomDims) {
+        finalSize = `${editCustomDims.w}x${editCustomDims.h}`;
+      } else if (finalSize === 'custom') {
+        finalSize = tile.size; // fallback to original if custom was selected but dims not changed
+      }
+
       updateTile(tileId, {
         name: document.getElementById('edit-name').value.trim() || tile.name,
         icon: iconUrl || document.getElementById('edit-icon').value,
@@ -3583,7 +3624,7 @@ const App = (() => {
         forceSafari: forceSafari,
         iconForceWhite: iconForceWhite,
         iconScale: editIconScale,
-        size: document.getElementById('edit-size').value,
+        size: finalSize,
         color: document.getElementById('edit-color').value,
       }, folderId);
       hideModal();

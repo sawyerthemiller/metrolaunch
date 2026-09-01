@@ -378,8 +378,10 @@ function showSearchContextMenu(tileId, x, y) {
   if (!tile) return;
   
   const DEFAULT_APP_NAMES = ['weather', 'messages', 'chrome', 'maps', 'mail', 'camera', 'settings', 'photos', 'music', 'youtube'];
+  const isDefaultIcon = ['weather', 'message', 'chrome', 'map', 'mail', 'camera', 'settings', 'image', 'music', 'play'].includes(tile.icon);
+  const isDefaultUrl = ['weather://', 'messages://', 'googlechrome://', 'maps://', 'com.apple.mobilemail://', 'camera://', 'com.apple.Preferences://', 'com.apple.mobileslideshow://', 'music://', 'youtube://'].includes((tile.url || '').toLowerCase());
   const isLiveTile = tile.id.startsWith('__') || (tile.url || '').toLowerCase().startsWith('livecontainer://') || (tile.url || '').toLowerCase().startsWith('shortcuts://');
-  const isDefaultApp = DEFAULT_APP_NAMES.includes((tile.name || '').toLowerCase());
+  const isDefaultApp = DEFAULT_APP_NAMES.includes((tile.name || '').toLowerCase()) || isDefaultIcon || isDefaultUrl;
   const isSubmittable = !isDefaultApp && !isLiveTile;
   
   const consent = localStorage.getItem('metrolaunch_backend_consent') === '1';
