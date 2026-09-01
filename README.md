@@ -1,3 +1,5 @@
+NEW - check out the new 'advanced features' option in the settings
+
 > [!NOTE]  
 > MetroLaunch code is reusable but only with proper attribution... Do not steal code...
 >
