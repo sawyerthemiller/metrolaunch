@@ -956,7 +956,7 @@ const App = (() => {
         if (isWeatherTile(t)) iconF.innerHTML = svgIcon('weather');
         else if (isNewsTile(t)) iconF.innerHTML = svgIcon('news');
         else if (isSpotifyTile(t)) iconF.innerHTML = svgIcon('spotify');
-        else if (isEventsTile(t)) iconF.innerHTML = `<img src="system_icon/events.png" style="transform: scale(0.95); filter: brightness(0) invert(1);">`;
+        else if (isEventsTile(t)) iconF.innerHTML = `<img src="system_icon/events.png" style="transform: scale(0.90); filter: brightness(0) invert(1);">`;
         const labelF = document.createElement('div');
         labelF.className = 'tile-label';
         labelF.textContent = t.name;
@@ -4131,7 +4131,7 @@ const App = (() => {
               <span id="tp-h-val" style="font-size: 24px; font-weight: bold;">${h.toString().padStart(2, '0')}</span>
               <svg id="tp-h-dn" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div style="font-size: 40px; font-weight: bold; display: flex; align-items: center; padding-bottom: 8px;">:</div>
+            <div style="font-size: 40px; font-weight: bold; display: flex; align-items: center; padding-bottom: 8px; transform: translateX(5px);">:</div>
             <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
               <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Minute</span>
               <svg id="tp-m-up" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="18 15 12 9 6 15"/></svg>

@@ -50,9 +50,9 @@
   }
 
   function formatTime(mins) {
-    if (mins < 60) return `Happens in ${mins} minute${Number(mins) !== 1 ? 's' : ''}`;
+    if (mins < 60) return `Happens in ${String(mins).padStart(2, '0')} minute${Number(mins) !== 1 ? 's' : ''}`;
     const hrs = Math.round(mins / 60);
-    return `Happens in ${hrs} hour${Number(hrs) !== 1 ? 's' : ''}`;
+    return `Happens in ${String(hrs).padStart(2, '0')} hour${Number(hrs) !== 1 ? 's' : ''}`;
   }  function _renderEventsTile(el, alertMins) {
     const escHtml = deps.escHtml;
     const tile = deps.getTile(TILE_ID);

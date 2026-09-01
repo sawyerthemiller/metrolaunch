@@ -2215,6 +2215,7 @@ body.glossy-tiles .folder-chevron-face {
   font-weight: 600;
   opacity: 0.8;
   margin-top: calc(-2px * var(--live-tile-scale, 1));
+  margin-left: calc(-1px * var(--live-tile-scale, 1));
 }
 .events-center-zone {
   position: absolute;
