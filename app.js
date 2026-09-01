@@ -1011,7 +1011,7 @@ const App = (() => {
         }
         if (r > 0) badge.style.borderRadius = `${r}px`;
 
-        if (!isFolder(t)) {
+        if (!isFolder(t) && !isEventsTile(t)) {
           const handle = document.createElement('div');
           handle.className = 'resize-handle';
           if (r > 0) handle.style.borderRadius = `${r}px`;
@@ -1046,7 +1046,7 @@ const App = (() => {
         badge.addEventListener('touchend', badgeClick);
         if (r > 0) badge.style.borderRadius = `${r}px`;
 
-        if (!isFolder(t)) {
+        if (!isFolder(t) && !isEventsTile(t)) {
           const handle = document.createElement('div');
           handle.className = 'resize-handle';
           if (r > 0) handle.style.borderRadius = `${r}px`;
@@ -2102,7 +2102,7 @@ const App = (() => {
             if (r > 0) badge.style.borderRadius = `${r}px`;
             tileEl.appendChild(badge);
           }
-          if (!isFolder(t) && !tileEl.querySelector('.resize-handle')) {
+          if (!isFolder(t) && !tileEl.querySelector('.resize-handle') && !isEventsTile(t)) {
             const handle = document.createElement('div');
             handle.className = 'resize-handle';
             const r = parseFloat(tileEl.style.borderRadius) || 0;
