@@ -1,10 +1,3 @@
-/* ================================================================
-   METRO LAUNCHER — Spotify Service
-   ----------------------------------------------------------------
-   Owns polling of the Leopard status endpoint, the "Test" connection
-   check, DOM rendering of the Spotify live tile, and the artist/
-   track text cleaners.
-   ================================================================ */
 /** biome-ignore-all lint/suspicious/noGlobalIsNan: <explanation> */
 /** biome-ignore-all lint/correctness/noUnusedVariables: <explanation> */
 /** biome-ignore-all lint/complexity/useOptionalChain: <explanation> */
@@ -21,8 +14,6 @@
   let pollTimer = null;
   let nullCount = 0;
 
-  // Text cleaning regex numero dos
-
   function cleanArtistName(artist) {
     if (!artist) return '';
     if (deps && deps.getSettings && deps.getSettings().disableRegexCleaning) return artist.trim();
@@ -36,8 +27,6 @@
     return parsed;
   }
 
-  // Text cleaning regex numero tres
-
   function cleanTrackName(track) {
     if (!track) return '';
     if (deps && deps.getSettings && deps.getSettings().disableRegexCleaning) return track.trim();
@@ -46,8 +35,6 @@
     parsed = parsed.replace(/\$/g, 's');
     parsed = parsed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     parsed = parsed.replace(/&/g, 'and');
-    
-    // Strip apostrophes early so contractions don't break capitalisation (e.g. She's -> SheS)
     parsed = parsed.replace(/['’]/g, '');
 
     if (deps && deps.getSettings && deps.getSettings().spotifyCapitaliseSong) {
@@ -67,12 +54,8 @@
     });
     
     // Aesthetic cleanups
-    
-    // Remove spaces immediately inside parentheses and brackets
     parsed = parsed.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')');
     parsed = parsed.replace(/\[\s+/g, '[').replace(/\s+\]/g, ']');
-    
-    // Replace hyphens that are strictly bounded by letters/numbers with a space
     parsed = parsed.replace(/(\w)-(\w)/g, '$1 $2');
 
     parsed = parsed.replace(/\//g, ' ');
@@ -87,8 +70,6 @@
   function init(injected) {
     deps = injected;
   }
-
-  // When playback stops we want to keep the old back-face content visible while the tile flips
   const FLIP_MS = 550;
 
   function handlePlaybackChange(hadData) {
@@ -123,8 +104,6 @@
     const hadDataBefore = data !== null;
 
     if (!window.MetroRuntime || !window.MetroRuntime.Spotify) return Promise.resolve();
-
-    // Patch fetchStatus to guarantee cache bypass, even if the cached runtime is an older version
     window.MetroRuntime.Spotify.fetchStatus = function(uname) {
       return fetch(`https://leopardindustries.net:8088/metro.php?action=status&username=${encodeURIComponent(uname)}&_ml_reload=${Date.now()}`, { 
         method: 'POST',

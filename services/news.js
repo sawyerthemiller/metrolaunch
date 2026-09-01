@@ -1,10 +1,3 @@
-/* ================================================================
-   METRO LAUNCHER — News Service
-   ----------------------------------------------------------------
-   Owns all networking, caching, polling, and DOM rendering for the
-   news live tile (Hacker News). Also owns the headline
-   text-cleaning helper.
-   ================================================================ */
 /** biome-ignore-all lint/complexity/useOptionalChain: <explanation> */
 /** biome-ignore-all lint/complexity/useArrowFunction: <explanation> */
 
@@ -33,8 +26,6 @@
   let pollTimer = null;
   let hasLoaded = false;
   let hasFailed = false;
-
-  // Text cleaning regex numero uno
 
   function cleanHeadline(title) {
     if (!title) return '';

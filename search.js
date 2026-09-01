@@ -220,7 +220,9 @@ function renderSearchList() {
   
   tiles.forEach(tile => {
     if (!tile.name) return;
-    if (tile.visibility === 'tiles' || tile.isNews || tile.id === 'news-tile') return;
+    if (tile.visibility === 'tiles' || tile.isNews || tile.id === 'news-tile' || tile.id === '__events__' || tile.isEvents) return;
+    if (window.App.isNewsTile && window.App.isNewsTile(tile)) return;
+    if (window.App.isEventsTile && window.App.isEventsTile(tile)) return;
     
     const nameStr = tile.name.trim();
     if (!nameStr) return;
@@ -386,7 +388,7 @@ function showSearchContextMenu(tileId, x, y) {
   if (window.communityAPI && window.communityAPI.isSubmitEnabled() && isSubmittable && consent && runtimeReady) {
     submitHtml = `
       <div class="context-menu-item" data-action="submit">
-        <img src="share.png" style="width:16px; height:16px; margin-right:8px; object-fit:contain; filter: invert(1); transform: scale(1.1);"> Community Submit
+        <img src="system_icon/share.png" style="width:16px; height:16px; margin-right:8px; object-fit:contain; filter: invert(1); transform: scale(1.1);"> Community Submit
       </div>
       <div class="context-menu-divider"></div>
     `;

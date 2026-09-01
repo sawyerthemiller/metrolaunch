@@ -1,8 +1,3 @@
-/* ================================================================
-   METRO LAUNCHER — Application Logic
-
-   ...delete or undelete this line to test the app update system...
-   ================================================================ */
 /** biome-ignore-all lint/style/useTemplate: <explanation> */
 /** biome-ignore-all lint/suspicious/noGlobalIsNan: <explanation> */
 /** biome-ignore-all lint/style/useConst: <explanation> */
@@ -121,9 +116,7 @@ function syncVisualViewport() {
     
     if (lastKeyboardOpen) {
       keyboardCloseTimeout = setTimeout(() => {
-        // Nothing here may touch opacity: this selector also catches the haptic
-        // helpers, which are real <input switch> elements parked at opacity 0
-        // over buttons and toggles. Lifting that paints them as white dots.
+        // Nothing here may touch opacity
         document.querySelectorAll('input:not([type="range"]):not([type="hidden"])').forEach(el => el.blur());
         lastKeyboardOpen = false;
       }, 300);
@@ -151,11 +144,7 @@ document.addEventListener('focusin', (e) => {
   }
 });
 
-// iOS does not scroll a text field sideways to follow the caret, so scrubbing
-// the cursor (holding space to turn the keyboard into a trackpad) strands it in
-// the clipped tail of a long value. Measure where the caret actually sits and
-// move the field ourselves. Desktop already handles this, and there the caret
-// measures as visible, so this stays a no-op.
+// iOS does not scroll a text field sideways to follow the caret
 const caretRuler = document.createElement('canvas').getContext('2d');
 const CARET_SCROLL_EDGE = 8;
 
@@ -184,8 +173,7 @@ document.addEventListener('selectionchange', () => keepCaretVisible(document.act
 
 // prevent rubber-banding or overscroll on iOS globally
 document.addEventListener('touchmove', (e) => {
-  // let range sliders work natively, and leave text fields alone so iOS keeps
-  // its own caret dragging, selection and scrub gestures
+  // let range sliders work natively, and leave text fields alone
   if (e.target.closest('input[type="range"]')) return;
   if (e.target.closest('input:not([type="range"]):not([type="hidden"]), textarea, label')) return;
   const scrollEl = e.target.closest('.grid-scroll, .modal-sheet, .scrollable-y, .search-page');
@@ -357,12 +345,14 @@ const App = (() => {
   const WEATHER_TILE_ID = window.WeatherService.TILE_ID;
   const NEWS_TILE_ID = window.NewsService.TILE_ID;
   const SPOTIFY_TILE_ID = window.SpotifyService.TILE_ID;
+  const EVENTS_TILE_ID = window.EventsService ? window.EventsService.TILE_ID : '__events__';
   let liveTileIntervals = [];
 
   function isWeatherTile(t) { return t && t.id === WEATHER_TILE_ID; }
   function isNewsTile(t) { return t && t.id === NEWS_TILE_ID; }
   function isSpotifyTile(t) { return t && t.id === SPOTIFY_TILE_ID; }
-  function isSpecialTile(t) { return isWeatherTile(t) || isNewsTile(t) || isSpotifyTile(t); }
+  function isEventsTile(t) { return t && t.id === EVENTS_TILE_ID; }
+  function isSpecialTile(t) { return isWeatherTile(t) || isNewsTile(t) || isSpotifyTile(t) || isEventsTile(t); }
   function isFolder(t) { return t && t.type === 'folder'; }
 
   function flipTile(inner, show) {
@@ -447,10 +437,22 @@ const App = (() => {
         liveTileIntervals.push(setTimeout(spotifyCycle, 7000 + Math.random() * 5000));
       }, delay));
     }
+    function scheduleEvents() {
+      const delay = 5000 + Math.random() * 3000;
+      liveTileIntervals.push(setTimeout(function eventsCycle() {
+        const el = document.querySelector(`[data-id="${EVENTS_TILE_ID}"] .live-tile-inner`);
+        if (el && navigator.onLine && window.EventsService && !editMode && !el.classList.contains('is-flipped')) {
+          flipTile(el, true);
+          liveTileIntervals.push(setTimeout(() => flipTile(el, false), 4000 + Math.random() * 2000));
+        }
+        liveTileIntervals.push(setTimeout(eventsCycle, 8000 + Math.random() * 4000));
+      }, delay));
+    }
 
     scheduleWeather();
     scheduleNews();
     scheduleSpotify();
+    scheduleEvents();
   }
 
   // DEFAULT TILES
@@ -585,7 +587,6 @@ const App = (() => {
       contentH += folderExpandedContainerEl.offsetHeight;
     }
     // Extra room only while editing/dragging so tiles can be moved past the last row
-    // Outside edit mode, snug the grid to its actual content so it doesn't scroll for no reason
     const baseBuffer = editMode ? 120 : 0;
     const navBuffer = settings.windowsNavBar ? (50 + (parseInt(settings.navBarPaddingBottom ?? 20, 10))) : 0;
     
@@ -595,7 +596,7 @@ const App = (() => {
       if (!parentH || parentH < 100) {
         parentH = window.innerHeight - 60;
       }
-      // Top padding 8px + 4px visual clearance = 12px. Bottom padding doesn't matter for navbar collision.
+      // Top padding
       if (contentH + 12 <= parentH - navBuffer) {
         effectiveNavBuffer = 0;
       }
@@ -623,7 +624,7 @@ const App = (() => {
   function load() {
     try {
       const ver = parseInt(localStorage.getItem(VERSION_KEY), 10);
-      // Accept version 6 (pre-folders) and migrate transparently
+      // Accept version 6 and migrate transparently
       if (ver !== DATA_VERSION && ver !== 6) {
         localStorage.removeItem(STORAGE_KEY);
         return null;
@@ -632,7 +633,7 @@ const App = (() => {
       if (raw) {
         const p = JSON.parse(raw);
         if (Array.isArray(p) && p.length) {
-          // Migrate: save as new version
+          // Migrate
           if (ver === 6) {
             localStorage.setItem(VERSION_KEY, DATA_VERSION);
           }
@@ -707,6 +708,12 @@ const App = (() => {
     // header title
     const titleText = settings.headerTitle || 'Hello';
     document.querySelectorAll('.header h1').forEach(el => { el.textContent = titleText; });
+
+    // hide app store shortcut
+    const storeBtn = document.getElementById('btn-store');
+    const storeBtnM = document.getElementById('btn-store-m');
+    if (storeBtn) storeBtn.style.display = settings.hideStoreShortcut ? 'none' : 'flex';
+    if (storeBtnM) storeBtnM.style.display = settings.hideStoreShortcut ? 'none' : 'flex';
 
     // label alignment
     const lAlign = settings.labelAlignment || 'under-icon';
@@ -896,7 +903,7 @@ const App = (() => {
         el.dataset.size = 'medium'; // folders are always medium
         const isExpanded = expandedFolderId === t.id;
 
-        // Collapsed face: count + name + "Folder"
+        // Collapsed face
         const countFace = document.createElement('div');
         countFace.className = 'folder-count-face';
         countFace.style.display = isExpanded ? 'none' : 'flex';
@@ -912,7 +919,7 @@ const App = (() => {
         countFace.append(countEl, nameEl, folderLabel);
         el.appendChild(countFace);
 
-        // Expanded face: chevron only
+        // Expanded face
         const chevronFace = document.createElement('div');
         chevronFace.className = 'folder-chevron-face';
         chevronFace.style.display = isExpanded ? 'flex' : 'none';
@@ -948,6 +955,7 @@ const App = (() => {
         if (isWeatherTile(t)) iconF.innerHTML = svgIcon('weather');
         else if (isNewsTile(t)) iconF.innerHTML = svgIcon('news');
         else if (isSpotifyTile(t)) iconF.innerHTML = svgIcon('spotify');
+        else if (isEventsTile(t)) iconF.innerHTML = `<img src="system_icon/events.png" style="transform: scale(0.95); filter: brightness(0) invert(1);">`;
         const labelF = document.createElement('div');
         labelF.className = 'tile-label';
         labelF.textContent = t.name;
@@ -966,6 +974,9 @@ const App = (() => {
           } else if (isSpotifyTile(t)) {
             face.className = 'live-tile-face spotify-face';
             c.className = 'spotify-content';
+          } else if (isEventsTile(t)) {
+            face.className = 'live-tile-face events-face';
+            c.className = 'events-back-content';
           }
           face.appendChild(c);
           return face;
@@ -989,6 +1000,11 @@ const App = (() => {
         } else if (isSpotifyTile(t)) {
           badge.innerHTML = UI_SVG.pencil;
           const editClick = (e) => { e.stopPropagation(); e.preventDefault(); showSpotifyEditor(); };
+          badge.addEventListener('click', editClick);
+          badge.addEventListener('touchend', editClick);
+        } else if (isEventsTile(t)) {
+          badge.innerHTML = UI_SVG.pencil;
+          const editClick = (e) => { e.stopPropagation(); e.preventDefault(); showEventsEditor(); };
           badge.addEventListener('click', editClick);
           badge.addEventListener('touchend', editClick);
         }
@@ -1065,6 +1081,7 @@ const App = (() => {
     WeatherService.updateFace();
     NewsService.updateFace();
     SpotifyService.updateFace();
+    if (window.EventsService) window.EventsService.updateFace();
   }
 
   // TILE CRAP
@@ -1992,12 +2009,7 @@ const App = (() => {
     overlay.appendChild(wrapper);
     document.body.appendChild(overlay);
 
-    // The tap that started this launch still has a click coming, and that click
-    // is what toggles the haptic switch under the tile. The .animate class turns
-    // this overlay into a hit target two frames from now, so it has to stay out
-    // of hit testing until the click has been delivered or it swallows it and
-    // the tile opens with no haptic. Folders never hit this, which is why they
-    // are the one tap that always buzzes.
+    // The tap that started this launch still has a click coming
     overlay.style.pointerEvents = 'none';
     setTimeout(() => { overlay.style.pointerEvents = ''; }, 350);
 
@@ -2275,7 +2287,7 @@ const App = (() => {
     const snapRow = Math.max(0, Math.round(newY / (cellSize + GRID_GAP)));
 
     // ---- Folder hover detection ----
-    // We only allow dropping into EXISTING folders. No folder creation via drag-and-drop.
+    // We only allow dropping into EXISTING folders
     let hoverTarget = null;
     const dragS = TILE_SIZES[tile.size];
     if (!isSpecialTile(tile) && !isFolder(tile)) {
@@ -2346,7 +2358,7 @@ const App = (() => {
         });
       }
 
-      // Pass `true` for ignoreFolders during drag so folders don't run away!
+      // Pass `true` for ignoreFolders
       const origCol = tile.col, origRow = tile.row;
       tile.col = snapCol;
       tile.row = snapRow;
@@ -2718,6 +2730,7 @@ const App = (() => {
     const isW = tileId === WEATHER_TILE_ID;
     const isN = tileId === NEWS_TILE_ID;
     const isS = tileId === SPOTIFY_TILE_ID;
+    const isE = tileId === EVENTS_TILE_ID;
     const tileObj = tiles.find(t => t.id === tileId);
     
     // If tile not in global array, check if it's in the expanded folder
@@ -2736,6 +2749,10 @@ const App = (() => {
         <div class="context-menu-item" data-action="edit">${UI_SVG.pencil} Edit folder</div>
         <div class="context-menu-divider"></div>
         <div class="context-menu-item danger" data-action="delete">${UI_SVG.trash} Remove folder</div>
+      `;
+    } else if (isE) {
+      menu.innerHTML = `
+        <div class="context-menu-item" data-action="edit">${UI_SVG.pencil} Edit events</div>
       `;
     } else if (isW || isN || isS) {
       let label = 'Edit tile';
@@ -2756,7 +2773,7 @@ const App = (() => {
         <div class="context-menu-item" data-action="resize-medium">${UI_SVG.resize_m} Medium</div>
         <div class="context-menu-item" data-action="resize-wide">${UI_SVG.resize_w} Wide</div>
         <div class="context-menu-item" data-action="resize-large">${UI_SVG.resize_l} Large</div>
-        <div class="context-menu-item" data-action="resize-custom"><img src="paint.png" style="width: 13px; height: 13px; filter: brightness(0) invert(1); object-fit: contain;"> Custom Size</div>
+        <div class="context-menu-item" data-action="resize-custom"><img src="system_icon/paint.png" style="width: 13px; height: 13px; filter: brightness(0) invert(1); object-fit: contain;"> Custom Size</div>
         <div class="context-menu-divider"></div>
         <div class="context-menu-item danger" data-action="delete">${UI_SVG.trash} Remove</div>
       `;
@@ -2776,6 +2793,7 @@ const App = (() => {
         } else if (isW) showWeatherEditor();
         else if (isN) showNewsEditor();
         else if (isS) showSpotifyEditor();
+        else if (isE) showEventsEditor();
         else showTileEditor(tileId);
       }
       else if (action === 'delete') {
@@ -2984,7 +3002,7 @@ const App = (() => {
     // to fetch and cache the fresh files from the network instead of the HTTP cache
     const criticalFiles = [
       './', './index.html', './style.css', './app.js',
-      './services/weather.js', './services/news.js', './services/spotify.js',
+      './services/weather.js', './services/news.js', './services/spotify.js', './services/events.js',
       './version.txt'
     ];
     try {
@@ -3590,7 +3608,7 @@ const App = (() => {
         </select>
       </div>
       <div class="form-group">
-        <label>Postal / Zip Code</label>
+        <label>Postal or Zip Code</label>
         <input type="text" spellcheck="false" autocorrect="off" id="weather-zip" value="${escHtml(settings.weatherZip)}" placeholder="e.g. 90210 or SW1A 1AA" autocomplete="off" inputmode="text">
       </div>
       <div class="form-group">
@@ -4006,6 +4024,374 @@ const App = (() => {
     };
   }
 
+  function showMetroPrompt(title, description, placeholder, initialValue = '') {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'confirm-overlay';
+      overlay.style.zIndex = '3200';
+      overlay.innerHTML =
+        `<div class="confirm-box">` +
+        `<h3>${escHtml(title)}</h3>` +
+        `<p>${escHtml(description)}</p>` +
+        `<input type="text" spellcheck="false" autocorrect="off" class="metro-input" id="metro-prompt-input" placeholder="${escHtml(placeholder)}" value="${escHtml(initialValue)}">` +
+        `<div class="confirm-actions">` +
+        `<button class="confirm-cancel">Cancel</button>` +
+        `<button class="confirm-ok" style="color:#fff; border-color:var(--accent, #0078d4);">OK</button>` +
+        `</div>` +
+        `</div>`;
+      document.body.appendChild(overlay);
+
+      const input = overlay.querySelector('#metro-prompt-input');
+      requestAnimationFrame(() => { input.focus(); input.select(); });
+
+      overlay.querySelector('.confirm-cancel').onclick = () => {
+        overlay.remove();
+        resolve(null);
+      };
+      overlay.querySelector('.confirm-ok').onclick = () => {
+        const val = input.value;
+        overlay.remove();
+        resolve(val);
+      };
+      overlay.onclick = (e) => {
+        if (e.target === overlay) {
+          overlay.remove();
+          resolve(null);
+        }
+      };
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') overlay.querySelector('.confirm-ok').click();
+        if (e.key === 'Escape') overlay.querySelector('.confirm-cancel').click();
+      };
+    });
+  }
+
+  async function showEventsTimePicker(initialTime) {
+    return new Promise((resolve) => {
+      // time picker modal similar to custom dimensions
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay visible';
+      overlay.style.display = 'flex';
+      overlay.style.zIndex = '3100';
+      
+      let [h, m] = initialTime ? initialTime.split(':').map(Number) : [12, 0];
+
+      overlay.innerHTML = `
+        <div class="modal-sheet" style="margin-bottom: 30px; text-align: center;">
+          <h2>Select Time</h2>
+          <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+              <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Hour</span>
+              <svg id="tp-h-up" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="18 15 12 9 6 15"/></svg>
+              <span id="tp-h-val" style="font-size: 24px; font-weight: bold;">${h.toString().padStart(2, '0')}</span>
+              <svg id="tp-h-dn" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div style="font-size: 40px; font-weight: bold; display: flex; align-items: center; padding-bottom: 8px;">:</div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+              <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Minute</span>
+              <svg id="tp-m-up" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="18 15 12 9 6 15"/></svg>
+              <span id="tp-m-val" style="font-size: 24px; font-weight: bold;">${m.toString().padStart(2, '0')}</span>
+              <svg id="tp-m-dn" viewBox="0 0 24 24" style="width: 24px; height: 24px; cursor: pointer; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" id="tp-cancel">Cancel</button>
+            <button class="btn-primary" id="tp-save">Set Time</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      void overlay.offsetWidth;
+      if (window.applyHaptics) window.applyHaptics(overlay.querySelectorAll('button, svg'));
+
+      const hVal = overlay.querySelector('#tp-h-val');
+      const mVal = overlay.querySelector('#tp-m-val');
+
+      const updateUI = () => {
+        hVal.textContent = h.toString().padStart(2, '0');
+        mVal.textContent = m.toString().padStart(2, '0');
+        overlay.querySelector('#tp-h-up').style.opacity = h === 23 ? '0.3' : '1';
+        overlay.querySelector('#tp-h-dn').style.opacity = h === 0 ? '0.3' : '1';
+        overlay.querySelector('#tp-m-up').style.opacity = m === 59 ? '0.3' : '1';
+        overlay.querySelector('#tp-m-dn').style.opacity = m === 0 ? '0.3' : '1';
+      };
+
+      overlay.querySelector('#tp-h-up').onclick = () => { if (h < 23) h++; updateUI(); };
+      overlay.querySelector('#tp-h-dn').onclick = () => { if (h > 0) h--; updateUI(); };
+      overlay.querySelector('#tp-m-up').onclick = () => { if (m < 59) m++; updateUI(); };
+      overlay.querySelector('#tp-m-dn').onclick = () => { if (m > 0) m--; updateUI(); };
+
+      updateUI();
+
+      overlay.querySelector('#tp-cancel').onclick = () => { overlay.remove(); resolve(null); };
+      overlay.querySelector('#tp-save').onclick = () => { overlay.remove(); resolve(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`); };
+    });
+  }
+
+  async function showEventsEditor() {
+    const tile = tiles.find(t => t.id === EVENTS_TILE_ID);
+    if (!tile) return;
+    
+    let data = tile.eventsData ? JSON.parse(JSON.stringify(tile.eventsData)) : { alertMins: 20, schedule: {1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[]} };
+    if (!data.schedule) data.schedule = {1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[]};
+    let activeDay = 1;
+    let selectedEventIds = new Set();
+    
+    await showModal(`
+      <h2>Events Tile</h2>
+      <div style="display:flex; align-items: center; border: 1.5px solid var(--text); border-radius: 0; margin-bottom: 12px; height: 36px;">
+        <button id="evt-btn-copy" style="flex:1; background:transparent; border:none; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <div style="width: 1.5px; height: 100%; background-color: var(--text);"></div>
+        <button id="evt-btn-paste" style="flex:1; background:transparent; border:none; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+        </button>
+        <div style="width: 1.5px; height: 100%; background-color: var(--text);"></div>
+        <button id="evt-btn-del" style="flex:1; background:transparent; border:none; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0;" title="Delete Selected">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
+        <div style="width: 1.5px; height: 100%; background-color: var(--text);"></div>
+        <button id="evt-btn-add" style="flex:1; background:transparent; border:none; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); padding: 0;">
+           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+      <div id="evt-days-container" style="display:flex; justify-content:space-between; position:relative; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.2);"></div>
+      <div id="evt-list-container" class="scrollable-y" style="max-height: 250px; min-height: 150px; margin-bottom: 16px;"></div>
+      
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label>Alert me (minutes before)</label>
+        <input type="number" id="evt-alert-mins" value="${data.alertMins || 20}" min="1" max="60" class="metro-input">
+      </div>
+      <div class="toggle-row" style="margin-bottom: 24px;">
+        <span class="toggle-label" style="line-height: 1.3; padding-right: 12px;">Do not show events coming up<br>tomorrow or next week today</span>
+        <div id="evt-hide-future" class="toggle-switch${data.hideFuture ? ' on' : ''}"></div>
+      </div>
+      <div class="modal-actions" style="margin-top: 24px;">
+        <button id="evt-btn-cancel">Cancel</button>
+        <button id="evt-btn-save">Save</button>
+      </div>
+    `);
+
+    const daysContainer = document.getElementById('evt-days-container');
+    const listContainer = document.getElementById('evt-list-container');
+
+    const renderTabs = () => {
+      if (!daysContainer.innerHTML) {
+        const labels = ['M','T','W','T','F','S','S'];
+        let html = '';
+        labels.forEach((l, i) => {
+          html += `<div class="evt-day-tab" data-day="${i+1}" style="cursor:pointer; flex:1; text-align:center; position:relative; font-weight:bold;">${l}</div>`;
+        });
+        html += `<div id="evt-day-slider" style="position:absolute; bottom:-2px; left:0; height:2px; background-color:#3b82f6; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), width 0.3s cubic-bezier(0.25, 1, 0.5, 1);"></div>`;
+        daysContainer.innerHTML = html;
+        
+        daysContainer.querySelectorAll('.evt-day-tab').forEach(el => {
+          el.onclick = () => {
+            activeDay = parseInt(el.dataset.day);
+            selectedEventIds.clear();
+            updateTabUI();
+            renderList();
+          };
+        });
+      }
+      updateTabUI();
+    };
+
+    const updateTabUI = () => {
+      const tabs = daysContainer.querySelectorAll('.evt-day-tab');
+      let activeEl = null;
+      tabs.forEach(el => {
+        const isAct = parseInt(el.dataset.day) === activeDay;
+        if (isAct) {
+          el.classList.add('active');
+          activeEl = el;
+        } else {
+          el.classList.remove('active');
+        }
+      });
+      const slider = document.getElementById('evt-day-slider');
+      if (slider && activeEl) {
+        slider.style.width = activeEl.offsetWidth + 'px';
+        slider.style.transform = `translateX(${activeEl.offsetLeft}px)`;
+      }
+    };
+
+    const renderList = () => {
+      const dayEvents = data.schedule[activeDay] || [];
+      let html = '';
+      if (dayEvents.length === 0) {
+        html = `<div style="text-align:center; padding: 20px; opacity: 0.5;">No events for this day</div>`;
+      } else {
+        const sorted = dayEvents.sort((a,b) => {
+           let [hA,mA] = a.time.split(':').map(Number);
+           let [hB,mB] = b.time.split(':').map(Number);
+           return (hA*60+mA) - (hB*60+mB);
+        });
+        sorted.forEach((ev, i) => {
+          const isSel = selectedEventIds.has(ev.id);
+          const isLast = i === sorted.length - 1;
+          const borderStyle = isLast ? 'border-bottom:none;' : 'border-bottom:1px solid rgba(255,255,255,0.1);';
+          html += `
+            <div class="events-list-item" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; ${borderStyle}">
+               <div class="events-sel-circle${isSel ? ' sel' : ''}" data-evid="${ev.id}" style="width:18px; height:18px; border-radius:50%; border:2px solid ${isSel ? '#3b82f6' : 'var(--text)'}; cursor:pointer; background:${isSel ? '#3b82f6' : 'transparent'}; flex-shrink:0; display:flex; align-items:center; justify-content:center; position:relative; top:1px;">
+                 ${isSel ? '<div style="width:8px; height:8px; background:white; border-radius:50%;"></div>' : ''}
+               </div>
+               <div class="events-item-name" style="flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; cursor:pointer;" data-evid="${ev.id}">${escHtml(ev.name)}</div>
+               <button class="btn-secondary events-loc-btn" data-evid="${ev.id}" style="padding:4px 8px; flex:none;">${ev.location ? 'L O C' : 'L O C'}</button>
+               <button class="btn-secondary events-time-btn" data-evid="${ev.id}" style="padding:4px 8px; flex:none;">${ev.time}</button>
+            </div>
+          `;
+        });
+      }
+      listContainer.innerHTML = html;
+
+      listContainer.querySelectorAll('.events-sel-circle').forEach(el => {
+        el.onclick = () => {
+          const id = el.dataset.evid;
+          if (selectedEventIds.has(id)) selectedEventIds.delete(id);
+          else selectedEventIds.add(id);
+          renderList();
+        };
+      });
+
+      listContainer.querySelectorAll('.events-loc-btn').forEach(el => {
+        el.onclick = async () => {
+          const id = el.dataset.evid;
+          const ev = data.schedule[activeDay].find(e => e.id === id);
+          if (!ev) return;
+          const loc = await showMetroPrompt('Location', 'Enter location...', 'Location', ev.location || '');
+          if (loc !== null) {
+            ev.location = loc.trim();
+            renderList();
+          }
+        };
+      });
+
+      listContainer.querySelectorAll('.events-item-name').forEach(el => {
+        el.onclick = async () => {
+          const id = el.dataset.evid;
+          const ev = data.schedule[activeDay].find(e => e.id === id);
+          if (!ev) return;
+          const name = await showMetroPrompt('Event Name', 'Enter event name...', 'Event name', ev.name);
+          if (name !== null && name.trim()) {
+            ev.name = name.trim();
+            renderList();
+          }
+        };
+      });
+
+      listContainer.querySelectorAll('.events-time-btn').forEach(el => {
+        el.onclick = async () => {
+          const id = el.dataset.evid;
+          const ev = data.schedule[activeDay].find(e => e.id === id);
+          if (!ev) return;
+          const time = await showEventsTimePicker(ev.time);
+          if (time !== null) {
+            // Check for conflict
+            if (data.schedule[activeDay].some(e => e.time === time && e.id !== id)) {
+               showToast('Event conflicts with other');
+               return;
+            }
+            ev.time = time;
+            renderList();
+          }
+        };
+      });
+    };
+
+    renderTabs();
+    renderList();
+
+    document.getElementById('evt-btn-add').onclick = async () => {
+      const name = await showMetroPrompt('New Event', 'Please enter an event name...', 'Event name', 'New Event');
+      if (!name || !name.trim()) return;
+      const time = await showEventsTimePicker();
+      if (!time) return;
+      
+      if (data.schedule[activeDay].some(e => e.time === time)) {
+         showToast('Event conflicts with other');
+         return;
+      }
+
+      data.schedule[activeDay].push({
+        id: 'ev_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+        name: name.trim(),
+        time: time,
+        location: ''
+      });
+      renderList();
+    };
+
+    document.getElementById('evt-btn-copy').onclick = () => {
+      if (selectedEventIds.size === 0) {
+        showToast('Select events to copy');
+        return;
+      }
+      const toCopy = data.schedule[activeDay].filter(e => selectedEventIds.has(e.id));
+      window.__eventsClipboard = JSON.parse(JSON.stringify(toCopy));
+      showToast(`Copied event or events`);
+      selectedEventIds.clear();
+      renderList();
+    };
+
+    document.getElementById('evt-btn-paste').onclick = () => {
+      if (!window.__eventsClipboard || window.__eventsClipboard.length === 0) {
+        showToast('Clipboard empty');
+        return;
+      }
+      let pasted = 0;
+      window.__eventsClipboard.forEach(clipEv => {
+        // Prevent exact time conflict on paste
+        if (!data.schedule[activeDay].some(e => e.time === clipEv.time)) {
+          let newEv = JSON.parse(JSON.stringify(clipEv));
+          newEv.id = 'ev_' + Date.now() + '_' + Math.floor(Math.random()*1000) + pasted;
+          data.schedule[activeDay].push(newEv);
+          pasted++;
+        }
+      });
+      if (pasted < window.__eventsClipboard.length) {
+        showToast('Event conflicts with other');
+      } else {
+        showToast(`Pasted event or events`);
+      }
+      renderList();
+    };
+
+    document.getElementById('evt-btn-del').onclick = () => {
+      if (selectedEventIds.size === 0) {
+        showToast('Select events to delete');
+        return;
+      }
+      data.schedule[activeDay] = data.schedule[activeDay].filter(e => !selectedEventIds.has(e.id));
+      showToast(`Deleted event or events`);
+      selectedEventIds.clear();
+      renderList();
+    };
+
+    const hideFutureToggle = document.getElementById('evt-hide-future');
+    hideFutureToggle.onclick = () => {
+      hideFutureToggle.classList.toggle('on');
+    };
+
+    document.getElementById('evt-btn-cancel').onclick = hideModal;
+    document.getElementById('evt-btn-save').onclick = () => {
+      let alertVal = parseInt(document.getElementById('evt-alert-mins').value, 10);
+      if (isNaN(alertVal) || alertVal < 1) alertVal = 20;
+      if (alertVal > 60) alertVal = 60;
+      data.alertMins = alertVal;
+      data.hideFuture = hideFutureToggle.classList.contains('on');
+      
+      updateTile(EVENTS_TILE_ID, {
+        eventsData: data,
+        size: 'wide'
+      });
+      if (window.EventsService) window.EventsService.start();
+      hideModal();
+      showToast('Events tile updated');
+    };
+  }
+
   // SETTINGS MODAL
   function sectionClass(key) {
     return settings.collapsedSections?.[key] ? ' collapsed' : '';
@@ -4042,17 +4428,17 @@ const App = (() => {
         <div class="form-group">
           <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Blur <span><span id="blur-val">${settings.bgBlur}</span>px</span></label>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('bg-blur', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('bg-blur', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
             <input type="range" id="bg-blur" min="0" max="60" value="${settings.bgBlur}" style="flex: 1; width: 0;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('bg-blur', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('bg-blur', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
           </div>
         </div>
         <div class="form-group">
           <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Darken <span><span id="darken-val">${settings.bgDarken || 0}</span>%</span></label>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('bg-darken', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('bg-darken', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
             <input type="range" id="bg-darken" min="0" max="90" value="${settings.bgDarken || 0}" style="flex: 1; width: 0;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('bg-darken', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('bg-darken', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
           </div>
         </div>
         <div class="modal-actions" style="margin-bottom: 8px;">
@@ -4071,25 +4457,25 @@ const App = (() => {
         <div class="form-group">
           <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Opacity <span><span id="opacity-val">${settings.tileOpacity != null ? settings.tileOpacity : 85}</span>%</span></label>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-opacity', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-opacity', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
             <input type="range" id="tile-opacity" min="10" max="100" value="${settings.tileOpacity != null ? settings.tileOpacity : 85}" style="flex: 1; width: 0;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-opacity', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-opacity', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
           </div>
         </div>
         <div class="form-group">
           <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Blur <span><span id="tile-blur-val">${settings.tileBlur || 0}</span>px</span></label>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-blur', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-blur', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
             <input type="range" id="tile-blur" min="0" max="40" value="${settings.tileBlur || 0}" style="flex: 1; width: 0;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-blur', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-blur', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
           </div>
         </div>
         <div class="form-group">
           <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Border Radius <span><span id="radius-val">${settings.tileRadius || 0}</span>px</span></label>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-radius', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('tile-radius', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
             <input type="range" id="tile-radius" min="0" max="24" value="${settings.tileRadius || 0}" style="flex: 1; width: 0;">
-            <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-radius', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('tile-radius', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
           </div>
         </div>
       </div>
@@ -4127,6 +4513,10 @@ const App = (() => {
         <div class="toggle-row">
           <span class="toggle-label">News tile</span>
           <div class="toggle-switch${settings.newsEnabled ? ' on' : ''}" id="news-toggle"></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Events tile</span>
+          <div class="toggle-switch${settings.eventsEnabled ? ' on' : ''}" id="events-toggle"></div>
         </div>
         <div class="toggle-row">
           <span class="toggle-label">Force lowercase news</span>
@@ -4405,6 +4795,15 @@ const App = (() => {
       newsToggle.classList.toggle('on', newsOn);
     };
 
+    let eventsOn = !!settings.eventsEnabled;
+    const eventsToggle = document.getElementById('events-toggle');
+    if (eventsToggle) {
+      eventsToggle.onclick = () => {
+        eventsOn = !eventsOn;
+        eventsToggle.classList.toggle('on', eventsOn);
+      };
+    }
+
     let newsLc = !!settings.newsLowercase;
     const newsLcToggle = document.getElementById('news-lc-toggle');
     const newsCapToggle = document.getElementById('news-cap-toggle');
@@ -4585,18 +4984,18 @@ const App = (() => {
             <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-padding-group">
               <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">How much to move up <span class="val" id="nav-padding-val">${settings.navBarPaddingBottom ?? 20}px</span></label>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+                <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
                 <input type="range" class="metro-range" id="nav-padding-slider" min="0" max="100" value="${settings.navBarPaddingBottom ?? 20}" style="flex: 1; width: 0;">
-                <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+                <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-padding-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
               </div>
             </div>
 
             <div class="form-group" style="opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'}; margin-bottom: 16px;" id="nav-gap-group">
               <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Space between buttons <span class="val" id="nav-gap-val">${settings.navBarButtonGap ?? 100}px</span></label>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+                <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
                 <input type="range" class="metro-range" id="nav-gap-slider" min="30" max="130" value="${settings.navBarButtonGap ?? 100}" style="flex: 1; width: 0;">
-                <img src="arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+                <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
               </div>
             </div>
           </div>
@@ -5021,10 +5420,10 @@ const App = (() => {
 
       const REQUIRED_ASSETS = [
         './', './index.html', './style.css', './app.js', './search.js', './community.js',
-        './services/weather.js', './services/news.js', './services/spotify.js',
+        './services/weather.js', './services/news.js', './services/spotify.js', './services/events.js',
         './manifest.json', './version.txt', './ios-haptics.js',
         './segoe-ui-supro.otf',
-        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './share.png', './arrow-rite.png', './exit.png', './pull.png', './store.png', './paint.png',
+        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './system_icon/share.png', './system_icon/arrow-rite.png', './system_icon/exit.png', './system_icon/pull.png', './system_icon/store.png', './system_icon/paint.png', './system_icon/walk.png', './system_icon/zzz.png', './system_icon/events.png',
         './weather_bg/01d.jpg', './weather_bg/01n.jpg',
         './weather_bg/02d.jpg', './weather_bg/02n.jpg',
         './weather_bg/03d.jpg', './weather_bg/03n.jpg',
@@ -5082,8 +5481,9 @@ const App = (() => {
           else if (asset === './services/weather.js') cat = 'Service - Weather';
           else if (asset === './services/news.js') cat = 'Service - News';
           else if (asset === './services/spotify.js') cat = 'Service - Spotify';
+          else if (asset === './services/events.js') cat = 'Service - Events';
           else if (asset === './segoe-ui-supro.otf') cat = 'Asset - Font';
-          else if (asset.includes('navbar_icon') || asset === './share.png' || asset === './arrow-rite.png' || asset === './exit.png' || asset === './pull.png' || asset === './store.png' || asset === './paint.png') cat = 'Asset - Icons';
+          else if (asset.includes('navbar_icon') || asset === './system_icon/share.png' || asset === './system_icon/arrow-rite.png' || asset === './system_icon/exit.png' || asset === './system_icon/pull.png' || asset === './system_icon/store.png' || asset === './system_icon/paint.png' || asset === './system_icon/walk.png' || asset === './system_icon/zzz.png' || asset === './system_icon/events.png') cat = 'Asset - Icons';
           else if (asset.includes('weather_bg')) cat = 'Asset - Weather Images';
           
           if (cat && !found) categoryStatus[cat] = false;
@@ -5177,6 +5577,7 @@ const App = (() => {
       settings.hideDynamicContent = hdcEnabled;
       settings.disableDateInHeader = disableDateEnabled;
       settings.hideSearchIcons = hideSearchIconsEnabled;
+      settings.hideStoreShortcut = hideStoreEnabled;
       settings.lightHeader = lhOn;
       settings.hideSmallLabels = hslOn;
       settings.gridlock = gridlockOn;
@@ -5194,6 +5595,8 @@ const App = (() => {
       const wasNewsOn = settings.newsEnabled;
       settings.newsEnabled = newsOn;
       settings.newsLowercase = newsLc;
+      const newsCap = document.getElementById('news-cap-toggle').classList.contains('on');
+      const eventsOn = document.getElementById('events-toggle').classList.contains('on');
       settings.newsCapitaliseFirst = newsCap;
 
       const wasWeatherOn = settings.weatherEnabled !== false;
@@ -5202,6 +5605,9 @@ const App = (() => {
       const wasSpotifyOn = settings.spotifyEnabled;
       settings.spotifyEnabled = spotifyOn;
       settings.spotifyCapitaliseSong = spotifyCap;
+
+      const wasEventsOn = settings.eventsEnabled;
+      settings.eventsEnabled = eventsOn;
 
       applySettings();
 
@@ -5219,6 +5625,14 @@ const App = (() => {
       } else if (!spotifyOn && wasSpotifyOn) {
         removeSpotifyTile();
         SpotifyService.stop();
+      }
+
+      if (eventsOn && !wasEventsOn) {
+        ensureEventsTile();
+        EventsService.start();
+      } else if (!eventsOn && wasEventsOn) {
+        removeEventsTile();
+        EventsService.stop();
       }
 
       if (weatherOn && !wasWeatherOn) {
@@ -5278,6 +5692,19 @@ const App = (() => {
 
   function removeSpotifyTile() {
     tiles = tiles.filter(t => t.id !== SPOTIFY_TILE_ID);
+    save();
+  }
+
+  // EVENTS TILE MANAGEMENT
+  function ensureEventsTile() {
+    if (tiles.find(t => t.id === EVENTS_TILE_ID)) return;
+    const spot = findNextFreeSpot('wide');
+    tiles.push({ id: EVENTS_TILE_ID, name: 'Events', icon: 'events', url: '', color: '#8b5cf6', size: 'wide', col: spot.col, row: spot.row, isEvents: true });
+    save();
+  }
+
+  function removeEventsTile() {
+    tiles = tiles.filter(t => t.id !== EVENTS_TILE_ID);
     save();
   }
 
@@ -5583,9 +6010,12 @@ const App = (() => {
     WeatherService.init(serviceDeps);
     NewsService.init(serviceDeps);
     SpotifyService.init(serviceDeps);
+    if (window.EventsService) window.EventsService.init(serviceDeps);
 
     // ensure news tile if enabled
     if (settings.newsEnabled) ensureNewsTile();
+    // ensure events tile if enabled
+    if (settings.eventsEnabled) ensureEventsTile();
 
     applySettings();
 
@@ -5660,6 +6090,7 @@ const App = (() => {
     startLiveTileFlip();
     if (settings.newsEnabled) NewsService.start();
     if (settings.spotifyEnabled) SpotifyService.start();
+    if (settings.eventsEnabled && window.EventsService) window.EventsService.start();
 
     // Live network status handling
     window.addEventListener('online', () => {
@@ -5975,7 +6406,7 @@ const App = (() => {
     showModal(html);
   }
 
-  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, saveSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile, updateTile, deleteTile, markTileSeen };
+  return { init, hideModal, showToast, getTiles, getFlatTiles, getSettings, saveSettings, launchApp, flipTile, getTileIconHtml, showAdvancedIconControl, addTile, updateTile, deleteTile, markTileSeen, isEventsTile, isNewsTile };
 })();
 
 window.App = App;
@@ -5989,10 +6420,7 @@ document.addEventListener('DOMContentLoaded', App.init);
         const wrapper = document.createElement('div');
         wrapper.className = 'input-blur-wrapper';
         wrapper.style.position = 'relative';
-        // Block rather than flex: the field only has to fill the wrapper, and
-        // blockifying it collapses the inline baseline gap that would otherwise
-        // leave the wrapper taller than the field and drop the copy out of
-        // vertical alignment.
+        // Block rather than flex
         wrapper.style.display = 'block';
         input.style.display = 'block';
         
@@ -6043,11 +6471,6 @@ document.addEventListener('DOMContentLoaded', App.init);
         
         const paint = () => {
           // While the field is being edited the copy is taken out of the layout
-          // rather than just made transparent, so there is only ever one text
-          // field on the page while typing. Nothing is rewritten on repeat:
-          // this also runs on the field's own scroll events, and touching
-          // styles mid-scroll can cancel the scroll that is bringing the caret
-          // into view.
           if (document.activeElement === input) {
             if (overlay.style.display !== 'none') {
               overlay.style.opacity = '0';
@@ -6084,11 +6507,6 @@ document.addEventListener('DOMContentLoaded', App.init);
         };
         
         // Swapping the text under the live blur leaves the old glyphs smeared
-        // into the tail, so drop both copies of the tail and rebuild them: the
-        // overlay's box is torn down, and the field's own faded tail (drawn with
-        // background-clip:text) is forced to repaint by restarting the
-        // stylesheet's repaint animation. Neither invalidates on its own when
-        // the value is replaced from code.
         const syncReplaced = () => {
           holdHidden = true;
           overlay.style.display = 'none';
@@ -6105,8 +6523,7 @@ document.addEventListener('DOMContentLoaded', App.init);
         input.addEventListener('input', sync);
         input.addEventListener('scroll', sync);
         
-        // Assigning input.value from code fires no events, so without this the
-        // overlay keeps painting whatever the user last typed.
+        // Assigning input.value from code fires no events
         const nativeValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
         if (nativeValue && nativeValue.configurable) {
           Object.defineProperty(input, 'value', {
