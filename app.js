@@ -6140,6 +6140,10 @@ const App = (() => {
 
     // Live network status handling
     window.addEventListener('online', () => {
+      WeatherService.updateFace();
+      NewsService.updateFace();
+      SpotifyService.updateFace();
+      if (window.EventsService) window.EventsService.updateFace();
       if (settings.weatherZip) WeatherService.fetchData();
       if (settings.newsEnabled) NewsService.fetchData();
       if (settings.spotifyEnabled) SpotifyService.fetchData();
