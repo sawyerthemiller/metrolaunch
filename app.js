@@ -1374,7 +1374,7 @@ const App = (() => {
       }
     });
 
-    let maxSimulatedY = 0;
+    let maxSimulatedY = folderBottomPx + expandHeight;
 
     tempTiles.forEach(tTemp => {
       if (tTemp.id === folder.id) return;
@@ -3492,10 +3492,10 @@ const App = (() => {
           <option value="small"${tile.size === 'small' ? ' selected' : ''}>Small (1x1)</option>
           <option value="medium"${tile.size === 'medium' ? ' selected' : ''}>Medium (2x2)</option>
           <option value="wide"${tile.size === 'wide' ? ' selected' : ''}>Wide (4x2)</option>
-          <option value="large"${tile.size === 'large' ? ' selected' : ''}>Large (4x4)</option>
-          <option value="custom"${!['small', 'medium', 'wide', 'large'].includes(tile.size) ? ' selected' : ''}>Custom</option>
+          ${!folderId ? `<option value="large"${tile.size === 'large' ? ' selected' : ''}>Large (4x4)</option>
+          <option value="custom"${!['small', 'medium', 'wide', 'large'].includes(tile.size) ? ' selected' : ''}>Custom</option>` : ''}
         </select>
-        <button class="btn-secondary" id="btn-edit-custom-dims" style="display:${!['small', 'medium', 'wide', 'large'].includes(tile.size) ? 'block' : 'none'}; margin-top: 10px; width: 100%;">Customise Dimensions</button>
+        <button class="btn-secondary" id="btn-edit-custom-dims" style="display:${!folderId && !['small', 'medium', 'wide', 'large'].includes(tile.size) ? 'block' : 'none'}; margin-top: 10px; width: 100%;">Customise Dimensions</button>
       </div>
       <div class="form-group" id="edit-color-group" style="${settings.globalColorEnabled ? 'display:none' : ''}">
         <label>Color</label>
