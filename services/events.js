@@ -110,7 +110,7 @@
         `;
       }
       
-      const nameStr = nextEvent.location ? `${nextEvent.name} - ${nextEvent.location}` : nextEvent.name;
+      const nameStr = nextEvent.location ? `${nextEvent.name}  -  ${nextEvent.location}` : nextEvent.name;
 
       centerHtml = `
         <div class="events-center-zone alert">
