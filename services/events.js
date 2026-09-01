@@ -110,7 +110,7 @@
         `;
       }
       
-      const nameStr = nextEvent.location ? `${nextEvent.name}  -  ${nextEvent.location}` : nextEvent.name;
+      const nameStr = nextEvent.location ? `${escHtml(nextEvent.name)}&nbsp;&nbsp;-&nbsp;&nbsp;${escHtml(nextEvent.location)}` : escHtml(nextEvent.name);
 
       centerHtml = `
         <div class="events-center-zone alert">
@@ -118,7 +118,7 @@
             <img src="system_icon/walk.png" style="width: calc(34px * var(--live-tile-scale, 1)); height: calc(34px * var(--live-tile-scale, 1)); filter: brightness(0) invert(1); margin-right: calc(12px * var(--live-tile-scale, 1)); object-fit: contain; flex-shrink: 0;">
             <div style="display: flex; flex-direction: column; overflow: hidden; width: 100%;">
               <span style="font-size: calc(22px * var(--live-tile-scale, 1)); font-weight: 300; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: calc(-3px * var(--live-tile-scale, 1)); padding-bottom: 0px;">${String(nextEvent.minsFromNow).padStart(2, '0')} ${nextEvent.minsFromNow === 1 ? 'minute' : 'minutes'}</span>
-              <div style="font-size: calc(14px * var(--live-tile-scale, 1)); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px;">${escHtml(nameStr)}</div>
+              <div style="font-size: calc(13px * var(--live-tile-scale, 1)); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px;">${nameStr}</div>
             </div>
           </div>
         </div>
