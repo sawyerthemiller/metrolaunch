@@ -26,6 +26,7 @@ const ASSETS_TO_CACHE = [
     './system_icon/walk.png',
     './system_icon/zzz.png',
     './system_icon/events.png',
+    './system_icon/no-repeat.png',
     './weather_bg/01d.jpg',
     './weather_bg/01n.jpg',
     './weather_bg/02d.jpg',

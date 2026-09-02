@@ -23,6 +23,25 @@
 
     let allUpcoming = [];
     
+    let noRepeatModified = false;
+    let remainingNoRepeat = [];
+    if (schedule[0]) {
+      for (const ev of schedule[0]) {
+        const [h, m] = ev.time.split(':').map(Number);
+        const evMins = h * 60 + m;
+        if (evMins <= currentMins) {
+          noRepeatModified = true;
+        } else {
+          remainingNoRepeat.push(ev);
+          allUpcoming.push({ ...ev, minsFromNow: evMins - currentMins });
+        }
+      }
+      if (noRepeatModified) {
+        schedule[0] = remainingNoRepeat;
+        if (deps.updateTile) deps.updateTile(TILE_ID, { eventsData: data });
+      }
+    }
+    
     // Scan up to 8 days to find the next few events
     for (let dayOffset = 0; dayOffset < 8; dayOffset++) {
       if (hideFuture && dayOffset > 0) break;
@@ -36,8 +55,10 @@
         const evMins = h * 60 + m;
         
         // If it's today, check if it's in the future
-        if (dayOffset === 0 && evMins <= currentMins) {
-          continue;
+        if (dayOffset === 0) {
+          if (evMins <= currentMins) continue;
+          // No-repeat (day 0) events take priority over regular scheduled events at the same time
+          if (schedule[0] && schedule[0].some(e => e.time === ev.time)) continue;
         }
         
         let totalMinsFromNow = (dayOffset * 24 * 60) + evMins - currentMins;
@@ -50,10 +71,12 @@
   }
 
   function formatTime(mins) {
-    if (mins < 60) return `Happens in ${String(mins).padStart(2, '0')} minute${Number(mins) !== 1 ? 's' : ''}`;
+    if (mins < 60) return `Happens in about ${String(mins).padStart(2, '0')} minute${Number(mins) !== 1 ? 's' : ''}`;
     const hrs = Math.round(mins / 60);
-    return `Happens in ${String(hrs).padStart(2, '0')} hour${Number(hrs) !== 1 ? 's' : ''}`;
-  }  function _renderEventsTile(el, alertMins) {
+    return `Happens in about ${String(hrs).padStart(2, '0')} hour${Number(hrs) !== 1 ? 's' : ''}`;
+  }
+
+  function _renderEventsTile(el, alertMins) {
     const escHtml = deps.escHtml;
     const tile = deps.getTile(TILE_ID);
     const data = tile?.eventsData || { alertMins: 20, schedule: {} };
@@ -61,7 +84,7 @@
 
     // Check if empty schedule
     let isEmpty = true;
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 0; i <= 7; i++) {
       if (data.schedule[i] && data.schedule[i].length > 0) {
         isEmpty = false; break;
       }
@@ -118,7 +141,7 @@
             <img src="system_icon/walk.png" style="width: calc(34px * var(--live-tile-scale, 1)); height: calc(34px * var(--live-tile-scale, 1)); filter: brightness(0) invert(1); margin-right: calc(12px * var(--live-tile-scale, 1)); object-fit: contain; flex-shrink: 0;">
             <div style="display: flex; flex-direction: column; overflow: hidden; width: 100%;">
               <span style="font-size: calc(22px * var(--live-tile-scale, 1)); font-weight: 300; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: calc(-3px * var(--live-tile-scale, 1)); padding-bottom: 0px;">${String(nextEvent.minsFromNow).padStart(2, '0')} ${nextEvent.minsFromNow === 1 ? 'minute' : 'minutes'}</span>
-              <div style="font-size: calc(13px * var(--live-tile-scale, 1)); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px;">${nameStr}</div>
+              <div style="margin-left: 0.5px; font-size: calc(13px * var(--live-tile-scale, 1)); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px;">${nameStr}</div>
             </div>
           </div>
         </div>

@@ -4177,8 +4177,9 @@ const App = (() => {
     const tile = tiles.find(t => t.id === EVENTS_TILE_ID);
     if (!tile) return;
     
-    let data = tile.eventsData ? JSON.parse(JSON.stringify(tile.eventsData)) : { alertMins: 20, schedule: {1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[]} };
-    if (!data.schedule) data.schedule = {1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[]};
+    let data = tile.eventsData ? JSON.parse(JSON.stringify(tile.eventsData)) : { alertMins: 20, schedule: {0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[]} };
+    if (!data.schedule) data.schedule = {0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[]};
+    if (!data.schedule[0]) data.schedule[0] = [];
     let activeDay = 1;
     let selectedEventIds = new Set();
     
@@ -4225,6 +4226,7 @@ const App = (() => {
       if (!daysContainer.innerHTML) {
         const labels = ['M','T','W','T','F','S','S'];
         let html = '';
+        html += `<div class="evt-day-tab" data-day="0" style="cursor:pointer; flex:1; text-align:center; position:relative; display: flex; align-items: center; justify-content: center;"><img src="system_icon/no-repeat.png" style="width: 14px; height: 14px; filter: brightness(0) invert(1);"></div>`;
         labels.forEach((l, i) => {
           html += `<div class="evt-day-tab" data-day="${i+1}" style="cursor:pointer; flex:1; text-align:center; position:relative; font-weight:bold;">${l}</div>`;
         });
@@ -4265,8 +4267,11 @@ const App = (() => {
     const renderList = () => {
       const dayEvents = data.schedule[activeDay] || [];
       let html = '';
+      if (activeDay === 0) {
+        html += `<div style="font-size: 12px; opacity: 0.8; margin-bottom: 8px; text-align: center;">Events added here apply to today only and will be deleted once completed...</div>`;
+      }
       if (dayEvents.length === 0) {
-        html = `<div style="text-align:center; padding: 20px; opacity: 0.5;">No events for this day</div>`;
+        html += `<div style="text-align:center; padding: 20px; opacity: 0.5;">No events for this day</div>`;
       } else {
         const sorted = dayEvents.sort((a,b) => {
            let [hA,mA] = a.time.split(':').map(Number);
@@ -5468,7 +5473,7 @@ const App = (() => {
         './services/weather.js', './services/news.js', './services/spotify.js', './services/events.js',
         './manifest.json', './version.txt', './ios-haptics.js',
         './segoe-ui-supro.otf',
-        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './system_icon/share.png', './system_icon/arrow-rite.png', './system_icon/exit.png', './system_icon/pull.png', './system_icon/store.png', './system_icon/paint.png', './system_icon/walk.png', './system_icon/zzz.png', './system_icon/events.png',
+        './navbar_icon/back.png', './navbar_icon/start.png', './navbar_icon/search.png', './system_icon/share.png', './system_icon/arrow-rite.png', './system_icon/exit.png', './system_icon/pull.png', './system_icon/store.png', './system_icon/paint.png', './system_icon/walk.png', './system_icon/zzz.png', './system_icon/events.png', './system_icon/no-repeat.png',
         './weather_bg/01d.jpg', './weather_bg/01n.jpg',
         './weather_bg/02d.jpg', './weather_bg/02n.jpg',
         './weather_bg/03d.jpg', './weather_bg/03n.jpg',
@@ -5529,7 +5534,7 @@ const App = (() => {
           else if (asset === './services/spotify.js') cat = 'Service - Spotify';
           else if (asset === './services/events.js') cat = 'Service - Events';
           else if (asset === './segoe-ui-supro.otf') cat = 'Asset - Font';
-          else if (asset.includes('navbar_icon') || asset === './system_icon/share.png' || asset === './system_icon/arrow-rite.png' || asset === './system_icon/exit.png' || asset === './system_icon/pull.png' || asset === './system_icon/store.png' || asset === './system_icon/paint.png' || asset === './system_icon/walk.png' || asset === './system_icon/zzz.png' || asset === './system_icon/events.png') cat = 'Asset - Icons';
+          else if (asset.includes('navbar_icon') || asset === './system_icon/share.png' || asset === './system_icon/arrow-rite.png' || asset === './system_icon/exit.png' || asset === './system_icon/pull.png' || asset === './system_icon/store.png' || asset === './system_icon/paint.png' || asset === './system_icon/walk.png' || asset === './system_icon/zzz.png' || asset === './system_icon/events.png' || asset === './system_icon/no-repeat.png') cat = 'Asset - Icons';
           else if (asset.includes('weather_bg')) cat = 'Asset - Weather Images';
           
           if (cat && !found) categoryStatus[cat] = false;
@@ -6052,6 +6057,7 @@ const App = (() => {
         const inner = document.querySelector(`[data-id="${id}"] .live-tile-inner`);
         if (inner) flipTile(inner, false);
       },
+      updateTile,
     };
     WeatherService.init(serviceDeps);
     NewsService.init(serviceDeps);

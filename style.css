@@ -2212,7 +2212,8 @@ body.glossy-tiles .folder-chevron-face {
 }
 .events-top-time {
   font-size: calc(12px * var(--live-tile-scale, 1));
-  font-weight: 600;
+  font-weight: 300;
+  text-shadow: 0 0 0.4px rgba(255, 255, 255, 0.6), 0 0 0.4px rgba(255, 255, 255, 0.6);
   opacity: 0.8;
   margin-top: calc(-2px * var(--live-tile-scale, 1));
   margin-left: calc(-0.5px * var(--live-tile-scale, 1));
