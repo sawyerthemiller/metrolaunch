@@ -141,7 +141,7 @@
             <img src="system_icon/walk.png" style="width: calc(34px * var(--live-tile-scale, 1)); height: calc(34px * var(--live-tile-scale, 1)); filter: brightness(0) invert(1); margin-right: calc(12px * var(--live-tile-scale, 1)); object-fit: contain; flex-shrink: 0;">
             <div style="display: flex; flex-direction: column; overflow: hidden; width: 100%;">
               <span style="font-size: calc(22px * var(--live-tile-scale, 1)); font-weight: 300; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: calc(-3px * var(--live-tile-scale, 1)); padding-bottom: 0px;">${String(nextEvent.minsFromNow).padStart(2, '0')} ${nextEvent.minsFromNow === 1 ? 'minute' : 'minutes'}</span>
-              <div style="margin-left: 0.5px; font-size: calc(13px * var(--live-tile-scale, 1)); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px;">${nameStr}</div>
+              <div style="margin-left: 1px; font-size: calc(13px * var(--live-tile-scale, 1)); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px;">${nameStr}</div>
             </div>
           </div>
         </div>
