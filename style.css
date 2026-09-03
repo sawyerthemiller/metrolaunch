@@ -1282,7 +1282,7 @@ body.disable-forced-font #btn-info-m span {
 }
 
 .btn-primary {
-  border-color: var(--accent) !important;
+  border-color: #fff !important;
 }
 
 .btn-danger {
