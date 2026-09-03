@@ -4597,6 +4597,10 @@ const App = (() => {
           <div class="toggle-switch${settings.disableDateInHeader ? ' on' : ''}" id="disable-date-toggle"></div>
         </div>
         <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also move the main text to be vertically aligned</div>
+        <div class="toggle-row">
+          <span class="toggle-label">Hide app names on small tiles</span>
+          <div class="toggle-switch${settings.hideSmallLabels ? ' on' : ''}" id="hsl-toggle"></div>
+        </div>
         <div class="toggle-row" style="opacity: ${settings.advancedEnabled && settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.advancedEnabled && settings.windowsNavBar ? 'auto' : 'none'};">
           <span class="toggle-label">Hide app icons in search</span>
           <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideSearchIcons ? ' on' : ''}" id="hide-search-icons-toggle"></div>
@@ -4629,10 +4633,6 @@ const App = (() => {
         <div class="toggle-row">
           <span class="toggle-label">Dark header text</span>
           <div class="toggle-switch${settings.lightHeader ? ' on' : ''}" id="light-header-toggle"></div>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">Hide app names on small tiles</span>
-          <div class="toggle-switch${settings.hideSmallLabels ? ' on' : ''}" id="hsl-toggle"></div>
         </div>
         <div class="toggle-row">
           <span class="toggle-label">Gridlock</span>
@@ -4989,7 +4989,6 @@ const App = (() => {
             </div>
             <div id="adv-warning-collapsed" style="max-height: ${settings.advWarningCollapsed ? '100px' : '0px'}; opacity: ${settings.advWarningCollapsed ? '1' : '0'}; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease;">
               <div style="display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); font-size: 13px; font-weight: bold; padding: 4px 0;">
-                <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="margin-right: 8px; color: #facc15;"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
                 View Warning Information
               </div>
             </div>

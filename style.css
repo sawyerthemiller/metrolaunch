@@ -1282,7 +1282,7 @@ body.disable-forced-font #btn-info-m span {
 }
 
 .btn-primary {
-  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--accent) !important;
 }
 
 .btn-danger {
