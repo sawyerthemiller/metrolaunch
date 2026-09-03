@@ -2023,7 +2023,7 @@ const App = (() => {
     setTimeout(() => {
       try {
         if (settings.demoModeEnabled && tile.type !== 'folder' && tile.id !== '__news__') {
-          metroAlert('Demo Mode', 'Cannot open app while in demo mode');
+          metroAlert('Demo Mode', 'Cannot open an app while in demo mode');
         } else {
           executeLaunch(tile);
         }
