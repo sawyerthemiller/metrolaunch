@@ -2941,11 +2941,11 @@ const App = (() => {
     
     let btnHtml = '';
     if (reverseBtns) {
-      btnHtml = `<button class="confirm-danger" style="color:${color}; border-color:${color}; --btn-color:${color};">${dangerLabel}</button>` +
+      btnHtml = `<button class="confirm-danger" style="border-color:${color}; --btn-color:${color};">${dangerLabel}</button>` +
                 `<button class="confirm-cancel">Cancel</button>`;
     } else {
       btnHtml = `<button class="confirm-cancel">Cancel</button>` +
-                `<button class="confirm-danger" style="color:${color}; border-color:${color}; --btn-color:${color};">${dangerLabel}</button>`;
+                `<button class="confirm-danger" style="border-color:${color}; --btn-color:${color};">${dangerLabel}</button>`;
     }
 
     overlay.innerHTML =
@@ -4453,7 +4453,7 @@ const App = (() => {
       <h2>Settings</h2>
       
       <div class="modal-actions" style="margin-bottom:12px;${settings.hideDonateButton ? ' display:none;' : ''}" id="donate-btn-wrapper">
-        <button class="btn-secondary" id="settings-donate" style="color:#22c55e; border-color:#22c55e;">Donate / Support Me</button>
+        <button class="btn-secondary" id="settings-donate" style="border-color:#22c55e;">Donate / Support Me</button>
       </div>
 
       <div class="form-section-title${sectionClass('general')}" data-section="general">General <span class="section-chevron">\u25BC</span></div>
@@ -4463,7 +4463,7 @@ const App = (() => {
           <button class="btn-secondary" id="settings-restore">Restore Launcher Data</button>
         </div>
         <div class="modal-actions" style="margin-bottom:12px;">
-          <button class="btn-secondary" id="settings-reset" style="color:#ff9800; border-color:#ff9800;">Reset Launcher</button>
+          <button class="btn-secondary" id="settings-reset" style="border-color:#ff9800;">Reset Launcher</button>
         </div>
       </div>
 
@@ -4675,10 +4675,10 @@ const App = (() => {
       <div class="section-body${sectionClass('cache')}" id="sec-cache">
         <div class="modal-actions" style="margin-bottom:8px;">
           <button class="btn-secondary" id="settings-sw-check">Service Worker Check</button>
-          <button class="btn-secondary" id="settings-purge-cache" style="color:#0078d4; border-color:#0078d4;">Update App</button>
+          <button class="btn-secondary" id="settings-purge-cache" style="border-color:#0078d4;">Update App</button>
         </div>
         <div class="modal-actions" style="margin-bottom:0;">
-          <button class="btn-secondary" id="settings-uninstall" style="color:#ff6b6b; border-color:#ff6b6b;">!! Uninstall !!</button>
+          <button class="btn-secondary" id="settings-uninstall" style="border-color:#ff6b6b;">!! Uninstall !!</button>
         </div>
       </div>
 
@@ -4973,8 +4973,12 @@ const App = (() => {
             <div id="adv-warning-expanded" style="max-height: ${settings.advWarningCollapsed ? '0px' : '400px'}; opacity: ${settings.advWarningCollapsed ? '0' : '1'}; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease;">
               <div style="padding-bottom: 4px;">
                 <div style="display: flex; align-items: stretch;">
-                  <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0 12px 10px 0; color: #facc15;">
-                    <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                  <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0 12px 10px 0;">
+                    <svg viewBox="0 0 100 100" width="28" height="28">
+                      <polygon points="50,10 95,88 5,88" fill="none" stroke="#facc15" stroke-width="8" stroke-linejoin="miter" />
+                      <rect x="46" y="36" width="8" height="26" fill="#fff" />
+                      <rect x="46" y="68" width="8" height="8" fill="#fff" />
+                    </svg>
                   </div>
                   <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
                   <div style="flex: 1; padding-left: 12px; padding-bottom: 12px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
