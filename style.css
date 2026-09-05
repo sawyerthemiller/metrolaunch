@@ -1096,7 +1096,7 @@ body.is-desktop .modal-sheet {
   color: transparent;
   -webkit-text-fill-color: transparent;
   background-image: 
-    linear-gradient(to left, rgba(255, 255, 255, 0) 15px, rgba(255, 255, 255, 0.3) 40px, rgba(255, 255, 255, 0.7) 70px, var(--text) 100px),
+    linear-gradient(to left, rgba(255, 255, 255, 0) 15px, rgba(255, 255, 255, 0.1) 60px, rgba(255, 255, 255, 0.8) 110px, var(--text) 130px),
     linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04));
   background-origin: padding-box, border-box;
   background-repeat: no-repeat, no-repeat;

@@ -6510,14 +6510,14 @@ document.addEventListener('DOMContentLoaded', App.init);
         overlay.style.background = 'transparent';
         overlay.style.borderColor = 'transparent';
         
-        overlay.style.color = 'rgba(255, 255, 255, 0.5)';
-        overlay.style.webkitTextFillColor = 'rgba(255, 255, 255, 0.5)';
+        overlay.style.color = 'rgba(255, 255, 255, 0.10)';
+        overlay.style.webkitTextFillColor = 'rgba(255, 255, 255, 0.10)';
         overlay.style.backgroundImage = 'none';
         
-        overlay.style.filter = 'blur(1.25px)';
-        overlay.style.webkitFilter = 'blur(1.25px)';
-        overlay.style.maskImage = 'linear-gradient(to right, transparent calc(100% - 75px), black calc(100% - 12px))';
-        overlay.style.webkitMaskImage = 'linear-gradient(to right, transparent calc(100% - 75px), black calc(100% - 12px))';
+        overlay.style.filter = 'blur(1.65px)';
+        overlay.style.webkitFilter = 'blur(1.65px)';
+        overlay.style.maskImage = 'linear-gradient(to right, transparent calc(100% - 110px), black calc(100% - 40px), transparent calc(100% - 12px))';
+        overlay.style.webkitMaskImage = 'linear-gradient(to right, transparent calc(100% - 110px), black calc(100% - 40px), transparent calc(100% - 12px))';
         overlay.style.transition = 'opacity 0.2s';
         overlay.style.zIndex = '10';
         overlay.tabIndex = -1;

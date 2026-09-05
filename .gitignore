@@ -6,3 +6,6 @@ backends/
 
 # Garbage from changes
 __pycache__/
+
+# Used to reset repo
+reset.sh
