@@ -6345,7 +6345,7 @@ const App = (() => {
     const tile = getFlatTiles().find(t => t.id === id);
     if (!tile) return;
 
-    const isLiveTile = tile.isWeather || tile.isNews || tile.isSpotify;
+    const isLiveTile = tile.isWeather || tile.isNews || tile.isSpotify || tile.isEvents;
     const isModified = tile.visibility && tile.visibility !== 'both';
     const currentVis = tile.visibility || 'both';
 
@@ -6356,10 +6356,10 @@ const App = (() => {
     window._advSave = function() {
       const t = getFlatTiles().find(x => x.id === window._advTileId);
       if (!t) return;
-      const isLive = t.isWeather || t.isNews || t.isSpotify;
+      const isLive = t.isWeather || t.isNews || t.isSpotify || t.isEvents;
       
       if (isLive) {
-        if (t.isNews) {
+        if (t.isNews || t.isEvents) {
           t.visibility = 'tiles';
         } else {
           const cbLive = document.getElementById('adv-live-hide');
@@ -6428,7 +6428,7 @@ const App = (() => {
     `;
 
     if (isLiveTile) {
-      const isNews = tile.isNews;
+      const isNews = tile.isNews || tile.isEvents;
       html += `
         <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">The live tiles can only be hidden from search, so to get rid of a live tile on the start screen, turn it off in the settings...</div>
         <div class="form-group" style="display:flex; align-items:center; cursor:${isNews ? 'not-allowed' : 'pointer'}; opacity: ${isNews ? '0.5' : '1'};" onclick="${isNews ? '' : 'window._advToggleLiveCb()'}">
