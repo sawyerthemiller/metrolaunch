@@ -363,6 +363,11 @@ body:not(.is-desktop) .header {
   stroke: #000;
 }
 
+.header.light-bg .search-actions #btn-store img,
+.header.light-bg .search-actions #btn-store-m img {
+  filter: brightness(0);
+}
+
 .header.light-bg .header-btn:hover {
   background: rgba(0, 0, 0, 0.08);
 }
