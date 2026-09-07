@@ -288,6 +288,11 @@ body:not(.is-desktop) .header {
   z-index: 100;
 }
 
+.header.light-bg .header-menu {
+  background: #fff;
+  border-color: #000;
+}
+
 .header-menu.active {
   opacity: 1;
   pointer-events: auto;

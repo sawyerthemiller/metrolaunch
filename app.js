@@ -719,11 +719,16 @@ const App = (() => {
     const titleText = settings.headerTitle || 'Hello';
     document.querySelectorAll('.header h1').forEach(el => { el.textContent = titleText; });
 
-    // hide app store shortcut
+    // hide app store shortcut and info button
     const storeBtn = document.getElementById('btn-store');
     const storeBtnM = document.getElementById('btn-store-m');
     if (storeBtn) storeBtn.style.display = settings.hideStoreShortcut ? 'none' : 'flex';
     if (storeBtnM) storeBtnM.style.display = settings.hideStoreShortcut ? 'none' : 'flex';
+
+    const infoBtn = document.getElementById('btn-info');
+    const infoBtnM = document.getElementById('btn-info-m');
+    if (infoBtn) infoBtn.style.display = settings.hideInfoButton ? 'none' : 'flex';
+    if (infoBtnM) infoBtnM.style.display = settings.hideInfoButton ? 'none' : 'flex';
 
     // label alignment
     const lAlign = settings.labelAlignment || 'under-icon';
@@ -4615,6 +4620,10 @@ const App = (() => {
           <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideSearchIcons ? ' on' : ''}" id="hide-search-icons-toggle"></div>
         </div>
         <div class="toggle-row" style="opacity: ${settings.advancedEnabled && settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.advancedEnabled && settings.windowsNavBar ? 'auto' : 'none'};">
+          <span class="toggle-label">Hide info button in header</span>
+          <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideInfoButton ? ' on' : ''}" id="hide-info-toggle"></div>
+        </div>
+        <div class="toggle-row" style="opacity: ${settings.advancedEnabled && settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.advancedEnabled && settings.windowsNavBar ? 'auto' : 'none'};">
           <span class="toggle-label">Hide app store shortcut</span>
           <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideStoreShortcut ? ' on' : ''}" id="hide-store-toggle"></div>
         </div>
@@ -4628,7 +4637,7 @@ const App = (() => {
           <div class="toggle-switch${settings.glossyTiles ? ' on' : ''}" id="glossy-tiles-toggle"></div>
         </div>
         <div id="glossy-style-selector" style="display: ${settings.glossyTiles ? 'flex' : 'none'}; align-items: center; justify-content: space-between; margin-bottom: 16px; margin-top: -8px;">
-          <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">Glossy style</span>
+          <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">Gloss direction and gradient</span>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
             <button type="button" class="header-btn" id="inp-gloss-style-minus"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <span id="inp-gloss-style-val" style="min-width:60px; text-align:center; font-size:15px;">style - ${settings.glossyStyle === 2 ? 'b' : 'a'}</span>
@@ -4639,8 +4648,12 @@ const App = (() => {
           <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Gloss Intensity <span><span id="gloss-intensity-val">${settings.glossIntensity != null ? settings.glossIntensity : 100}</span>%</span></label>
           <div style="display: flex; align-items: center; gap: 8px;">
             <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('gloss-intensity-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
-            <input type="range" id="gloss-intensity-slider" min="0" max="200" value="${settings.glossIntensity != null ? settings.glossIntensity : 100}" style="flex: 1; width: 0;">
+            <input type="range" id="gloss-intensity-slider" min="10" max="150" value="${settings.glossIntensity != null ? settings.glossIntensity : 100}" style="flex: 1; width: 0;">
             <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('gloss-intensity-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top: 6px; padding: 0 24px; font-size: 12px; color: var(--text-muted);">
+            <span>Damp</span>
+            <span>Frosty</span>
           </div>
         </div>
         <div class="toggle-row">
@@ -4794,10 +4807,21 @@ const App = (() => {
 
     let hideSearchIconsEnabled = (settings.advancedEnabled && settings.windowsNavBar) ? !!settings.hideSearchIcons : false;
     const hideSearchIconsToggle = document.getElementById('hide-search-icons-toggle');
-    hideSearchIconsToggle.onclick = () => {
-      hideSearchIconsEnabled = !hideSearchIconsEnabled;
-      hideSearchIconsToggle.classList.toggle('on', hideSearchIconsEnabled);
-    };
+    if (hideSearchIconsToggle) {
+      hideSearchIconsToggle.onclick = () => {
+        hideSearchIconsEnabled = !hideSearchIconsEnabled;
+        hideSearchIconsToggle.classList.toggle('on', hideSearchIconsEnabled);
+      };
+    }
+
+    let hideInfoEnabled = (settings.advancedEnabled && settings.windowsNavBar) ? !!settings.hideInfoButton : false;
+    const hideInfoToggle = document.getElementById('hide-info-toggle');
+    if (hideInfoToggle) {
+      hideInfoToggle.onclick = () => {
+        hideInfoEnabled = !hideInfoEnabled;
+        hideInfoToggle.classList.toggle('on', hideInfoEnabled);
+      };
+    }
 
     let hideStoreEnabled = (settings.advancedEnabled && settings.windowsNavBar) ? !!settings.hideStoreShortcut : false;
     const hideStoreToggle = document.getElementById('hide-store-toggle');
@@ -4955,19 +4979,28 @@ const App = (() => {
     const advToggle = document.getElementById('advanced-toggle');
     const advPill = document.getElementById('settings-adv');
     
-    function updateHideSearchIconsState() {
-      const hideIconsRow = hideSearchIconsToggle.parentElement;
-      if (advOn && settings.windowsNavBar) {
-        hideIconsRow.style.opacity = '1';
-        hideIconsRow.style.pointerEvents = 'auto';
-      } else {
-        if (hideSearchIconsEnabled) {
-          hideSearchIconsEnabled = false;
-          hideSearchIconsToggle.classList.remove('on');
+    function updateWindowsNavBarDependentSettingsState() {
+      const toggles = [
+        { enabled: hideSearchIconsEnabled, el: hideSearchIconsToggle, setEnabled: (v) => hideSearchIconsEnabled = v },
+        { enabled: hideInfoEnabled, el: hideInfoToggle, setEnabled: (v) => hideInfoEnabled = v },
+        { enabled: hideStoreEnabled, el: hideStoreToggle, setEnabled: (v) => hideStoreEnabled = v }
+      ];
+
+      toggles.forEach(t => {
+        if (!t.el) return;
+        const row = t.el.parentElement;
+        if (advOn && settings.windowsNavBar) {
+          row.style.opacity = '1';
+          row.style.pointerEvents = 'auto';
+        } else {
+          if (t.enabled) {
+            t.setEnabled(false);
+            t.el.classList.remove('on');
+          }
+          row.style.opacity = '0.5';
+          row.style.pointerEvents = 'none';
         }
-        hideIconsRow.style.opacity = '0.5';
-        hideIconsRow.style.pointerEvents = 'none';
-      }
+      });
     }
 
     if (advToggle) {
@@ -4982,7 +5015,7 @@ const App = (() => {
         advOn = !advOn;
         advToggle.classList.toggle('on', advOn);
         advPill.disabled = !advOn;
-        updateHideSearchIconsState();
+        updateWindowsNavBarDependentSettingsState();
       };
       advPill.onclick = async () => {
         settings.advancedEnabled = advOn;
@@ -5085,12 +5118,12 @@ const App = (() => {
             </div>
             <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">very experimental and will mess up your current layout</div>
             
-            <div id="grid-size-selector" style="display: ${settings.resizeGridEnabled ? 'flex' : 'none'}; justify-content: center; margin-bottom: 16px;">
-              <div style="display: flex; background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 4px; position: relative; width: 180px;">
-                <div id="grid-size-slider" style="position: absolute; top: 4px; left: ${(settings.gridCols === 4 || settings.gridCols === 12) ? '4px' : (settings.gridCols === 5 || settings.gridCols === 13) ? '61px' : '119px'}; width: 57px; height: calc(100% - 8px); background: rgba(255, 255, 255, 0.25); border-radius: 16px; transition: left 0.2s ease; border: 1px solid rgba(255,255,255,0.4); box-sizing: border-box;"></div>
-                <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 12 : 4}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 12 : 4}</div>
-                <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 13 : 5}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 13 : 5}</div>
-                <div class="grid-size-option" data-val="${typeof isIPad !== 'undefined' && isIPad ? 14 : 6}" style="flex: 1; padding: 6px 0; text-align: center; cursor: pointer; z-index: 1;">${typeof isIPad !== 'undefined' && isIPad ? 14 : 6}</div>
+            <div id="grid-size-selector" style="display: ${settings.resizeGridEnabled ? 'flex' : 'none'}; align-items: center; justify-content: space-between; margin-bottom: 16px; margin-top: -8px;">
+              <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">Number of columns</span>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                <button type="button" class="header-btn" id="inp-grid-minus"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <span id="inp-grid-val" style="min-width:40px; text-align:center; font-size:15px;">${settings.gridCols || (typeof isIPad !== 'undefined' && isIPad ? 14 : 6)}</span>
+                <button type="button" class="header-btn" id="inp-grid-plus"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               </div>
             </div>
 
@@ -5181,47 +5214,47 @@ const App = (() => {
           if (!resizeOn) {
             settings.gridCols = isIPad ? 14 : 6;
             GRID_COLS = isIPad ? 14 : 6;
-            document.getElementById('grid-size-slider').style.left = '119px';
             applySettings();
             save();
             render();
           } else {
             settings.gridCols = isIPad ? 14 : 6;
             GRID_COLS = isIPad ? 14 : 6;
-            document.getElementById('grid-size-slider').style.left = '119px';
+            document.getElementById('inp-grid-val').textContent = GRID_COLS;
             applySettings();
           }
         };
 
-        const slider = document.getElementById('grid-size-slider');
-        document.querySelectorAll('.grid-size-option').forEach(el => {
-          el.onclick = () => {
-            if (!settings.resizeGridEnabled) return;
-            const val = parseInt(el.getAttribute('data-val'), 10);
-            if ((!isIPad && val === 6) || (isIPad && val === 14)) {
-              showToast('Launcher default so just turn off...');
-              return;
+        const updateGridSize = (delta) => {
+          if (!settings.resizeGridEnabled) return;
+          let val = (settings.gridCols || (isIPad ? 14 : 6)) + delta;
+          const min = isIPad ? 12 : 4;
+          const max = isIPad ? 14 : 6;
+          if (val < min || val > max) return;
+          if (val === max) {
+            showToast('Launcher default so just turn off...');
+            return;
+          }
+          settings.gridCols = val;
+          GRID_COLS = val;
+          document.getElementById('inp-grid-val').textContent = val;
+          
+          [...tiles].sort((a,b) => a.row !== b.row ? a.row - b.row : a.col - b.col).forEach(t => {
+            const s = TILE_SIZES[t.size];
+            if (t.col + s.cols > GRID_COLS) {
+              t.col = Math.max(0, GRID_COLS - s.cols);
             }
-            settings.gridCols = val;
-            GRID_COLS = val;
-            if (val === 4 || val === 12) slider.style.left = '4px';
-            else if (val === 5 || val === 13) slider.style.left = '61px';
-            else slider.style.left = '119px';
-            
-            [...tiles].sort((a,b) => a.row !== b.row ? a.row - b.row : a.col - b.col).forEach(t => {
-              const s = TILE_SIZES[t.size];
-              if (t.col + s.cols > GRID_COLS) {
-                t.col = Math.max(0, GRID_COLS - s.cols);
-              }
-              pushTilesAway(t.id);
-            });
-            if (settings.gridlock) compactGrid();
-            
-            applySettings();
-            save();
-            render();
-          };
-        });
+            pushTilesAway(t.id);
+          });
+          if (settings.gridlock) compactGrid();
+          
+          applySettings();
+          save();
+          render();
+        };
+
+        document.getElementById('inp-grid-minus').onclick = () => updateGridSize(-1);
+        document.getElementById('inp-grid-plus').onclick = () => updateGridSize(1);
 
         const fontToggle = document.getElementById('disable-font-toggle');
         let fontOff = !!settings.disableForcedFont;
@@ -5654,6 +5687,7 @@ const App = (() => {
       settings.hideDynamicContent = hdcEnabled;
       settings.disableDateInHeader = disableDateEnabled;
       settings.hideSearchIcons = hideSearchIconsEnabled;
+      settings.hideInfoButton = hideInfoEnabled;
       settings.hideStoreShortcut = hideStoreEnabled;
       settings.lightHeader = lhOn;
       settings.hideSmallLabels = hslOn;
