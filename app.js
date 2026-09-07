@@ -176,7 +176,7 @@ document.addEventListener('selectionchange', () => keepCaretVisible(document.act
 document.addEventListener('touchmove', (e) => {
   // let range sliders work natively, and leave text fields alone
   if (e.target.closest('input[type="range"]')) return;
-  if (e.target.closest('input:not([type="range"]):not([type="hidden"]), textarea, label')) return;
+  if (e.target.closest('input:not([type="range"]):not([type="hidden"]), textarea, label, button, .header-btn, .toggle-switch, .nav-icon-btn, .pill-btn, .dialog-btn, .search-item-tile, a, .context-menu-item, .folder-bg, .close-folder, .folder-title, .metro-checkbox, [onclick]')) return;
   const scrollEl = e.target.closest('.grid-scroll, .modal-sheet, .scrollable-y, .search-page');
 
   if (scrollEl) {
