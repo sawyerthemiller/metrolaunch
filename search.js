@@ -176,8 +176,15 @@ function closeSearch(e) {
     }
   });
   
+  const settings = window.App && window.App.getSettings ? window.App.getSettings() : {};
   document.querySelectorAll('.header-actions > *:not(.search-actions)').forEach(el => {
     el.style.display = '';
+    if (settings.hideStoreShortcut && (el.id === 'btn-store' || el.id === 'btn-store-m')) {
+      el.style.display = 'none';
+    }
+    if (settings.hideInfoButton && (el.id === 'btn-info' || el.id === 'btn-info-m')) {
+      el.style.display = 'none';
+    }
   });
   
   document.querySelectorAll('.search-actions').forEach(el => {
