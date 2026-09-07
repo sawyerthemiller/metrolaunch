@@ -695,6 +695,15 @@ const App = (() => {
     // tile border radius
     document.documentElement.style.setProperty('--tile-radius', `${settings.tileRadius || 0}px`);
 
+    // gloss intensity
+    const glossInt = (settings.glossIntensity != null ? settings.glossIntensity : 100) / 100;
+    document.documentElement.style.setProperty('--gloss-before-bg', `rgba(255, 255, 255, ${0.25 * glossInt})`);
+    document.documentElement.style.setProperty('--gloss-after-grad1', `rgba(255, 255, 255, ${0.15 * glossInt})`);
+    document.documentElement.style.setProperty('--gloss-after-grad3', `rgba(0, 0, 0, ${0.10 * glossInt})`);
+    document.documentElement.style.setProperty('--gloss-after-shadow1', `rgba(255, 255, 255, ${0.30 * glossInt})`);
+    document.documentElement.style.setProperty('--gloss-after-shadow2', `rgba(0, 0, 0, ${0.15 * glossInt})`);
+    document.documentElement.style.setProperty('--gloss-style2-bg', `rgba(255, 255, 255, ${0.20 * glossInt})`);
+
     // live tile text scale based on grid columns
     const liveTileScale = (typeof isIPad !== 'undefined' && isIPad) ? (6 / (GRID_COLS - 8)) : (6 / GRID_COLS);
     document.documentElement.style.setProperty('--live-tile-scale', liveTileScale.toFixed(2));
@@ -4593,7 +4602,7 @@ const App = (() => {
           <div class="toggle-switch${settings.hideDonateButton ? ' on' : ''}" id="hide-donate-toggle"></div>
         </div>
         <div class="toggle-row">
-          <span class="toggle-label">Disable date in header</span>
+          <span class="toggle-label">Hide date in header</span>
           <div class="toggle-switch${settings.disableDateInHeader ? ' on' : ''}" id="disable-date-toggle"></div>
         </div>
         <div style="font-size: 11px; color: var(--text-muted); padding-bottom: 12px; margin-top: -8px;">will also move the main text to be vertically aligned</div>
@@ -4619,11 +4628,19 @@ const App = (() => {
           <div class="toggle-switch${settings.glossyTiles ? ' on' : ''}" id="glossy-tiles-toggle"></div>
         </div>
         <div id="glossy-style-selector" style="display: ${settings.glossyTiles ? 'flex' : 'none'}; align-items: center; justify-content: space-between; margin-bottom: 16px; margin-top: -8px;">
-          <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-left: 20px; margin-top: 5px;">Glossy style</span>
+          <span class="toggle-label" style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">Glossy style</span>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
             <button type="button" class="header-btn" id="inp-gloss-style-minus"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <span id="inp-gloss-style-val" style="min-width:60px; text-align:center; font-size:15px;">style - ${settings.glossyStyle === 2 ? 'b' : 'a'}</span>
             <button type="button" class="header-btn" id="inp-gloss-style-plus"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </div>
+        <div class="form-group" id="glossy-intensity-container" style="display: ${settings.glossyTiles ? 'block' : 'none'}; margin-top: 4px;">
+          <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Gloss Intensity <span><span id="gloss-intensity-val">${settings.glossIntensity != null ? settings.glossIntensity : 100}</span>%</span></label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('gloss-intensity-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <input type="range" id="gloss-intensity-slider" min="0" max="200" value="${settings.glossIntensity != null ? settings.glossIntensity : 100}" style="flex: 1; width: 0;">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('gloss-intensity-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
           </div>
         </div>
         <div class="toggle-row">
@@ -4719,12 +4736,16 @@ const App = (() => {
     const opacitySlider = document.getElementById('tile-opacity');
     const tileBlurSlider = document.getElementById('tile-blur');
     const radiusSlider = document.getElementById('tile-radius');
+    const glossIntensitySlider = document.getElementById('gloss-intensity-slider');
 
     blurSlider.oninput = () => { document.getElementById('blur-val').textContent = blurSlider.value; };
     darkenSlider.oninput = () => { document.getElementById('darken-val').textContent = darkenSlider.value; };
     opacitySlider.oninput = () => { document.getElementById('opacity-val').textContent = opacitySlider.value; };
     tileBlurSlider.oninput = () => { document.getElementById('tile-blur-val').textContent = tileBlurSlider.value; };
     radiusSlider.oninput = () => { document.getElementById('radius-val').textContent = radiusSlider.value; };
+    if (glossIntensitySlider) {
+      glossIntensitySlider.oninput = () => { document.getElementById('gloss-intensity-val').textContent = glossIntensitySlider.value + '%'; };
+    }
 
     let gcEnabled = settings.globalColorEnabled;
     const toggle = document.getElementById('global-color-toggle');
@@ -4818,6 +4839,7 @@ const App = (() => {
       glossyTilesEnabled = !glossyTilesEnabled;
       glossyTilesToggle.classList.toggle('on', glossyTilesEnabled);
       glossyStyleSelector.style.display = glossyTilesEnabled ? 'flex' : 'none';
+      document.getElementById('glossy-intensity-container').style.display = glossyTilesEnabled ? 'flex' : 'none';
     };
 
     hdcToggle.onclick = () => {
@@ -5628,6 +5650,7 @@ const App = (() => {
       settings.hideBgEditing = hideBgEditEnabled;
       settings.glossyTiles = glossyTilesEnabled;
       settings.glossyStyle = currentGlossStyle;
+      settings.glossIntensity = glossIntensitySlider ? parseInt(glossIntensitySlider.value, 10) : 100;
       settings.hideDynamicContent = hdcEnabled;
       settings.disableDateInHeader = disableDateEnabled;
       settings.hideSearchIcons = hideSearchIconsEnabled;
@@ -5963,7 +5986,7 @@ const App = (() => {
         .then(version => {
           metroAlert(
             'MetroLaunch',
-            "One of the first ever (but best) non-jailbreak third party launcher for iOS...<br><br>Developed by Sawyer Miller (plumhusky)<br><br>Code may not be re-used without full attribution...<br><br>version is " + version.trim() + "<br><br>" + osInfo,
+            "one of the first ever, but best, non-jailbreak third party launcher for iOS...<br><br>Developed by Sawyer Miller (plumhusky)<br><br>Code may not be re-used without full attribution...<br><br>version is " + version.trim() + "<br><br>" + osInfo,
             'OK',
             () => {},
             'Get Help',

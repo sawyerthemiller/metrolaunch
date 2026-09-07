@@ -252,8 +252,10 @@ function renderSearchList() {
   const globalColor = settings.globalColor || '#0078D7';
   
   let html = '';
+  let totalAppsShown = 0;
   
   sortedLetters.forEach(letter => {
+    totalAppsShown += groups[letter].length;
     html += `
       <div class="search-group">
         <div class="search-group-letter">${letter}</div>
@@ -294,6 +296,12 @@ function renderSearchList() {
     
     html += `</div>`;
   });
+  // Update search placeholder with total app count
+  if (!currentSearchQuery) {
+    document.querySelectorAll('.search-input').forEach(input => {
+      input.placeholder = `Type here to begin searching ${totalAppsShown} apps...`;
+    });
+  }
   
   // Inject into containers
   document.querySelectorAll('.search-results').forEach(container => {
