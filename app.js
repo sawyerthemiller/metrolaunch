@@ -4839,7 +4839,7 @@ const App = (() => {
       glossyTilesEnabled = !glossyTilesEnabled;
       glossyTilesToggle.classList.toggle('on', glossyTilesEnabled);
       glossyStyleSelector.style.display = glossyTilesEnabled ? 'flex' : 'none';
-      document.getElementById('glossy-intensity-container').style.display = glossyTilesEnabled ? 'flex' : 'none';
+      document.getElementById('glossy-intensity-container').style.display = glossyTilesEnabled ? 'block' : 'none';
     };
 
     hdcToggle.onclick = () => {
