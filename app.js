@@ -4744,7 +4744,7 @@ const App = (() => {
     tileBlurSlider.oninput = () => { document.getElementById('tile-blur-val').textContent = tileBlurSlider.value; };
     radiusSlider.oninput = () => { document.getElementById('radius-val').textContent = radiusSlider.value; };
     if (glossIntensitySlider) {
-      glossIntensitySlider.oninput = () => { document.getElementById('gloss-intensity-val').textContent = glossIntensitySlider.value + '%'; };
+      glossIntensitySlider.oninput = () => { document.getElementById('gloss-intensity-val').textContent = glossIntensitySlider.value; };
     }
 
     let gcEnabled = settings.globalColorEnabled;
