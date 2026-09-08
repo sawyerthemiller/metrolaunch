@@ -261,11 +261,46 @@ function renderSearchList() {
   let html = '';
   let totalAppsShown = 0;
   
-  sortedLetters.forEach(letter => {
+  if (!settings.hideSystemSearchBtn && sortedLetters.length === 0 && currentSearchQuery) {
+    const escapedQuery = encodeURIComponent(currentSearchQuery);
+    const searchUrl = `shortcuts://run-shortcut?name=sys-srch&input=shortcuts%3A%2F%2F%2F%3Fquery%3D${escapedQuery}`;
+    html += `
+      <div class="search-group">
+        <div class="search-group-header">
+          <div class="system-search-btn-wrapper" onclick="window.location.href='${searchUrl}'">
+            <div class="system-search-btn-inner">preform system search...</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  sortedLetters.forEach((letter, index) => {
     totalAppsShown += groups[letter].length;
     html += `
       <div class="search-group">
-        <div class="search-group-letter">${letter}</div>
+    `;
+
+    if (!settings.hideSystemSearchBtn && index === 0 && currentSearchQuery) {
+      const escapedQuery = encodeURIComponent(currentSearchQuery);
+      const searchUrl = `shortcuts://run-shortcut?name=sys-srch&input=shortcuts%3A%2F%2F%2F%3Fquery%3D${escapedQuery}`;
+      html += `
+        <div class="search-group-header">
+          <div class="system-search-btn-wrapper" onclick="window.location.href='${searchUrl}'">
+            <div class="system-search-btn-inner">preform system search...</div>
+          </div>
+          <div class="search-group-letter">${letter}</div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="search-group-header" style="justify-content: flex-end;">
+          <div class="search-group-letter">${letter}</div>
+        </div>
+      `;
+    }
+    
+    html += `
         <hr class="search-group-divider">
     `;
     

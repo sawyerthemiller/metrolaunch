@@ -2939,9 +2939,7 @@ const App = (() => {
     metroConfirm(
       'The Navigation Bar',
       'This is possibly the most beta feature in the launcher yet, so apologies if it\'s not super polished...<br><br>' +
-      '<a href="https://github.com/rooootdev/lara" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); margin-bottom: 8px; color: var(--text); text-decoration: none; position: relative;">Learn how to disable the home bar</a>' +
-      '<a href="https://github.com/leminlimez/Nugget" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); margin-bottom: 8px; color: var(--text); text-decoration: none; position: relative;">Learn how to disable the dynamic island or status bar</a>' +
-      '<a href="https://www.icloud.com/shortcuts/ef18975eafea4392ae3712f1a0cbb64a" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); color: var(--text); text-decoration: none; position: relative;">Install the Apple homescreen shortcut</a>' +
+      '<a href="https://pastebin.com/RCg9FRN3" target="_blank" style="display:block; text-align: left; padding: 12px; background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); margin-bottom: 8px; color: var(--text); text-decoration: none; position: relative;">Learn how to complete the navbar setup...</a>' +
       '<style>.confirm-overlay .confirm-cancel { display: none !important; } .confirm-overlay .confirm-danger { width: 100%; }</style>',
       'OK',
       () => {},
@@ -4620,6 +4618,10 @@ const App = (() => {
           <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideSearchIcons ? ' on' : ''}" id="hide-search-icons-toggle"></div>
         </div>
         <div class="toggle-row" style="opacity: ${settings.advancedEnabled && settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.advancedEnabled && settings.windowsNavBar ? 'auto' : 'none'};">
+          <span class="toggle-label">Hide system search button</span>
+          <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideSystemSearchBtn ? ' on' : ''}" id="hide-system-search-toggle"></div>
+        </div>
+        <div class="toggle-row" style="opacity: ${settings.advancedEnabled && settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.advancedEnabled && settings.windowsNavBar ? 'auto' : 'none'};">
           <span class="toggle-label">Hide info button in header</span>
           <div class="toggle-switch${(settings.advancedEnabled && settings.windowsNavBar) && settings.hideInfoButton ? ' on' : ''}" id="hide-info-toggle"></div>
         </div>
@@ -4814,6 +4816,15 @@ const App = (() => {
       };
     }
 
+    let hideSystemSearchBtnEnabled = (settings.advancedEnabled && settings.windowsNavBar) ? !!settings.hideSystemSearchBtn : false;
+    const hideSystemSearchBtnToggle = document.getElementById('hide-system-search-toggle');
+    if (hideSystemSearchBtnToggle) {
+      hideSystemSearchBtnToggle.onclick = () => {
+        hideSystemSearchBtnEnabled = !hideSystemSearchBtnEnabled;
+        hideSystemSearchBtnToggle.classList.toggle('on', hideSystemSearchBtnEnabled);
+      };
+    }
+
     let hideInfoEnabled = (settings.advancedEnabled && settings.windowsNavBar) ? !!settings.hideInfoButton : false;
     const hideInfoToggle = document.getElementById('hide-info-toggle');
     if (hideInfoToggle) {
@@ -4982,6 +4993,7 @@ const App = (() => {
     function updateWindowsNavBarDependentSettingsState() {
       const toggles = [
         { enabled: hideSearchIconsEnabled, el: hideSearchIconsToggle, setEnabled: (v) => hideSearchIconsEnabled = v },
+        { enabled: hideSystemSearchBtnEnabled, el: hideSystemSearchBtnToggle, setEnabled: (v) => hideSystemSearchBtnEnabled = v },
         { enabled: hideInfoEnabled, el: hideInfoToggle, setEnabled: (v) => hideInfoEnabled = v },
         { enabled: hideStoreEnabled, el: hideStoreToggle, setEnabled: (v) => hideStoreEnabled = v }
       ];
@@ -5232,7 +5244,7 @@ const App = (() => {
           const max = isIPad ? 14 : 6;
           if (val < min || val > max) return;
           if (val === max) {
-            showToast('Launcher default so just turn off...');
+            showToast('Launcher default, please turn off...');
             return;
           }
           settings.gridCols = val;
@@ -5687,6 +5699,7 @@ const App = (() => {
       settings.hideDynamicContent = hdcEnabled;
       settings.disableDateInHeader = disableDateEnabled;
       settings.hideSearchIcons = hideSearchIconsEnabled;
+      settings.hideSystemSearchBtn = hideSystemSearchBtnEnabled;
       settings.hideInfoButton = hideInfoEnabled;
       settings.hideStoreShortcut = hideStoreEnabled;
       settings.lightHeader = lhOn;
