@@ -6019,7 +6019,11 @@ const App = (() => {
       if (/iP(hone|od|ad)/.test(ua)) {
         const match = ua.match(/OS (\d+_\d+(_\d+)?)/);
         if (match) {
-          osInfo = 'iOS version is ' + match[1].replace(/_/g, '.');
+          let ver = match[1].replace(/_/g, '.');
+          if (ver.split('.').length === 2) {
+            ver += '.0';
+          }
+          osInfo = 'iOS version is ' + ver;
         } else {
           osInfo = 'iOS version unknown';
         }

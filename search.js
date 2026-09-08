@@ -267,8 +267,8 @@ function renderSearchList() {
     html += `
       <div class="search-group">
         <div class="search-group-header">
-          <div class="system-search-btn-wrapper" onclick="window.location.href='${searchUrl}'">
-            <div class="system-search-btn-inner">preform system search...</div>
+          <div class="system-search-btn" onclick="window.location.href='${searchUrl}'">
+            preform system search...
           </div>
         </div>
       </div>
@@ -286,8 +286,8 @@ function renderSearchList() {
       const searchUrl = `shortcuts://run-shortcut?name=sys-srch&input=shortcuts%3A%2F%2F%2F%3Fquery%3D${escapedQuery}`;
       html += `
         <div class="search-group-header">
-          <div class="system-search-btn-wrapper" onclick="window.location.href='${searchUrl}'">
-            <div class="system-search-btn-inner">preform system search...</div>
+          <div class="system-search-btn" onclick="window.location.href='${searchUrl}'">
+            preform system search...
           </div>
           <div class="search-group-letter">${letter}</div>
         </div>

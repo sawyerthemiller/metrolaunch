@@ -1848,25 +1848,18 @@ body.disable-forced-font #btn-info-m span {
   margin-bottom: 10px;
 }
 
-.system-search-btn-wrapper {
-  display: inline-flex;
-  background-color: rgba(255, 255, 255, 0.6);
-  padding: 1.5px;
-  padding-right: 2.2px;
-  clip-path: polygon(0% 0%, calc(100% - 13px) 0%, 100% 50%, calc(100% - 13px) 100%, 0% 100%);
-  -webkit-clip-path: polygon(0% 0%, calc(100% - 13px) 0%, 100% 50%, calc(100% - 13px) 100%, 0% 100%);
-  cursor: pointer;
-}
-
-.system-search-btn-inner {
+.system-search-btn {
   display: flex;
   align-items: center;
   background-color: #000;
   color: #fff;
-  padding: 4px 24px 4px 10px;
-  font-size: 14px;
-  clip-path: polygon(0% 0%, calc(100% - 11.5px) 0%, 100% 50%, calc(100% - 11.5px) 100%, 0% 100%);
-  -webkit-clip-path: polygon(0% 0%, calc(100% - 11.5px) 0%, 100% 50%, calc(100% - 11.5px) 100%, 0% 100%);
+  padding: 0 24px 2px 12px;
+  height: 30px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  clip-path: polygon(0% 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 0% 100%);
+  -webkit-clip-path: polygon(0% 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 0% 100%);
 }
 
 .search-item {
