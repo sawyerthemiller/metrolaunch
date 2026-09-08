@@ -341,8 +341,8 @@ body:not(.is-desktop) .header {
 }
 
 .header.hide-dynamic {
-  background: #000;
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) var(--hdc-solid, 40%), rgba(0, 0, 0, 0) 100%);
+  border-bottom: var(--hdc-border, 1px solid var(--border));
 }
 
 .header.light-bg h1 {

@@ -516,6 +516,8 @@ const App = (() => {
     globalColorEnabled: false,
     globalColor: '#0078d4',
     hideDynamicContent: false,
+    hdcSolidPx: 40,
+    hdcUnderline: true,
     lightHeader: false,
     weatherZip: '',
     weatherApiKey: '',
@@ -707,6 +709,9 @@ const App = (() => {
     // live tile text scale based on grid columns
     const liveTileScale = (typeof isIPad !== 'undefined' && isIPad) ? (6 / (GRID_COLS - 8)) : (6 / GRID_COLS);
     document.documentElement.style.setProperty('--live-tile-scale', liveTileScale.toFixed(2));
+
+    document.documentElement.style.setProperty('--hdc-solid', `${settings.hdcSolidPx != null ? settings.hdcSolidPx : 40}%`);
+    document.documentElement.style.setProperty('--hdc-border', settings.hdcUnderline !== false ? '1px solid var(--border)' : '0px solid transparent');
 
     // hide dynamic content or notch
     document.querySelectorAll('.header').forEach(h => {
@@ -4662,6 +4667,24 @@ const App = (() => {
           <span class="toggle-label">Mask dynamic content</span>
           <div class="toggle-switch${settings.hideDynamicContent ? ' on' : ''}" id="hdc-toggle"></div>
         </div>
+        <div class="toggle-row" id="hdc-underline-row" style="display: ${settings.hideDynamicContent ? 'flex' : 'none'}; margin-top: -6px;">
+          <div style="display: flex; align-items: center; padding-left: 24px;">
+            <svg width="24" height="18" viewBox="0 0 24 18" style="margin-left: -24px; margin-right: 6px; stroke: #888; fill: none; stroke-width: 1.5px; stroke-linejoin: round; stroke-linecap: round;">
+               <path d="M4 -8 L4 8 Q 4 12 8 12 L 22 12" />
+               <path d="M19 9 L 22 12 L 19 15" />
+            </svg>
+            <span class="toggle-label" style="color: var(--text);">Underline</span>
+          </div>
+          <div class="toggle-switch${settings.hdcUnderline !== false ? ' on' : ''}" id="hdc-underline-toggle"></div>
+        </div>
+        <div class="form-group" id="hdc-slider-container" style="display: ${settings.hideDynamicContent ? 'block' : 'none'}; margin-top: 4px; margin-bottom: 8px;">
+          <label style="display:flex; justify-content:space-between; margin-bottom: 6px;">Solid Mask <span><span id="hdc-solid-val">${settings.hdcSolidPx != null ? settings.hdcSolidPx : 40}</span>%</span></label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; transform: scaleX(-1); flex-shrink: 0;" onpointerdown="startStepSlider('hdc-solid-slider', -1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+            <input type="range" id="hdc-solid-slider" min="10" max="100" value="${settings.hdcSolidPx != null ? settings.hdcSolidPx : 40}" style="flex: 1; width: 0;">
+            <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('hdc-solid-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
+          </div>
+        </div>
         <div class="toggle-row">
           <span class="toggle-label">Dark header text</span>
           <div class="toggle-switch${settings.lightHeader ? ' on' : ''}" id="light-header-toggle"></div>
@@ -4880,8 +4903,27 @@ const App = (() => {
     hdcToggle.onclick = () => {
       hdcEnabled = !hdcEnabled;
       hdcToggle.classList.toggle('on', hdcEnabled);
+      document.getElementById('hdc-underline-row').style.display = hdcEnabled ? 'flex' : 'none';
+      document.getElementById('hdc-slider-container').style.display = hdcEnabled ? 'block' : 'none';
       updateLhState();
     };
+
+    const hdcSolidSlider = document.getElementById('hdc-solid-slider');
+    const hdcSolidVal = document.getElementById('hdc-solid-val');
+    if (hdcSolidSlider) {
+      hdcSolidSlider.oninput = () => {
+        hdcSolidVal.textContent = hdcSolidSlider.value;
+      };
+    }
+
+    let hdcUnderlineEnabled = settings.hdcUnderline !== false;
+    const hdcUnderlineToggle = document.getElementById('hdc-underline-toggle');
+    if (hdcUnderlineToggle) {
+      hdcUnderlineToggle.onclick = () => {
+        hdcUnderlineEnabled = !hdcUnderlineEnabled;
+        hdcUnderlineToggle.classList.toggle('on', hdcUnderlineEnabled);
+      };
+    }
 
     lhToggle.onclick = () => {
       lhOn = !lhOn;
@@ -5697,6 +5739,11 @@ const App = (() => {
       settings.glossyStyle = currentGlossStyle;
       settings.glossIntensity = glossIntensitySlider ? parseInt(glossIntensitySlider.value, 10) : 100;
       settings.hideDynamicContent = hdcEnabled;
+      
+      const hdcSolidSliderSave = document.getElementById('hdc-solid-slider');
+      settings.hdcSolidPx = hdcSolidSliderSave ? parseInt(hdcSolidSliderSave.value, 10) : 40;
+      settings.hdcUnderline = hdcUnderlineEnabled;
+      
       settings.disableDateInHeader = disableDateEnabled;
       settings.hideSearchIcons = hideSearchIconsEnabled;
       settings.hideSystemSearchBtn = hideSystemSearchBtnEnabled;
