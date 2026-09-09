@@ -294,7 +294,7 @@ function renderSearchList() {
       const escapedQuery = encodeURIComponent(currentSearchQuery);
       const searchUrl = `shortcuts://run-shortcut?name=sys-srch&input=shortcuts%3A%2F%2F%2F%3Fquery%3D${escapedQuery}`;
       html += `
-        <div class="search-sticky-header ${!currentSearchQuery ? 'sticky' : ''}">
+        <div class="search-sticky-header ${(!currentSearchQuery && !settings.hideStickySearchHeaders) ? 'sticky' : ''}">
           <div class="search-group-header">
             <div class="system-search-btn" onclick="window.location.href='${searchUrl}'">
               preform system search...
@@ -306,7 +306,7 @@ function renderSearchList() {
       `;
     } else {
       html += `
-        <div class="search-sticky-header ${!currentSearchQuery ? 'sticky' : ''}">
+        <div class="search-sticky-header ${(!currentSearchQuery && !settings.hideStickySearchHeaders) ? 'sticky' : ''}">
           <div class="search-group-header" style="justify-content: flex-end;">
             <div class="search-group-letter">${letter}</div>
           </div>
@@ -467,6 +467,7 @@ function initSearchHeaderAnimations(page) {
       bottom: groupTop + groupHeight,
       headerHeight,
       groupHeight,
+      isSticky: header.classList.contains('sticky'),
       lastOpacity: -1,
       lastScaleX: -1
     });
@@ -489,21 +490,24 @@ function updateSearchHeaderAnimations(page) {
     const bottomDiff = item.bottom - stickyLine;
     
     let opacity = 1;
-    if (topDiff <= 0) {
-      const pushDistance = item.headerHeight - bottomDiff;
-      if (pushDistance > 0) {
-        opacity = 1 - (pushDistance / item.headerHeight);
-        opacity = Math.max(0, Math.min(1, opacity));
-      }
-    }
-    
     let shrinkProgress = 0;
-    const scrollableGroupHeight = item.groupHeight - item.headerHeight;
     
-    if (scrollableGroupHeight > 0 && topDiff <= 0) {
-      const scrolledDistance = -topDiff;
-      shrinkProgress = scrolledDistance / scrollableGroupHeight;
-      shrinkProgress = Math.max(0, Math.min(1, shrinkProgress));
+    if (item.isSticky) {
+      if (topDiff <= 0) {
+        const pushDistance = item.headerHeight - bottomDiff;
+        if (pushDistance > 0) {
+          opacity = 1 - (pushDistance / item.headerHeight);
+          opacity = Math.max(0, Math.min(1, opacity));
+        }
+      }
+      
+      const scrollableGroupHeight = item.groupHeight - item.headerHeight;
+      
+      if (scrollableGroupHeight > 0 && topDiff <= 0) {
+        const scrolledDistance = -topDiff;
+        shrinkProgress = scrolledDistance / scrollableGroupHeight;
+        shrinkProgress = Math.max(0, Math.min(1, shrinkProgress));
+      }
     }
     
     const scaleX = 1 - (0.75 * shrinkProgress);

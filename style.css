@@ -1729,7 +1729,6 @@ body.disable-forced-font #btn-info-m span {
   transition: transform 0.4s ease, opacity 0.4s ease;
   overflow-y: auto;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
 }
 
 .grid-scroll {

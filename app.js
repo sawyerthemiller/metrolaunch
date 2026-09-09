@@ -5161,6 +5161,11 @@ const App = (() => {
                 <img src="system_icon/arrow-rite.png" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;" onpointerdown="startStepSlider('nav-gap-slider', 1)" onpointerup="stopStepSlider()" onpointerleave="stopStepSlider()" onpointercancel="stopStepSlider()" oncontextmenu="event.preventDefault();">
               </div>
             </div>
+
+            <div class="toggle-row" style="margin-bottom: 16px; opacity: ${settings.windowsNavBar ? '1' : '0.5'}; pointer-events: ${settings.windowsNavBar ? 'auto' : 'none'};" id="hide-sticky-search-group">
+              <span class="toggle-label">Hide sticky headers and animation in search</span>
+              <div class="toggle-switch${settings.hideStickySearchHeaders ? ' on' : ''}" id="hide-sticky-search-toggle"></div>
+            </div>
           </div>
 
           <div class="form-divider"></div>
@@ -5402,9 +5407,25 @@ const App = (() => {
             navGapGroup.style.opacity = wpNavOn ? '1' : '0.5';
             navGapGroup.style.pointerEvents = wpNavOn ? 'auto' : 'none';
           }
+          const stickyGroup = document.getElementById('hide-sticky-search-group');
+          if (stickyGroup) {
+            stickyGroup.style.opacity = wpNavOn ? '1' : '0.5';
+            stickyGroup.style.pointerEvents = wpNavOn ? 'auto' : 'none';
+          }
           
           applySettings();
         };
+
+        const hideStickySearchToggle = document.getElementById('hide-sticky-search-toggle');
+        if (hideStickySearchToggle) {
+          let hideStickyOn = !!settings.hideStickySearchHeaders;
+          hideStickySearchToggle.onclick = () => {
+            hideStickyOn = !hideStickyOn;
+            hideStickySearchToggle.classList.toggle('on', hideStickyOn);
+            settings.hideStickySearchHeaders = hideStickyOn;
+            applySettings();
+          };
+        }
 
         const navPaddingSlider = document.getElementById('nav-padding-slider');
         const navPaddingVal = document.getElementById('nav-padding-val');
