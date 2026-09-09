@@ -472,7 +472,10 @@ function showSearchContextMenu(tileId, x, y) {
       const tileUrl = tile.url || tile.launchUrl || '';
       if (tileUrl.toLowerCase().startsWith('livecontainer://') || tileUrl.toLowerCase().startsWith('shortcuts://')) {
         if (window.showToast) window.showToast('Not allowed for community submission');
-      } else if (decodeURIComponent(tileUrl).toLowerCase().replace(/\s/g, '').startsWith('javascript:')) {
+      } else if (decodeURIComponent(tileUrl).toLowerCase().replace(/\s/g, '').startsWith('javascript:') || 
+                 /<[^>]*>/.test(tile.name || '') || 
+                 /<[^>]*>/.test(tile.icon || '') || 
+                 /<[^>]*>/.test(tile.color || '')) {
         if (window.showToast) window.showToast('Nice try asshole...');
       } else if (window.communityAPI) {
         window.communityAPI.submitApp({
