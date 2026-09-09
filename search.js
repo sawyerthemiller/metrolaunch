@@ -47,24 +47,31 @@ function initSearch() {
   const searchPages = document.querySelectorAll('.search-page');
   searchPages.forEach(page => {
     page.addEventListener('scroll', () => {
-      const scrollDist = page.scrollHeight - page.clientHeight;
-      if (scrollDist <= 0) return;
+      if (page._isScrollPending) return;
+      page._isScrollPending = true;
       
-      const scrolled = page.scrollTop > scrollDist * 0.2;
-      
-      backBtns.forEach(btn => {
-        if (scrolled) {
-          btn.style.transform = 'rotate(90deg)';
-          btn.dataset.isUpBtn = 'true';
-        } else {
-          btn.style.transform = '';
-          btn.dataset.isUpBtn = 'false';
-        }
-        btn.style.transition = 'transform 0.2s';
+      requestAnimationFrame(() => {
+        page._isScrollPending = false;
+        
+        const scrollDist = page.scrollHeight - page.clientHeight;
+        if (scrollDist <= 0) return;
+        
+        const scrolled = page.scrollTop > scrollDist * 0.2;
+        
+        backBtns.forEach(btn => {
+          if (scrolled) {
+            btn.style.transform = 'rotate(90deg)';
+            btn.dataset.isUpBtn = 'true';
+          } else {
+            btn.style.transform = '';
+            btn.dataset.isUpBtn = 'false';
+          }
+          btn.style.transition = 'transform 0.2s';
+        });
+        
+        updateSearchHeaderAnimations(page);
       });
-      
-      updateSearchHeaderAnimations(page);
-    });
+    }, { passive: true });
   });
 
   document.querySelectorAll('.wp-nav-bar .nav-icon-btn').forEach(btn => {
@@ -429,6 +436,8 @@ function updateSearchHeaderAnimations(page) {
   const pageRect = page.getBoundingClientRect();
   const stickyTopEdge = pageRect.top - 1;
   
+  // Phase 1: Reads (prevent layout thrashing)
+  const updates = [];
   groups.forEach(group => {
     const header = group.querySelector('.search-sticky-header');
     const divider = group.querySelector('.search-group-divider');
@@ -445,9 +454,7 @@ function updateSearchHeaderAnimations(page) {
         opacity = Math.max(0, Math.min(1, opacity));
       }
     }
-    header.style.opacity = opacity;
     
-    divider.style.transformOrigin = 'right center';
     let shrinkProgress = 0;
     const scrollableGroupHeight = groupRect.height - headerRect.height;
     
@@ -460,7 +467,13 @@ function updateSearchHeaderAnimations(page) {
     }
     
     const scaleX = 1 - (0.75 * shrinkProgress);
-    divider.style.transform = `scaleX(${scaleX})`;
+    updates.push({ header, divider, opacity, scaleX });
+  });
+  
+  // Phase 2: Writes
+  updates.forEach(update => {
+    update.header.style.opacity = update.opacity;
+    update.divider.style.transform = `scaleX(${update.scaleX}) translateZ(0)`;
   });
 }
 
