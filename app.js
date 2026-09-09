@@ -707,7 +707,8 @@ const App = (() => {
     document.documentElement.style.setProperty('--gloss-style2-bg', `rgba(255, 255, 255, ${0.20 * glossInt})`);
 
     // live tile text scale based on grid columns
-    const liveTileScale = (typeof isIPad !== 'undefined' && isIPad) ? (6 / (GRID_COLS - 8)) : (6 / GRID_COLS);
+    let liveTileScale = (typeof isIPad !== 'undefined' && isIPad) ? (6 / (GRID_COLS - 8)) : (6 / GRID_COLS);
+    if (liveTileScale >= 1.5) liveTileScale = 1.35;
     document.documentElement.style.setProperty('--live-tile-scale', liveTileScale.toFixed(2));
 
     document.documentElement.style.setProperty('--hdc-solid', `${settings.hdcSolidPx != null ? settings.hdcSolidPx : 40}%`);
@@ -5091,7 +5092,7 @@ const App = (() => {
                   </div>
                   <div style="width: 1px; background: rgba(255, 255, 255, 0.2);"></div>
                   <div style="flex: 1; padding-left: 12px; padding-bottom: 12px; font-size: 13.5px; line-height: 1.5; opacity: 0.9;">
-                    Starting in version 2.0.0 large code refactors will take place. These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>Cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
+                    Messing with these options may cause instability, UI quirks, or other issues despite our best testing efforts...<br><br>These options show some of the features which may be implemented in the future, and allow users to take part in new features right away. Note that not all features will be available forever...<br><br>As noted in the GH repo, music cover art comes from discogs, so it may not match the cover art you see on Spotify or other services...
                   </div>
                 </div>
                 <div style="height: 1px; background: rgba(255, 255, 255, 0.2); margin-bottom: 12px;"></div>
@@ -5259,6 +5260,33 @@ const App = (() => {
         const resizeToggle = document.getElementById('resize-grid-toggle');
         const gridSelector = document.getElementById('grid-size-selector');
         let resizeOn = !!settings.resizeGridEnabled;
+
+        const updateGridBtns = (val) => {
+          const minusBtn = document.getElementById('inp-grid-minus');
+          const plusBtn = document.getElementById('inp-grid-plus');
+          const minCols = isIPad ? 12 : 4;
+          const maxCols = isIPad ? 14 : 6;
+          
+          if (minusBtn) {
+            if (val <= minCols) {
+              minusBtn.style.opacity = '0.5';
+              minusBtn.style.pointerEvents = 'none';
+            } else {
+              minusBtn.style.opacity = '1';
+              minusBtn.style.pointerEvents = 'auto';
+            }
+          }
+          
+          if (plusBtn) {
+            if (val >= maxCols) {
+              plusBtn.style.opacity = '0.5';
+              plusBtn.style.pointerEvents = 'none';
+            } else {
+              plusBtn.style.opacity = '1';
+              plusBtn.style.pointerEvents = 'auto';
+            }
+          }
+        };
         
         resizeToggle.onclick = () => {
           resizeOn = !resizeOn;
@@ -5275,6 +5303,7 @@ const App = (() => {
             settings.gridCols = isIPad ? 14 : 6;
             GRID_COLS = isIPad ? 14 : 6;
             document.getElementById('inp-grid-val').textContent = GRID_COLS;
+            updateGridBtns(GRID_COLS);
             applySettings();
           }
         };
@@ -5284,14 +5313,15 @@ const App = (() => {
           let val = (settings.gridCols || (isIPad ? 14 : 6)) + delta;
           const min = isIPad ? 12 : 4;
           const max = isIPad ? 14 : 6;
-          if (val < min || val > max) return;
-          if (val === max) {
+          if (val < min) return;
+          if (val >= max) {
             showToast('Launcher default, please turn off...');
             return;
           }
           settings.gridCols = val;
           GRID_COLS = val;
           document.getElementById('inp-grid-val').textContent = val;
+          updateGridBtns(val);
           
           [...tiles].sort((a,b) => a.row !== b.row ? a.row - b.row : a.col - b.col).forEach(t => {
             const s = TILE_SIZES[t.size];
@@ -5307,6 +5337,7 @@ const App = (() => {
           render();
         };
 
+        updateGridBtns(settings.gridCols || (isIPad ? 14 : 6));
         document.getElementById('inp-grid-minus').onclick = () => updateGridSize(-1);
         document.getElementById('inp-grid-plus').onclick = () => updateGridSize(1);
 
@@ -5578,7 +5609,7 @@ const App = (() => {
 
     document.getElementById('settings-sw-check').onclick = async () => {
         hideModal();
-        await showModal('<h2>Service Worker Checker</h2><div class="weather-nodata" style="padding:24px 0;">Checking cache\u2026</div>');
+        await showModal('<h2>Service Worker Checker</h2><div style="padding:24px 0; font-size:14px; color:rgba(255,255,255,0.4); text-align:center;">Checking cache\u2026</div>');
 
       const REQUIRED_ASSETS = [
         './', './index.html', './style.css', './app.js', './search.js', './community.js',
