@@ -62,6 +62,8 @@ function initSearch() {
         }
         btn.style.transition = 'transform 0.2s';
       });
+      
+      updateSearchHeaderAnimations(page);
     });
   });
 
@@ -413,6 +415,52 @@ function renderSearchList() {
         }
       });
     });
+  });
+  
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.search-page').forEach(updateSearchHeaderAnimations);
+  });
+}
+
+function updateSearchHeaderAnimations(page) {
+  const groups = page.querySelectorAll('.search-group');
+  if (!groups.length) return;
+  
+  const pageRect = page.getBoundingClientRect();
+  const stickyTopEdge = pageRect.top - 1;
+  
+  groups.forEach(group => {
+    const header = group.querySelector('.search-sticky-header');
+    const divider = group.querySelector('.search-group-divider');
+    if (!header || !divider) return;
+    
+    const groupRect = group.getBoundingClientRect();
+    const headerRect = header.getBoundingClientRect();
+    
+    let opacity = 1;
+    if (groupRect.top <= stickyTopEdge) {
+      const pushDistance = (stickyTopEdge + headerRect.height) - groupRect.bottom;
+      if (pushDistance > 0) {
+        opacity = 1 - (pushDistance / headerRect.height);
+        opacity = Math.max(0, Math.min(1, opacity));
+      }
+    }
+    header.style.opacity = opacity;
+    
+    divider.style.transformOrigin = 'right center';
+    let shrinkProgress = 0;
+    const scrollableGroupHeight = groupRect.height - headerRect.height;
+    
+    if (scrollableGroupHeight > 0) {
+      if (groupRect.top <= stickyTopEdge) {
+        const scrolledDistance = stickyTopEdge - groupRect.top;
+        shrinkProgress = scrolledDistance / scrollableGroupHeight;
+        shrinkProgress = Math.max(0, Math.min(1, shrinkProgress));
+      }
+    }
+    
+    const scaleX = 1 - (0.75 * shrinkProgress);
+    divider.style.transform = `scaleX(${scaleX})`;
   });
 }
 
