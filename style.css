@@ -2205,6 +2205,7 @@ body.glossy-tiles .folder-chevron-face {
 
 .search-new-badge {
   margin-left: 8px;
+  margin-top: 2px;
   font-size: 12px;
   background: #000;
   color: #fff;
