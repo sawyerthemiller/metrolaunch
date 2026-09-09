@@ -285,24 +285,26 @@ function renderSearchList() {
       const escapedQuery = encodeURIComponent(currentSearchQuery);
       const searchUrl = `shortcuts://run-shortcut?name=sys-srch&input=shortcuts%3A%2F%2F%2F%3Fquery%3D${escapedQuery}`;
       html += `
-        <div class="search-group-header">
-          <div class="system-search-btn" onclick="window.location.href='${searchUrl}'">
-            preform system search...
+        <div class="search-sticky-header ${!currentSearchQuery ? 'sticky' : ''}">
+          <div class="search-group-header">
+            <div class="system-search-btn" onclick="window.location.href='${searchUrl}'">
+              preform system search...
+            </div>
+            <div class="search-group-letter">${letter}</div>
           </div>
-          <div class="search-group-letter">${letter}</div>
+          <hr class="search-group-divider">
         </div>
       `;
     } else {
       html += `
-        <div class="search-group-header" style="justify-content: flex-end;">
-          <div class="search-group-letter">${letter}</div>
+        <div class="search-sticky-header ${!currentSearchQuery ? 'sticky' : ''}">
+          <div class="search-group-header" style="justify-content: flex-end;">
+            <div class="search-group-letter">${letter}</div>
+          </div>
+          <hr class="search-group-divider">
         </div>
       `;
     }
-    
-    html += `
-        <hr class="search-group-divider">
-    `;
     
     // Sort tiles within the group
     groups[letter].sort((a, b) => a.name.localeCompare(b.name)).forEach(tile => {
