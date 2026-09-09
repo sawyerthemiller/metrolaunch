@@ -425,55 +425,101 @@ function renderSearchList() {
   });
   
   requestAnimationFrame(() => {
-    document.querySelectorAll('.search-page').forEach(updateSearchHeaderAnimations);
+    document.querySelectorAll('.search-page').forEach(initSearchHeaderAnimations);
   });
 }
 
-function updateSearchHeaderAnimations(page) {
+// Re-calculate dimensions on orientation change or resize
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.search-page').forEach(initSearchHeaderAnimations);
+});
+
+function initSearchHeaderAnimations(page) {
   const groups = page.querySelectorAll('.search-group');
   if (!groups.length) return;
   
-  const pageRect = page.getBoundingClientRect();
-  const stickyTopEdge = pageRect.top - 1;
-  
-  // Phase 1: Reads (prevent layout thrashing)
-  const updates = [];
+  const cache = [];
   groups.forEach(group => {
     const header = group.querySelector('.search-sticky-header');
     const divider = group.querySelector('.search-group-divider');
     if (!header || !divider) return;
     
-    const groupRect = group.getBoundingClientRect();
-    const headerRect = header.getBoundingClientRect();
+    // Clear styles briefly to get raw measurements in case of re-init
+    header.style.opacity = '';
+    divider.style.transform = '';
+    
+    divider.style.transformOrigin = 'right center';
+    
+    let groupTop = 0;
+    let curr = group;
+    while (curr && curr !== page && curr !== document.body) {
+      groupTop += curr.offsetTop;
+      curr = curr.offsetParent;
+    }
+    
+    const groupHeight = group.offsetHeight;
+    const headerHeight = header.offsetHeight;
+    
+    cache.push({
+      header,
+      divider,
+      top: groupTop,
+      bottom: groupTop + groupHeight,
+      headerHeight,
+      groupHeight,
+      lastOpacity: -1,
+      lastScaleX: -1
+    });
+  });
+  
+  page._searchHeaderCache = cache;
+  updateSearchHeaderAnimations(page);
+}
+
+function updateSearchHeaderAnimations(page) {
+  const cache = page._searchHeaderCache;
+  if (!cache || !cache.length) return;
+  
+  const scrollTop = page.scrollTop;
+  const stickyOffset = -1; // Matches top: -1px
+  const stickyLine = scrollTop + stickyOffset;
+  
+  cache.forEach(item => {
+    const topDiff = item.top - stickyLine;
+    const bottomDiff = item.bottom - stickyLine;
     
     let opacity = 1;
-    if (groupRect.top <= stickyTopEdge) {
-      const pushDistance = (stickyTopEdge + headerRect.height) - groupRect.bottom;
+    if (topDiff <= 0) {
+      const pushDistance = item.headerHeight - bottomDiff;
       if (pushDistance > 0) {
-        opacity = 1 - (pushDistance / headerRect.height);
+        opacity = 1 - (pushDistance / item.headerHeight);
         opacity = Math.max(0, Math.min(1, opacity));
       }
     }
     
     let shrinkProgress = 0;
-    const scrollableGroupHeight = groupRect.height - headerRect.height;
+    const scrollableGroupHeight = item.groupHeight - item.headerHeight;
     
-    if (scrollableGroupHeight > 0) {
-      if (groupRect.top <= stickyTopEdge) {
-        const scrolledDistance = stickyTopEdge - groupRect.top;
-        shrinkProgress = scrolledDistance / scrollableGroupHeight;
-        shrinkProgress = Math.max(0, Math.min(1, shrinkProgress));
-      }
+    if (scrollableGroupHeight > 0 && topDiff <= 0) {
+      const scrolledDistance = -topDiff;
+      shrinkProgress = scrolledDistance / scrollableGroupHeight;
+      shrinkProgress = Math.max(0, Math.min(1, shrinkProgress));
     }
     
     const scaleX = 1 - (0.75 * shrinkProgress);
-    updates.push({ header, divider, opacity, scaleX });
-  });
-  
-  // Phase 2: Writes
-  updates.forEach(update => {
-    update.header.style.opacity = update.opacity;
-    update.divider.style.transform = `scaleX(${update.scaleX}) translateZ(0)`;
+    
+    const newOpacity = Math.round(opacity * 1000) / 1000;
+    const newScaleX = Math.round(scaleX * 1000) / 1000;
+    
+    if (newOpacity !== item.lastOpacity) {
+      item.header.style.opacity = newOpacity;
+      item.lastOpacity = newOpacity;
+    }
+    
+    if (newScaleX !== item.lastScaleX) {
+      item.divider.style.transform = `scaleX(${newScaleX}) translateZ(0)`;
+      item.lastScaleX = newScaleX;
+    }
   });
 }
 
