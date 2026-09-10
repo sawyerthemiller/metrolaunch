@@ -2314,7 +2314,8 @@ const App = (() => {
     // We only allow dropping into EXISTING folders
     let hoverTarget = null;
     const dragS = TILE_SIZES[tile.size];
-    if (!isSpecialTile(tile) && !isFolder(tile)) {
+    const allowedFolderDropSizes = ['small', 'medium', 'wide'];
+    if (!isSpecialTile(tile) && !isFolder(tile) && allowedFolderDropSizes.includes(tile.size)) {
       const dragW = dragS.cols * cellSize + (dragS.cols - 1) * GRID_GAP;
       const dragH = dragS.rows * cellSize + (dragS.rows - 1) * GRID_GAP;
       const dragCenterX = newX + dragW / 2;

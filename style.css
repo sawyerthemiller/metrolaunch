@@ -494,9 +494,37 @@ body:not(.is-desktop) .header {
 .tile[data-size="wide"] .tile-icon svg,
 .tile[data-size="wide"] .tile-icon img,
 .tile[data-size="large"] .tile-icon svg,
-.tile[data-size="large"] .tile-icon img {
+.tile[data-size="large"] .tile-icon img,
+.tile[data-size="3x4"] .tile-icon svg,
+.tile[data-size="3x4"] .tile-icon img,
+.tile[data-size="4x3"] .tile-icon svg,
+.tile[data-size="4x3"] .tile-icon img {
   width: calc(42px * var(--live-tile-scale, 1));
   height: calc(42px * var(--live-tile-scale, 1));
+}
+
+.tile[data-size="1x2"] .tile-icon svg,
+.tile[data-size="1x2"] .tile-icon img,
+.tile[data-size="2x1"] .tile-icon svg,
+.tile[data-size="2x1"] .tile-icon img,
+.tile[data-size="1x3"] .tile-icon svg,
+.tile[data-size="1x3"] .tile-icon img,
+.tile[data-size="3x1"] .tile-icon svg,
+.tile[data-size="3x1"] .tile-icon img,
+.tile[data-size="1x4"] .tile-icon svg,
+.tile[data-size="1x4"] .tile-icon img,
+.tile[data-size="4x1"] .tile-icon svg,
+.tile[data-size="4x1"] .tile-icon img {
+  width: calc(27px * var(--live-tile-scale, 1));
+  height: calc(27px * var(--live-tile-scale, 1));
+}
+
+.tile[data-size="2x3"] .tile-icon svg,
+.tile[data-size="2x3"] .tile-icon img,
+.tile[data-size="3x2"] .tile-icon svg,
+.tile[data-size="3x2"] .tile-icon img {
+  width: calc(37px * var(--live-tile-scale, 1));
+  height: calc(37px * var(--live-tile-scale, 1));
 }
 
 .tile[data-id="__spotify__"][data-size="medium"] .tile-icon svg {
