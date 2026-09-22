@@ -172,18 +172,57 @@ window.communityAPI = {
         chkConsent.classList.remove('checked');
         hasInitialized = false;
         updateBtnStates();
-        
-        if (window.showToast) {
-          const toastEl = document.getElementById('toast');
-          if (toastEl) {
-            const oldZ = toastEl.style.zIndex;
-            toastEl.style.zIndex = '100005';
-            window.showToast('Server could not respond - please try later');
-            setTimeout(() => {
-              if (toastEl.style.zIndex === '100005') toastEl.style.zIndex = oldZ;
-            }, 3000);
-          } else {
-            window.showToast('Server could not respond - please try later');
+
+        let serverDown = false;
+        try {
+          let vRes = await fetch(`./version.txt?t=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+          if (!vRes || !vRes.ok) {
+            vRes = await fetch('./version.txt', { cache: 'no-store' }).catch(() => null);
+          }
+          if (vRes && vRes.ok) {
+            const text = await vRes.text();
+            if (text.match(/SD\s*=\s*Y/i)) {
+              serverDown = true;
+            }
+          } else if (window.location.protocol === 'file:') {
+            serverDown = true;
+          }
+        } catch(err) {}
+
+        if (serverDown && localStorage.getItem('metrolaunch_hide_sd') !== '1') {
+          const overlay = document.createElement('div');
+          overlay.className = 'confirm-overlay';
+          overlay.style.zIndex = '100005';
+          overlay.innerHTML =
+            '<div class="confirm-box">' +
+            '<h3>Server is down</h3>' +
+            '<p>Unfortunately, the MetroLaunch server has suffered a hardware failure and will be down for at most a month</p>' +
+            '<div class="confirm-actions">' +
+            '<button class="confirm-cancel" style="flex:1;">Never show again</button>' +
+            '<button class="confirm-danger" style="color:#fff; background:#0078d4; border-color:#0078d4; --btn-color:#0078d4; flex:1;">OK</button>' +
+            '</div>' +
+            '</div>';
+          document.body.appendChild(overlay);
+          
+          const btns = overlay.querySelectorAll('button');
+          if (typeof applyHapticToEls === 'function') applyHapticToEls(btns);
+          
+          overlay.querySelector('.confirm-cancel').onclick = () => { localStorage.setItem('metrolaunch_hide_sd', '1'); overlay.remove(); };
+          overlay.querySelector('.confirm-danger').onclick = () => overlay.remove();
+          overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        } else {
+          if (window.showToast) {
+            const toastEl = document.getElementById('toast');
+            if (toastEl) {
+              const oldZ = toastEl.style.zIndex;
+              toastEl.style.zIndex = '100005';
+              window.showToast('Server could not respond - please try later');
+              setTimeout(() => {
+                if (toastEl.style.zIndex === '100005') toastEl.style.zIndex = oldZ;
+              }, 3000);
+            } else {
+              window.showToast('Server could not respond - please try later');
+            }
           }
         }
         

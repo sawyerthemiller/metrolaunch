@@ -19,8 +19,11 @@ if (localStorage.getItem('metrolaunch_backend_consent') === '1') {
     }
   } else {
     // Attempt to recover runtime
-    fetch('https://leopardindustries.net:8088/metro.php?action=runtime', { cache: 'no-store' })
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    fetch('https://leopardindustries.net:8088/metro.php?action=runtime', { cache: 'no-store', signal: controller.signal })
       .then(res => {
+        clearTimeout(timeoutId);
         if (!res.ok) throw new Error('Server error');
         return res.text();
       })
@@ -30,8 +33,47 @@ if (localStorage.getItem('metrolaunch_backend_consent') === '1') {
       })
       .catch(e => {
         console.error("Failed to fetch runtime on boot", e);
-        const notify = () => {
-          if (typeof showToast === 'function') showToast('Tried network init but fail - will try later');
+        const notify = async () => {
+          let serverDown = false;
+          try {
+            let vRes = await fetch(`./version.txt?t=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+            if (!vRes || !vRes.ok) {
+              vRes = await fetch('./version.txt', { cache: 'no-store' }).catch(() => null);
+            }
+            if (vRes && vRes.ok) {
+              const text = await vRes.text();
+              if (text.match(/SD\s*=\s*Y/i)) {
+                serverDown = true;
+              }
+            } else if (window.location.protocol === 'file:') {
+              // Fallback for local testing since file:// cannot fetch version.txt
+              serverDown = true;
+            }
+          } catch(err) {}
+
+          if (serverDown && localStorage.getItem('metrolaunch_hide_sd') !== '1') {
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML =
+              '<div class="confirm-box">' +
+              '<h3>Server is down</h3>' +
+              '<p>Unfortunately, the MetroLaunch server has suffered a hardware failure and will be down for at most a month</p>' +
+              '<div class="confirm-actions">' +
+              '<button class="confirm-cancel" style="flex:1;">Never show again</button>' +
+              '<button class="confirm-danger" style="color:#fff; background:#0078d4; border-color:#0078d4; --btn-color:#0078d4; flex:1;">OK</button>' +
+              '</div>' +
+              '</div>';
+            document.body.appendChild(overlay);
+            
+            const btns = overlay.querySelectorAll('button');
+            if (typeof applyHapticToEls === 'function') applyHapticToEls(btns);
+            
+            overlay.querySelector('.confirm-cancel').onclick = () => { localStorage.setItem('metrolaunch_hide_sd', '1'); overlay.remove(); };
+            overlay.querySelector('.confirm-danger').onclick = () => overlay.remove();
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+          } else if (!serverDown) {
+            if (typeof showToast === 'function') showToast('Tried network init but fail - will try later');
+          }
         };
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', notify);
@@ -4722,7 +4764,7 @@ const App = (() => {
           <div class="toggle-switch${settings.advancedEnabled ? ' on' : ''}" id="advanced-toggle"></div>
         </div>
         <div class="modal-actions" style="margin-top:8px; margin-bottom:0;">
-          <button class="btn-secondary" id="settings-adv" style="border-radius: 9999px;" ${!settings.advancedEnabled ? 'disabled' : ''}>View More Settings</button>
+          <button class="btn-secondary" id="settings-adv" ${!settings.advancedEnabled ? 'disabled' : ''}><span>View More Settings</span></button>
         </div>
       </div>
 

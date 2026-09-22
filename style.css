@@ -2312,3 +2312,8 @@ body.glossy-tiles .folder-chevron-face {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* View More Settings Button */
+#settings-adv {
+  border-radius: 0 !important;
+}
