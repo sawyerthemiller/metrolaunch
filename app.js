@@ -6177,9 +6177,10 @@ const App = (() => {
         .then(res => res.text())
         .catch(() => 'Unknown')
         .then(version => {
+          const cleanVersion = version.split('\n')[0].trim();
           metroAlert(
             'MetroLaunch',
-            "one of the first ever, but best, non-jailbreak third party launcher for iOS...<br><br>Developed by Sawyer Miller (plumhusky)<br><br>Code may not be re-used without full attribution...<br><br>version is " + version.trim() + "<br><br>" + osInfo,
+            "one of the first ever, but best, non-jailbreak third party launcher for iOS...<br><br>Developed by Sawyer Miller (plumhusky)<br><br>Code may not be re-used without full attribution...<br><br>version is " + cleanVersion + "<br><br>" + osInfo,
             'OK',
             () => {},
             'Get Help',
