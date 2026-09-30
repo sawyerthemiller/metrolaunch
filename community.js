@@ -156,7 +156,7 @@ window.communityAPI = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000);
       try {
-        const res = await fetch('https://leopardindustries.net:8088/metro.php?action=runtime', { 
+        const res = await fetch('https://metro.leopardindustries.net/metro.php?action=runtime', { 
           cache: 'no-store',
           signal: controller.signal
         });

@@ -21,7 +21,7 @@ if (localStorage.getItem('metrolaunch_backend_consent') === '1') {
     // Attempt to recover runtime
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
-    fetch('https://leopardindustries.net:8088/metro.php?action=runtime', { cache: 'no-store', signal: controller.signal })
+    fetch('https://metro.leopardindustries.net/metro.php?action=runtime', { cache: 'no-store', signal: controller.signal })
       .then(res => {
         clearTimeout(timeoutId);
         if (!res.ok) throw new Error('Server error');
@@ -3145,8 +3145,10 @@ const App = (() => {
         fetch(`./version.txt?t=${Date.now()}`, { cache: 'no-store' }),
       ]);
       if (!localRes.ok || !remoteRes.ok) return;
-      const local = (await localRes.text()).trim();
-      const remote = (await remoteRes.text()).trim();
+      const localText = (await localRes.text()).trim();
+      const remoteText = (await remoteRes.text()).trim();
+      const local = localText.split('\n')[0].trim();
+      const remote = remoteText.split('\n')[0].trim();
       
       // Migrate old setting
       if (settings.skipUpdateCheck) {

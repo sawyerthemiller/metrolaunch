@@ -243,7 +243,7 @@ def _make_key_reader():
 
 # ── Main ──
 
-SERVER_URL = 'https://leopardindustries.net:8088/metro.php'
+SERVER_URL = 'https://metro.leopardindustries.net/metro.php'
 POLL_RATE = 2
 
 def main():

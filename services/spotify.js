@@ -107,7 +107,7 @@
 
     if (!window.MetroRuntime || !window.MetroRuntime.Spotify) return Promise.resolve();
     window.MetroRuntime.Spotify.fetchStatus = function(uname) {
-      return fetch(`https://leopardindustries.net:8088/metro.php?action=status&username=${encodeURIComponent(uname)}&_ml_reload=${Date.now()}`, { 
+      return fetch(`https://metro.leopardindustries.net/metro.php?action=status&username=${encodeURIComponent(uname)}&_ml_reload=${Date.now()}`, { 
         method: 'POST',
         cache: 'no-store' 
       });
