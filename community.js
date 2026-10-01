@@ -176,16 +176,24 @@ window.communityAPI = {
         let serverDown = false;
         try {
           let vRes = await fetch(`./version.txt?t=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
-          if (!vRes || !vRes.ok) {
-            vRes = await fetch('./version.txt', { cache: 'no-store' }).catch(() => null);
-          }
+          let hasLocalSD = false;
+          
           if (vRes && vRes.ok) {
             const text = await vRes.text();
             if (text.match(/SD\s*=\s*Y/i)) {
               serverDown = true;
+              hasLocalSD = true;
             }
-          } else if (window.location.protocol === 'file:') {
-            serverDown = true;
+          }
+          
+          if (!hasLocalSD) {
+            let remoteRes = await fetch(`https://sawyerthemiller.github.io/metrolaunch/version.txt?t=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+            if (remoteRes && remoteRes.ok) {
+              const text = await remoteRes.text();
+              if (text.match(/SD\s*=\s*Y/i)) {
+                serverDown = true;
+              }
+            }
           }
         } catch(err) {}
 
